@@ -1,0 +1,11 @@
+# History files
+.Rhistory
+.Rapp.history
+
+# other
+*.DS_Store
+*.Rhistory
+.DS_Store
+.Rproj.user
+
+data/
