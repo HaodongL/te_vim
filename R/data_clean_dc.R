@@ -14,15 +14,15 @@ W <- dplyr::select(W, -c(STUDYID, SUBJID, DIABDURU, WSTCRBLU,
                          CHOL1BLU, TRIG1BLU, HBC2BLU, HDL2BLU,
                          LDL2BLU, CHOL2BLU, TRIG2BLU, CREATBLU,
                          EGFREPIU, EGFREPBU, HGTTBLU, AGEU, HGTBLU)) %>%
-  dplyr::select(-c(ISHRGRL, ISHRGRN, DTHDT, EOSDT, EOTDT, LSTCONDT, LSTSVDT,
+  dplyr::select(-c(DTHDT, EOSDT, EOTDT, LSTCONDT, LSTSVDT,
                    RANDDT, BRTHDT, EOSSTT, TOTREAT, STDURY, TRDURD, TRDURY,
-                   TRDU15OD, TRDUROY, TRDU15OY))
+                   TRDU15OD, TRDUROY, TRDU15OY)) # ??? ISHRGRL, ISHRGRN, 
 
 # REMOVE DEGENERATE COLUMNS
 W <- select_if(W, ~length(unique(.))>1)
 
 # REMOVE DUPLICATE COLUMNS & LINEARLY DEPENDENT COLUMNS
-W <- dplyr::select(W, -c(PREVTFL, WGTBL, HBC2BL, ARMCD,
+W <- dplyr::select(W, -c(PREVTFL, HBC2BL, ARMCD, # ??? WGTBL,
                          HDL2BL, LDL2BL, CHOL2BL, TRIG2BL,
                          GERDCMFL, # near dup GERDBLFL, off by 2
                          STROKSFL, # remove the sensitivity analysis stroke flag?,
@@ -35,7 +35,7 @@ W <- dplyr::select(W, -c(PREVTFL, WGTBL, HBC2BL, ARMCD,
 # skimr::skim(dplyr::select(W, ISMHIBFL, ISMHGPFL, RETINSEV, NYHACLAS))
 
 # remove vars with >99% missingness
-W <- dplyr::select(W, -c(ISMHIBFL, ISMHGPFL))
+# W <- dplyr::select(W, -c(ISMHIBFL, ISMHGPFL)) # ??? doesn't exist.
 
 # how to deal with missing retinopathy severity & NYHA class?
 W <- W %>%
@@ -74,3 +74,25 @@ W <- W %>% mutate(SMOKER = factor(SMOKER, ordered = T,
                     levels = c("Normal (EGFR>=90)", "Mild (EGFR<90)",
                                "Moderate (EGFR<60)", "Severe (EGFR<30)"))) %>%
   mutate_if(is.character, as_factor)
+
+
+
+# outcomes
+data_path <- ("data/ex2211-3748-3/Analysis Ready Datasets/SAS_analysis/")
+outcomes <- haven::read_sas("data/ADaM/adtte.sas7bdat") %>%
+  dplyr::select("USUBJID", 'PARAMCD', "AVAL", "PARCAT1") %>%
+  dplyr::filter(PARAMCD %in% c("MACEEVTM", "MCECVDTM", "MACEMITM",
+                               "MCENFSTM", "NONCVTM"# , "PRMACETM",
+  )) %>%
+  rename("EVENT" = "PARCAT1") %>%
+  mutate(PARAMCD = case_when(PARAMCD == "MACEEVTM" ~ "MACE",
+                             PARAMCD == "MACEMITM" ~ "NFMI",
+                             PARAMCD == "MCECVDTM" ~ "CVDEATH",
+                             PARAMCD == "MCENFSTM" ~ "NFSTROKE",
+                             PARAMCD == "NONCVTM" ~ 'NONCVDEATH' #,
+                             # PARAMCD == "PRMACETM" ~ 'PRIMACE'
+  )) %>%
+  pivot_wider(id_cols = "USUBJID", names_from = "PARAMCD", values_from = c("AVAL", "EVENT")) %>%
+  mutate_at(vars(starts_with("EVENT")),
+            ~as.numeric(. == "TIME TO EVENT"))
+
