@@ -55,6 +55,12 @@ fitSL <- function(df, df_train = df){
   g_fit <- sl_g$train(task_g)
   
   # preds Q and g
+  task_Q_pred <- sl3::make_sl3_Task(
+    data = df,
+    covariates = setdiff(names(df), c('Y')),
+    outcome = 'Y'
+  )
+  pred_Q <- Q_fit$predict(task_Q_pred)
   pred_Q_cf <- pred_Q_cf(df = df, Q_fit = Q_fit, folds = folds)
   
   task_g_pred <- sl3::make_sl3_Task(
@@ -80,7 +86,8 @@ fitSL <- function(df, df_train = df){
     A = df$A,
     pi_hat  = pred_g,
     mu1_hat = pred_Q_cf$Qbar1W,
-    mu0_hat = pred_Q_cf$Qbar0W
+    mu0_hat = pred_Q_cf$Qbar0W,
+    mua_hat = pred_Q
     # mu1_hat = predict(mod.m,mutate(df,A=1),type="response"),
     # mu0_hat = predict(mod.m,mutate(df,A=0),type="response")
   ) %>% return()

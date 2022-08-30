@@ -11,7 +11,7 @@
 
 TMLE_VTE <- function(data,ab=NULL){
   ## Some params
-  max.it <- 2000 #maximum number of iterations in targetting step
+  max.it <- 600 #maximum number of iterations in targetting step
   eps <- 0.0001 #TMLE target step size
   
   a <- with(data,min(Y,mu1_hat,mu0_hat))
@@ -67,15 +67,16 @@ TMLE_VTE <- function(data,ab=NULL){
       retarget <- FALSE
     }
     it <- it+1
-    # print(paste0("it = ", it))
-    # print(N^2*pD2^2 )
-    # print(Sig2)
 
   }
   if(it>=max.it) warning("Max iterations reached in TMLE")
-  # print(N^2*pD1^2)
-  # print(Sig1)
-  # print(it)
+  
+  # print(paste0("it = ", it))
+  print(paste0("eic1 = ", N^2*pD1^2))
+  print(paste0("cutoff1 = ", Sig1))
+  print(paste0("eic2 = ", N^2*pD2^2))
+  print(paste0("cutoff2 = ", Sig2))
+
   
   rootV <- ifelse(VTE>=0,sqrt(VTE),NA)
   ss <- sqrt(Sig2/N)
@@ -97,4 +98,9 @@ TMLE_VTE <- function(data,ab=NULL){
   
   return(out)
 }
+
+
+
+
+
 
