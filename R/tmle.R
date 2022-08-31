@@ -102,5 +102,87 @@ TMLE_VTE <- function(data,ab=NULL){
 
 
 
-
+TMLE_VIMD <- function(df, df_fit, option, covar){
+  ## Some params
+  max.it <- 600 #maximum number of iterations in targeting step
+  eps <- 0.0001 #TMLE target step size
+  
+  y_l <- with(df_fit,min(Y,mu1_hat,mu0_hat))
+  y_u <- with(df_fit,max(Y,mu1_hat,mu0_hat))
+  
+  # Q,Y,g,A
+  n = NROW(df_fit)
+  A <- df_fit$A
+  g_hat <- df_fit$pi_hat
+  Y_t <- (df_fit$Y - y_l)/(y_u - y_l)
+  Q_t <- (df_fit$mua_hat - y_l)/(y_u - y_l)
+  Q1_t <- (df_fit$mu1_hat - y_l)/(y_u - y_l)
+  Q0_t <- (df_fit$mu0_hat - y_l)/(y_u - y_l)
+  
+  # cate
+  tau <- df_fit$CATE
+  tau_s <- df_fit$tau_s
+  
+  # psi and ic
+  psi <- mean((tau - tau_s)^2)
+  HAW = 2*(tau - tau_s)*(2*A - 1)/(g_hat) 
+  H1W = 2*(tau - tau_s)*(2*1 - 1)/(g_hat)
+  H0W = 2*(tau - tau_s)*(2* - 1)/(g_hat)
+  D = HAW*(Y_t - Q_t) + (tau - tau_s)^2 - psi
+  
+  sig_hat <- sd(D)
+  criterion <- abs(mean(D)) < sig_hat/(sqrt(n)*log(n))
+  
+  it <- 1
+  while(it <= max.it){
+    if(criterion){
+      break
+    }else{
+      
+      # update Q
+      Q1_t <- qlogis(plogis(Q1_t) - eps*H1W*sign(D))
+      Q0_t <- qlogis(plogis(Q0_t) - eps*H0W*sign(D))
+      Q_t <- ifelse(A, Q1_t, Q0_t)
+      
+      # update tau, tau_s
+      df_fit <- df_fit %>% select('Y', 'A', "pi_hat",  "mu1_hat", "mu0_hat", "mua_hat")
+      df_fit$mu1_hat <- Q1_t
+      df_fit$mu0_hat <- Q0_t
+      df_fit$mua_hat <- Q_t
+      
+      df_fit <- fit_tau(df = df, df_fit = df_fit, option = option)
+      df_fit <- fit_tau_s(df = df, df_fit = df_fit, covar = covar)
+      
+      tau <- df_fit$CATE
+      tau_s <- df_fit$tau_s
+      
+      # update psi, ic
+      psi <- mean((tau - tau_s)^2)
+      HAW = 2*(tau - tau_s)*(2*A - 1)/(g_hat) 
+      H1W = 2*(tau - tau_s)*(2*1 - 1)/(g_hat)
+      H0W = 2*(tau - tau_s)*(2* - 1)/(g_hat)
+      D = HAW*(Y_t - Q_t) + (tau - tau_s)^2 - psi
+      
+      # re-evaluate criterion
+      criterion <- abs(mean(D)) < sig_hat/(sqrt(n)*log(n))
+      it <- it + 1
+    }
+  }
+  if(it>=max.it) warning("Max iterations reached in TMLE")
+  
+  # scale back
+  
+  psi <- c(psi*(y_u - y_l)^2)
+  se <- sd(D)*(y_u - y_l)^2/sqrt(n)
+  ci_l <- psi - 1.96*se
+  ci_u <- psi + 1.96*se
+  
+  out<- list(
+    psi = psi,
+    ci_l = ci_l,
+    ci_u = ci_u
+  )
+  
+  return(out)
+}
 
