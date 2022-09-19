@@ -13,7 +13,7 @@ fit_tau <- function(df, df_fit, option = "T-Learner"){
   
   # get po (the pseudo outcome)
   y = df_fit$Y
-  a = df_fit$a
+  a = df_fit$A
   pi_hat = df_fit$pi_hat
   mu1_hat = df_fit$mu1_hat
   mu0_hat = df_fit$mu0_hat
@@ -53,7 +53,8 @@ fit_tau <- function(df, df_fit, option = "T-Learner"){
 
 fit_tau_s <- function(df, df_fit, covar){
   
-  df_train <- cbind(df, df_fit$CATE)
+  CATE = df_fit$CATE
+  df_train <- cbind(df, CATE)
   folds <- origami::make_folds(strata_ids = df$A)
   
   # setup sl3
