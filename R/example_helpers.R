@@ -1,7 +1,7 @@
 require(tidyverse)
 require(mgcv) #we use gam fitting for this example
 
-generate_data_simple <- function(N){
+generate_data_simple <- function(N, print_truth = FALSE){
   # A simple data generating process
   X1 <- runif(N,-1,1)
   X2 <- runif(N,-1,1)
@@ -11,6 +11,15 @@ generate_data_simple <- function(N){
   CATE <- X1^2*(X1+7/5) + (5*X2/3)^2
   muY = muY0+A*CATE
   Y <- rnorm(N,sd=1,mean= muY)
+  
+  if (print_truth){
+    VTE <- var(CATE)
+    tau_s <- X1^2*(X1+7/5)
+    VTE_s <- var(tau_s)
+    VIM_Theta_s <- VTE - VTE_s
+    print(paste0("VIM_Theta_s: ", VIM_Theta_s))
+    print(paste0("VTE: ", VTE))
+  }
   return(tibble(X1=X1,X2=X2,A=A,Y=Y))
 }
 

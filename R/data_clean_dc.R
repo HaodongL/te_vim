@@ -10,6 +10,8 @@ df_tte <- haven::read_sas("data/ADaM/adtte.sas7bdat")
 df_cm <- haven::read_sas("data/ADaM/adcm.sas7bdat")
 df_ttse <- haven::read_sas("data/ADaM/adttse.sas7bdat")
 df_hypo <- haven::read_sas("data/ADaM/adhypo.sas7bdat")
+df_adae <- haven::read_sas("data/ADaM/adae.sas7bdat")
+# df_adlb <- haven::read_sas("data/ADaM/adlb.sas7bdat")
 
 # remove the subjects who are not in df_tte or df_cm
 unique_subid_w = unique(df_w$USUBJID)
@@ -122,6 +124,26 @@ Y_secondary <- df_ttse %>%
   # mutate_at(vars(starts_with("EVENT")),
   #           ~as.numeric(. == "TIME TO EVENT"))
 
+# First time OAD
+
+
+df_OADTM <- read_csv("data/ADaM/FINAL1.csv")
+df_OADINSTM <- read_csv("data/ADaM/FINAL2.csv")
+
+# tmp <- df_cm %>% 
+#   filter(ASTRF %in% c("DURING","AFTER"), FASFL == "Y")
+# 
+# drop_sujid_oad <- tmp %>% 
+#   filter_at(vars(matches("CMCLASCD|DCL[0-9]*C")),
+#             any_vars(str_detect(., "A10BX"))) %>% 
+#   filter(CMDECOD == 'LIRAGLUTIDE') 
+# 
+# df_oad <- tmp %>% 
+#   filter_at(vars(matches("CMCLASCD|DCL[0-9]*C")),
+#             any_vars(str_detect(., "A10BA|A10BB|A10BC|A10BD|A10BF|
+#                                 A10BG|A10BH|A10BX09|A10BX11|A10BX12|A10BX"))) 
+
+  
 
 
 # 'OADTM' %in% unique(df_ttse$PARAMCD)

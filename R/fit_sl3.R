@@ -10,6 +10,7 @@ lrnr_ranger <- Lrnr_ranger$new()
 
 lrnr_stack <- make_learner("Stack",
                            lrnr_lm,
+                           lrnr_earth,
                            lrnr_xgb)
 
 
@@ -58,17 +59,20 @@ fitSL <- function(df, df_train = df){
   task_Q_pred <- sl3::make_sl3_Task(
     data = df,
     covariates = setdiff(names(df), c('Y')),
-    outcome = 'Y'
+    outcome = 'Y',
+    folds = folds
   )
-  pred_Q <- Q_fit$predict(task_Q_pred)
+  # pred_Q <- Q_fit$predict(task_Q_pred)
+  pred_Q <- Q_fit$predict_fold(task_Q_pred, "validation")
   pred_Q_cf <- pred_Q_cf(df = df, Q_fit = Q_fit, folds = folds)
   
   task_g_pred <- sl3::make_sl3_Task(
     data = df,
     covariates = setdiff(names(df), c('Y', 'A')),
-    outcome = 'A'
+    outcome = 'A',
+    folds = folds
   )
-  pred_g <- g_fit$predict(task_g_pred)
+  pred_g <- g_fit$predict_fold(task_g_pred, "validation")
   
   # bound g
   pred_g[pred_g< 0.025] <- 0.025
@@ -126,23 +130,23 @@ pred_Q_cf <- function(df, Q_fit, folds){
               'Qbar0W' = Qbar0W))
 }
 
-crossFitSL <- function(df,foldIDs,Nfolds=max(foldIDs)){
-  fold_list = lapply(1:Nfolds, function(i,foldIDs){which(foldIDs==i)},foldIDs = foldIDs)
-  
-  a <- sapply(fold_list,function(fold,df){
-    fitSL(df[fold,],df[-1*fold,]) 
-  },df=df,simplify = FALSE) %>% bind_rows()
-  
-  a <- a[order(unlist(fold_list)),] %>%
-    mutate(FoldID = foldIDs)
-  
-  return(a)
-}
+# crossFitSL <- function(df,foldIDs,Nfolds=max(foldIDs)){
+#   fold_list = lapply(1:Nfolds, function(i,foldIDs){which(foldIDs==i)},foldIDs = foldIDs)
+#   
+#   a <- sapply(fold_list,function(fold,df){
+#     fitSL(df[fold,],df[-1*fold,]) 
+#   },df=df,simplify = FALSE) %>% bind_rows()
+#   
+#   a <- a[order(unlist(fold_list)),] %>%
+#     mutate(FoldID = foldIDs)
+#   
+#   return(a)
+# }
 
-getFoldIDs <- function(N,Nfolds,shuffle=TRUE){
-  if (shuffle){
-    return(sample(rep_len(seq_len(Nfolds),length.out=N)))
-  } else{
-    return(rep_len(seq_len(Nfolds),length.out=N))
-  }
-}
+# getFoldIDs <- function(N,Nfolds,shuffle=TRUE){
+#   if (shuffle){
+#     return(sample(rep_len(seq_len(Nfolds),length.out=N)))
+#   } else{
+#     return(rep_len(seq_len(Nfolds),length.out=N))
+#   }
+# }

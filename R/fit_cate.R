@@ -80,3 +80,34 @@ fit_tau_s <- function(df, df_fit, covar){
 }
 
 
+
+fit_gamma_s <- function(df, df_fit, covar){
+  
+  tau_2= (df_fit$CATE)^2
+  df_train <- cbind(df, tau_2)
+  folds <- origami::make_folds(strata_ids = df$A)
+  
+  # setup sl3
+  task_gamma <- sl3::make_sl3_Task(
+    data = df_train,
+    covariates = setdiff(names(df_train), c('Y', 'A', 'tau_2', covar)),
+    outcome = 'tau_2',
+    folds = folds
+  )
+  
+  # assume we have 'lrnr_stack' and 'ls_metalearner' defined outside
+  sl_gamma <- Lrnr_sl$new(
+    learners = lrnr_stack,
+    metalearner = ls_metalearner
+  )
+  
+  gamma_fit <- sl_gamma$train(task_gamma)
+  gamma_s <- gamma_fit$predict()
+  
+  
+  res <- cbind(df_fit, gamma_s)
+  return(res)
+}
+
+
+
