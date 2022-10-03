@@ -100,7 +100,7 @@ TMLE_VIM <- function(data, y_l, y_u, max.it=600){
   tau_i <- tau_0
   tau_s_i <- tau_s_0
   
-  logging <- matrix(NA, max.it, 3)
+  # logging <- matrix(NA, max.it, 3)
   
   while(i <= max.it){
     # step 1. update Q and tau
@@ -122,9 +122,9 @@ TMLE_VIM <- function(data, y_l, y_u, max.it=600){
     D_2i <- H_2i*(tau_i - tau_s_i)
     PnD_2i <- mean(D_2i)
     
-    logging[i, 1] <- i
-    logging[i, 2] <- PnD_1i
-    logging[i, 3] <- PnD_2i
+    # logging[i, 1] <- i
+    # logging[i, 2] <- PnD_1i
+    # logging[i, 3] <- PnD_2i
     
     # tau_s_i <- plogis(qlogis(tau_s_i) - eps2*H_2i*sign(PnD_2i))
     maxabs <- max(abs(tau_s_i))
@@ -147,15 +147,18 @@ TMLE_VIM <- function(data, y_l, y_u, max.it=600){
     c2 <- abs(PnD_2i) <= sig2/(sqrt(N)*log(N))
     
     if (c1 & c2){
-      QA_star <- QA_i
-      Q1_star <- Q1_i
-      Q0_star <- Q0_i
-      tau_star <- tau_i
-      tau_s_star <- tau_s_i
       break
     }
     i <- i + 1
   }
+  
+  QA_star <- QA_i
+  Q1_star <- Q1_i
+  Q0_star <- Q0_i
+  tau_star <- tau_i
+  tau_s_star <- tau_s_i
+  
+  if(i>=max.it) warning("Max iterations reached in TMLE")
   
   # update gamma_s
   suppressWarnings({

@@ -1,4 +1,4 @@
-run_all_simu <- function(B, N, truth, covar = c('X2'), max.it = 1e3){
+run_all_simu <- function(B, N, truth, covar = c('X2'), max.it = 2e3){
   results_cols <- c('i', 'truth', 'cvtmle', 'cvtmle_se',
                     'cvtmle_lower', 'cvtmle_upper', 
                     'cvaiptw', 'cvaiptw_se', 'cvaiptw_lower', 
@@ -7,7 +7,7 @@ run_all_simu <- function(B, N, truth, covar = c('X2'), max.it = 1e3){
   results_df <- data.frame(matrix(NA, nrow = B, ncol = length(results_cols)))
   colnames(results_df) <- results_cols
   
-  run_bootstrap <- foreach(b = 1:B, .combine = 'rbind') %do% {
+  run_bootstrap <- foreach(b = 1:B, .combine = 'rbind') %dopar% {
     
     print(paste0("may the power be with you! ", b))
     

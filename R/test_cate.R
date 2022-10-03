@@ -6,7 +6,7 @@ source(paste0(repo_path, "R/fit_cate.R"))
 source(paste0(repo_path, "R/vim.R"))
 
 set.seed(1234)
-N <- 5e2 #size of generated data
+N <- 1e6 #size of generated data
 df <- generate_data_simple(N, print_truth = TRUE)
 
 # y_l <- min(df$Y)
