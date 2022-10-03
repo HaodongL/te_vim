@@ -35,10 +35,10 @@ ncore <- floor(cpus_logical/2)
 
 ###### run simu
 set.seed(1234)
-B <- 2 #rounds of simu
+B <- 5 #rounds of simu
 N <- 5e2 #size of data
 
-registerDoParallel(ncore)
+registerDoParallel(2)
 bootstrap_results <- run_all_simu(B = B, N = N, truth = 0.686)
 
 
@@ -47,6 +47,6 @@ write.csv(bootstrap_results, output_filename)
 
 
 
-
+# local
 
 

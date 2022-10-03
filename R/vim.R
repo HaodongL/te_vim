@@ -53,13 +53,13 @@ EE_VIM <- function(data){
 }
 
 # Estimator: TMLE
-run_TMLE_VIM <- function(df, covar, max.it=600){
+run_TMLE_VIM <- function(df, covar, max.it=600, Q_bounds = c(0.001, 0.999), g_bounds = c(0.025, 0.975)){
   # transform Y into [0,1]
   y_l <- min(df$Y)
   y_u <- max(df$Y)
   df$Y <- scale01(df$Y, y_l, y_u)
   # fit Q, g
-  df_fit_sl <- fitSL(df)
+  df_fit_sl <- fitSL(df, Q_bounds, g_bounds)
   # fit tau, tau_s, gamma_s
   df_fit_sl <- fit_tau(df, df_fit_sl, option = "T-Learner")
   df_fit_sl <- fit_tau_s(df, df_fit_sl, covar = covar)

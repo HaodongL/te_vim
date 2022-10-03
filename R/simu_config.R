@@ -7,9 +7,9 @@ run_all_simu <- function(B, N, truth, covar = c('X2'), max.it = 1e3){
   results_df <- data.frame(matrix(NA, nrow = B, ncol = length(results_cols)))
   colnames(results_df) <- results_cols
   
-  run_bootstrap <- foreach(b = 1:B, .combine = 'rbind') %dopar% {
+  run_bootstrap <- foreach(b = 1:B, .combine = 'rbind') %do% {
     
-    print("may the power be with you")
+    print(paste0("may the power be with you! ", b))
     
     results_df_row <- data.frame(matrix(NA, nrow = 1, ncol = length(results_cols)))
     colnames(results_df_row) <- results_cols
@@ -30,8 +30,9 @@ run_all_simu <- function(B, N, truth, covar = c('X2'), max.it = 1e3){
     # CVAIPW 
     results_df_row$cvaiptw <- res_ee$coef
     results_df_row$cvaiptw_se <- res_ee$std_err
-    results_df_row$cvaiptw_upper <- res_ee$ci_l
-    results_df_row$cvaiptw_lower <- res_ee$ci_u
+    results_df_row$cvaiptw_lower <- res_ee$ci_l
+    results_df_row$cvaiptw_upper <- res_ee$ci_u
+    
     
     # print(se_cvaiptw)
     # print(se_aiptw)
