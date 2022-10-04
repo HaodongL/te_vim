@@ -1,0 +1,328 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={Untitled},
+  pdfauthor={Haodong Li},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Untitled}
+\author{Haodong Li}
+\date{2022-10-03}
+
+\begin{document}
+\maketitle
+
+\begin{verbatim}
+## 
+## Please cite as:
+\end{verbatim}
+
+\begin{verbatim}
+##  Hlavac, Marek (2022). stargazer: Well-Formatted Regression and Summary Statistics Tables.
+\end{verbatim}
+
+\begin{verbatim}
+##  R package version 5.2.3. https://CRAN.R-project.org/package=stargazer
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'dplyr'
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:kableExtra':
+## 
+##     group_rows
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'data.table'
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:dplyr':
+## 
+##     between, first, last
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{output\_filename }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(}\StringTok{\textquotesingle{}\textasciitilde{}/Repo/te\_vim/simu\_res/theta\_s/\textquotesingle{}}\NormalTok{,}\StringTok{"local\_"}\NormalTok{, }\DecValTok{500}\NormalTok{, }\StringTok{"\_"}\NormalTok{, }\StringTok{\textquotesingle{}2022{-}10{-}02\textquotesingle{}}\NormalTok{,}\StringTok{\textquotesingle{}.csv\textquotesingle{}}\NormalTok{)}
+\NormalTok{res1 }\OtherTok{\textless{}{-}} \FunctionTok{read\_csv}\NormalTok{(output\_filename) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{mutate}\NormalTok{(}\AttributeTok{n =} \DecValTok{500}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## New names:
+## Rows: 500 Columns: 11
+## -- Column specification
+## -------------------------------------------------------- Delimiter: "," chr
+## (1): ...1 dbl (10): i, truth, cvtmle, cvtmle_se, cvtmle_lower, cvtmle_upper,
+## cvaiptw, ...
+## i Use `spec()` to retrieve the full column specification for this data. i
+## Specify the column types or set `show_col_types = FALSE` to quiet this message.
+## * `` -> `...1`
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{output\_filename }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(}\StringTok{\textquotesingle{}\textasciitilde{}/Repo/te\_vim/simu\_res/theta\_s/\textquotesingle{}}\NormalTok{,}\StringTok{"local\_"}\NormalTok{, }\DecValTok{2000}\NormalTok{, }\StringTok{"\_"}\NormalTok{, }\StringTok{\textquotesingle{}2022{-}10{-}02\textquotesingle{}}\NormalTok{,}\StringTok{\textquotesingle{}.csv\textquotesingle{}}\NormalTok{)}
+\NormalTok{res2 }\OtherTok{\textless{}{-}} \FunctionTok{read\_csv}\NormalTok{(output\_filename) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{mutate}\NormalTok{(}\AttributeTok{n =} \DecValTok{2000}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## New names:
+## Rows: 500 Columns: 11
+## -- Column specification
+## -------------------------------------------------------- Delimiter: "," chr
+## (1): ...1 dbl (10): i, truth, cvtmle, cvtmle_se, cvtmle_lower, cvtmle_upper,
+## cvaiptw, ...
+## i Use `spec()` to retrieve the full column specification for this data. i
+## Specify the column types or set `show_col_types = FALSE` to quiet this message.
+## * `` -> `...1`
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{output\_filename }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(}\StringTok{\textquotesingle{}\textasciitilde{}/Repo/te\_vim/simu\_res/theta\_s/\textquotesingle{}}\NormalTok{,}\StringTok{"local\_"}\NormalTok{, }\DecValTok{5000}\NormalTok{, }\StringTok{"\_"}\NormalTok{, }\StringTok{\textquotesingle{}2022{-}10{-}02\textquotesingle{}}\NormalTok{,}\StringTok{\textquotesingle{}.csv\textquotesingle{}}\NormalTok{)}
+\NormalTok{res3 }\OtherTok{\textless{}{-}} \FunctionTok{read\_csv}\NormalTok{(output\_filename) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{mutate}\NormalTok{(}\AttributeTok{n =} \DecValTok{5000}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## New names:
+## Rows: 500 Columns: 11
+## -- Column specification
+## -------------------------------------------------------- Delimiter: "," chr
+## (1): ...1 dbl (10): i, truth, cvtmle, cvtmle_se, cvtmle_lower, cvtmle_upper,
+## cvaiptw, ...
+## i Use `spec()` to retrieve the full column specification for this data. i
+## Specify the column types or set `show_col_types = FALSE` to quiet this message.
+## * `` -> `...1`
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{output\_filename }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(}\StringTok{\textquotesingle{}\textasciitilde{}/Repo/te\_vim/simu\_res/theta\_s/\textquotesingle{}}\NormalTok{,}\StringTok{"local\_"}\NormalTok{, }\DecValTok{7000}\NormalTok{, }\StringTok{"\_"}\NormalTok{, }\StringTok{\textquotesingle{}2022{-}10{-}03\textquotesingle{}}\NormalTok{,}\StringTok{\textquotesingle{}.csv\textquotesingle{}}\NormalTok{)}
+\NormalTok{res4 }\OtherTok{\textless{}{-}} \FunctionTok{read\_csv}\NormalTok{(output\_filename) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{mutate}\NormalTok{(}\AttributeTok{n =} \DecValTok{7000}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## New names:
+## Rows: 500 Columns: 11
+## -- Column specification
+## -------------------------------------------------------- Delimiter: "," chr
+## (1): ...1 dbl (10): i, truth, cvtmle, cvtmle_se, cvtmle_lower, cvtmle_upper,
+## cvaiptw, ...
+## i Use `spec()` to retrieve the full column specification for this data. i
+## Specify the column types or set `show_col_types = FALSE` to quiet this message.
+## * `` -> `...1`
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{output\_filename }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(}\StringTok{\textquotesingle{}\textasciitilde{}/Repo/te\_vim/simu\_res/theta\_s/\textquotesingle{}}\NormalTok{,}\StringTok{"local\_"}\NormalTok{, }\DecValTok{10000}\NormalTok{, }\StringTok{"\_"}\NormalTok{, }\StringTok{\textquotesingle{}2022{-}10{-}03\textquotesingle{}}\NormalTok{,}\StringTok{\textquotesingle{}.csv\textquotesingle{}}\NormalTok{)}
+\NormalTok{res5 }\OtherTok{\textless{}{-}} \FunctionTok{read\_csv}\NormalTok{(output\_filename) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{mutate}\NormalTok{(}\AttributeTok{n =} \DecValTok{10000}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## New names:
+## Rows: 500 Columns: 11
+## -- Column specification
+## -------------------------------------------------------- Delimiter: "," chr
+## (1): ...1 dbl (10): i, truth, cvtmle, cvtmle_se, cvtmle_lower, cvtmle_upper,
+## cvaiptw, ...
+## i Use `spec()` to retrieve the full column specification for this data. i
+## Specify the column types or set `show_col_types = FALSE` to quiet this message.
+## * `` -> `...1`
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{res }\OtherTok{\textless{}{-}} \FunctionTok{rbind}\NormalTok{(res1, res2, res3, res4, res5)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `summarise()` has grouped output by 'n'. You can override using the `.groups`
+## argument.
+\end{verbatim}
+
+\#wide to long
+
+\#merge
+
+\newpage
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{data\_long }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\FunctionTok{across}\NormalTok{(}\FunctionTok{where}\NormalTok{(is.numeric), }\SpecialCharTok{\textasciitilde{}} \FunctionTok{round}\NormalTok{(., }\DecValTok{3}\NormalTok{))) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{kable}\NormalTok{(}\StringTok{"latex"}\NormalTok{, }\AttributeTok{booktabs =}\NormalTok{ T, }\AttributeTok{caption =} \StringTok{"Performance of CV{-}TMLE and CV{-}EE for Theta"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{collapse\_rows}\NormalTok{(}\AttributeTok{columns =} \DecValTok{1}\NormalTok{, }\AttributeTok{latex\_hline =} \StringTok{"major"}\NormalTok{, }\AttributeTok{valign =} \StringTok{"middle"}\NormalTok{)}\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{kable\_styling}\NormalTok{(}\AttributeTok{latex\_options =} \StringTok{"scale\_down"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-6}Performance of CV-TMLE and CV-EE for Theta}
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}[t]{rlrrrrrrr}
+\toprule
+n & Method & True\_Theta & Variance & Bias & MSE & Coverage & Coverage\_or & CI\_width\\
+\midrule
+ & CV-TMLE & 0.686 & 0.027 & -0.132 & 0.044 & 0.758 & 0.866 & 0.568\\
+
+\multirow{-2}{*}{\raggedleft\arraybackslash 500} & CV-EE & 0.686 & 0.029 & -0.173 & 0.059 & 0.734 & 0.834 & 0.614\\
+\cmidrule{1-9}
+ & CV-TMLE & 0.686 & 0.007 & -0.051 & 0.009 & 0.830 & 0.890 & 0.295\\
+
+\multirow{-2}{*}{\raggedleft\arraybackslash 2000} & CV-EE & 0.686 & 0.006 & -0.059 & 0.010 & 0.840 & 0.882 & 0.301\\
+\cmidrule{1-9}
+ & CV-TMLE & 0.686 & 0.003 & -0.026 & 0.003 & 0.894 & 0.920 & 0.190\\
+
+\multirow{-2}{*}{\raggedleft\arraybackslash 5000} & CV-EE & 0.686 & 0.003 & -0.028 & 0.003 & 0.896 & 0.916 & 0.190\\
+\cmidrule{1-9}
+ & CV-TMLE & 0.686 & 0.002 & -0.020 & 0.002 & 0.888 & 0.920 & 0.161\\
+
+\multirow{-2}{*}{\raggedleft\arraybackslash 7000} & CV-EE & 0.686 & 0.002 & -0.020 & 0.002 & 0.888 & 0.916 & 0.161\\
+\cmidrule{1-9}
+ & CV-TMLE & 0.686 & 0.001 & -0.021 & 0.002 & 0.906 & 0.906 & 0.134\\
+
+\multirow{-2}{*}{\raggedleft\arraybackslash 10000} & CV-EE & 0.686 & 0.001 & -0.020 & 0.001 & 0.902 & 0.900 & 0.134\\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\end{document}

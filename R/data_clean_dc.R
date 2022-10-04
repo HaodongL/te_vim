@@ -1,13 +1,29 @@
-library(here); library(tidyverse); library(mice)
-# read in subject level covariate dataset
-W <- haven::read_sas("data/ADaM/adsl.sas7bdat")
+library(here)
+library(tidyverse)
+library(dplyr)
+library(mice)
 
 
+# read in subject level covariate dataset, tte, ttse and cm 
+df_w <- haven::read_sas("data/ADaM/adsl.sas7bdat")
+df_tte <- haven::read_sas("data/ADaM/adtte.sas7bdat")
+df_cm <- haven::read_sas("data/ADaM/adcm.sas7bdat")
+df_ttse <- haven::read_sas("data/ADaM/adttse.sas7bdat")
+df_hypo <- haven::read_sas("data/ADaM/adhypo.sas7bdat")
+df_adae <- haven::read_sas("data/ADaM/adae.sas7bdat")
+# df_adlb <- haven::read_sas("data/ADaM/adlb.sas7bdat")
 
-# 9341th subject in subject level dataset, not in the time-to-event dataset
-#   FASFL = N, so supposed to be taken out?
-W <- subset(W, subset = USUBJID != unique(W$USUBJID)[ # remove the subject who is not in the time-to-event dataset
-  which(!(unique(W$USUBJID) %in% unique(haven::read_sas("data/ADaM/adtte.sas7bdat")$USUBJID)))])
+# remove the subjects who are not in df_tte or df_cm
+unique_subid_w = unique(df_w$USUBJID)
+# 1 subject in subject level dataset, not in the time-to-event dataset
+out_subid_tte <- unique_subid_w[which(!(unique_subid_w %in% unique(df_tte$USUBJID)))]
+# 2 subjects in subject level dataset, not in the concomitant med dataset
+out_subid_cm <- unique_subid_w[which(!(unique_subid_w %in% unique(df_cm$USUBJID)))]
+out_subid <- union(out_subid_tte, out_subid_cm)
+
+W <- subset(df_w, !USUBJID %in% out_subid)
+
+
 
 # REMOVE UNITS, ID VARIABLES, AND POST-BASELINE VARIABLES
 W <- dplyr::select(W, -c(STUDYID, SUBJID, DIABDURU, WSTCRBLU,
@@ -79,9 +95,62 @@ W <- W %>% mutate(SMOKER = factor(SMOKER, ordered = T,
 
 
 
+
+# identify statin use and concomitant flag
+# temp <- adcm %>% group_by(SUBJID) %>% summarise(count_statin = sum(CMCLASCD == 'C10AA'))
+# unique(temp$count_statin)
+# temp <- adcm %>% filter(SUBJID == '15506', CMCLASCD == 'C10AA')
+
+CM <- df_cm %>% 
+  select(USUBJID, CMCLASCD, CONBLFL) %>% 
+  filter(CMCLASCD == 'C10AA') %>% 
+  group_by(USUBJID) %>% 
+  summarise(
+    statin_use = TRUE,
+    statin_cm = sum(CONBLFL == 'Y') > 0) 
+
+W <- left_join(W, CM, by = 'USUBJID') 
+
+W <- W %>% mutate(statin_use = ifelse(is.na(statin_use), FALSE, statin_use),
+                  statin_cm = ifelse(is.na(statin_cm), FALSE, statin_cm))
+
+
+# identify disease progression outcome
+
+Y_secondary <- df_ttse %>%
+  dplyr::select("USUBJID", 'PARAMCD', "AVAL", "PARCAT1") %>%
+  dplyr::filter(PARAMCD %in% c("FRINSLTM")) %>%
+  rename("EVENT" = "PARCAT1") 
+  # pivot_wider(id_cols = "USUBJID", names_from = "PARAMCD", values_from = c("AVAL", "EVENT")) %>%
+  # mutate_at(vars(starts_with("EVENT")),
+  #           ~as.numeric(. == "TIME TO EVENT"))
+
+# First time OAD
+
+
+df_OADTM <- read_csv("data/ADaM/FINAL1.csv")
+df_OADINSTM <- read_csv("data/ADaM/FINAL2.csv")
+
+# tmp <- df_cm %>% 
+#   filter(ASTRF %in% c("DURING","AFTER"), FASFL == "Y")
+# 
+# drop_sujid_oad <- tmp %>% 
+#   filter_at(vars(matches("CMCLASCD|DCL[0-9]*C")),
+#             any_vars(str_detect(., "A10BX"))) %>% 
+#   filter(CMDECOD == 'LIRAGLUTIDE') 
+# 
+# df_oad <- tmp %>% 
+#   filter_at(vars(matches("CMCLASCD|DCL[0-9]*C")),
+#             any_vars(str_detect(., "A10BA|A10BB|A10BC|A10BD|A10BF|
+#                                 A10BG|A10BH|A10BX09|A10BX11|A10BX12|A10BX"))) 
+
+  
+
+
+# 'OADTM' %in% unique(df_ttse$PARAMCD)
+
 # outcomes
-data_path <- ("data/ex2211-3748-3/Analysis Ready Datasets/SAS_analysis/")
-outcomes <- haven::read_sas("data/ADaM/adtte.sas7bdat") %>%
+Y <- df_tte %>%
   dplyr::select("USUBJID", 'PARAMCD', "AVAL", "PARCAT1") %>%
   dplyr::filter(PARAMCD %in% c("MACEEVTM", "MCECVDTM", "MACEMITM",
                                "MCENFSTM", "NONCVTM"# , "PRMACETM",
