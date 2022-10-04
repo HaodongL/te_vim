@@ -2,6 +2,8 @@ library(here); library(tidyverse); library(mice)
 # read in subject level covariate dataset
 W <- haven::read_sas("data/ADaM/adsl.sas7bdat")
 
+
+
 # 9341th subject in subject level dataset, not in the time-to-event dataset
 #   FASFL = N, so supposed to be taken out?
 W <- subset(W, subset = USUBJID != unique(W$USUBJID)[ # remove the subject who is not in the time-to-event dataset
