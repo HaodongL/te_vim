@@ -1,5 +1,5 @@
-.libPaths(c(.libPaths(), 
-            "~/Repo/Rlib_backup/library"))
+# .libPaths(c(.libPaths(), 
+#             "~/Repo/Rlib_backup/library"))
 
 require(tidyverse)
 repo_path = "/Users/haodongli/Repo/te_vim/"
@@ -36,7 +36,7 @@ ncore <- floor(cpus_logical/2)
 ###### run simu
 set.seed(1234)
 B <- 500 #rounds of simu
-N <- 1e4 #size of data
+N <- 2e3 #size of data
 
 registerDoParallel(5)
 bootstrap_results <- run_all_simu(B = B, N = N, truth = 0.686)
@@ -49,5 +49,19 @@ write.csv(bootstrap_results, output_filename)
 
 
 # local
-
-
+# res <- bootstrap_results %>% mutate(n = 5e2)
+# 
+# res <- res[-which(is.na(res$cvtmle)),]
+# 
+# temp <- bootstrap_results
+# 
+# 
+# covar = c('X2')
+# cv = TRUE
+# max.it = 2e3
+# Q_bounds = c(0.001, 0.999)
+# g_bounds = c(0.025, 0.975)
+# tau_bounds = c(-1+1e-3, 1-1e-3)
+# tau_s_bounds = c(-1+1e-3, 1-1e-3)
+# gamma_s_bounds = c(1e-6, 1-1e-6)
+# cate_option = "DR-Learner"

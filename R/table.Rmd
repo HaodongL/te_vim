@@ -37,6 +37,16 @@ res5 <- read_csv(output_filename) %>% mutate(n = 10000)
 res <- rbind(res1, res2, res3, res4, res5)
 ```
 
+```{r}
+output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_correct_", 500, "_", '2022-10-04','.csv')
+res1 <- read_csv(output_filename) %>% mutate(n = 500)
+
+output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_correct_", 1000, "_", '2022-10-04','.csv')
+res2 <- read_csv(output_filename) %>% mutate(n = 1000)
+
+res <- rbind(res1, res2)
+```
+
 ```{r, echo=FALSE}
 res$truth <- 0.685757
 table_results_data <- res %>%
@@ -97,7 +107,7 @@ data_long = cbind(data_long_coverage,
 setnames(data_long, old = c('n' ,'method','truth','var','bias','mse','coverage','oracle_coverage','CIwidth'), 
          new = c ('n',"Method",'True_Theta','Variance','Bias','MSE','Coverage','Coverage_or','CI_width'))
 
-data_long$Method = c(rep('CV-TMLE',5), rep('CV-EE',5))
+data_long$Method = c(rep('CV-TMLE',2), rep('CV-EE',2))
 data_long <- data_long %>% arrange(n)
 ```
 

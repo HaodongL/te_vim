@@ -2,27 +2,55 @@ library(sl3)
 
 # -- sl setup
 lrnr_lm <- Lrnr_glm$new()
+lrnr_mean <- Lrnr_mean$new()
+lrnr_lm_inter<- Lrnr_glm$new(formula = "~.^2")
 lrnr_lasso <- Lrnr_glmnet$new()
+lrnr_grf <- Lrnr_grf$new()
 lrnr_xgb <- Lrnr_xgboost$new()
-lrnr_gam <- Lrnr_gam$new()
+lrnr_gam_Q <- Lrnr_gam$new('Y ~ s(X1) + s(X2) + ti(X1,X2) + s(X1,by=A) + s(X2,by=A) + ti(X1,X2,by=A)')
+lrnr_gam_g <- Lrnr_gam$new('A ~ s(X1) + s(X2) + ti(X1,X2)')
+# lrnr_gam_tau <- Lrnr_gam$new('A ~ s(X1) + s(X2) + ti(X1,X2)')
+# lrnr_gam_tau_s <- Lrnr_gam$new('A ~ s(X1) + s(X2) + ti(X1,X2)')
+# lrnr_gam_gamma_s <- Lrnr_gam$new('A ~ s(X1) + s(X2) + ti(X1,X2)')
+# lrnr_gam <- Lrnr_gam$new()
+lrnr_polspline <- Lrnr_polspline$new()
 lrnr_earth <- Lrnr_earth$new()
 lrnr_ranger <- Lrnr_ranger$new()
+hal_faster <- Lrnr_hal9001$new()
 
 lrnr_stack <- make_learner("Stack",
                            lrnr_lm,
-                           lrnr_earth,
-                           lrnr_xgb)
+                           lrnr_earth)
+# hal_faster,
+# lrnr_earth,
+# lrnr_xgb)
 
+lrnr_stack_Q <- make_learner("Stack",
+                           lrnr_lm,
+                           lrnr_earth)
+                           # hal_faster,
+                           # lrnr_earth,
+                           # lrnr_xgb)
 
-ls_metalearner <- make_learner(Lrnr_nnls)
-lb_metalearner <- make_learner(Lrnr_solnp,
-                               learner_function = metalearner_logistic_binomial,
-                               loss_function = loss_loglik_binomial)
+lrnr_stack_g <- make_learner("Stack",
+                             lrnr_lm,
+                             lrnr_earth)
+# hal_faster,
+# lrnr_earth,
+# lrnr_xgb)
+
+# ls_metalearner <- make_learner(Lrnr_nnls)
+# lb_metalearner <- make_learner(Lrnr_solnp,
+#                                learner_function = metalearner_logistic_binomial,
+#                                loss_function = loss_loglik_binomial)
+ls_metalearner <- Lrnr_cv_selector$new(loss_squared_error)
+lb_metalearner <- Lrnr_cv_selector$new(loss_loglik_binomial)
 
 # -- sl modeling function
-fitSL <- function(df, Q_bounds = NULL, g_bounds = c(0.025, 0.975)){
+fitSL <- function(df, Q_bounds = NULL, g_bounds = c(0.025, 0.975), cv = TRUE){
   
   folds <- origami::make_folds(strata_ids = df$A)
+  # folds <- origami::folds_vfold(nrow(df))
   
   # setup sl3
   task_Q <- sl3::make_sl3_Task(
@@ -40,13 +68,12 @@ fitSL <- function(df, Q_bounds = NULL, g_bounds = c(0.025, 0.975)){
   )
   
   sl_Q <- Lrnr_sl$new(
-    learners = lrnr_stack,
-    metalearner = ls_metalearner,
-    outcome_type = 'continuous'
+    learners = lrnr_stack_Q,
+    metalearner = ls_metalearner
   )
   
   sl_g <- Lrnr_sl$new(
-    learners = lrnr_stack,
+    learners = lrnr_stack_g,
     metalearner = lb_metalearner,
     outcome_type = 'binomial'
   )
@@ -56,19 +83,21 @@ fitSL <- function(df, Q_bounds = NULL, g_bounds = c(0.025, 0.975)){
   g_fit <- sl_g$train(task_g)
   
   # preds Q and g
-  task_Q_pred <- sl3::make_sl3_Task(
-    data = df,
-    covariates = setdiff(names(df), c('Y')),
-    outcome = 'Y',
-    folds = folds
-  )
-  # pred_Q <- Q_fit$predict(task_Q_pred)
-  pred_Q <- Q_fit$predict_fold(task_Q_pred, "validation")
-  pred_Q_cf <- pred_Q_cf(df = df, Q_fit = Q_fit, folds = folds)
+  # task_Q_pred <- sl3::make_sl3_Task(
+  #   data = df,
+  #   covariates = setdiff(names(df), c('Y')),
+  #   outcome = 'Y',
+  #   folds = folds
+  # )
+  # pred_Q <- Q_fit$predict_fold(task_Q, "validation")
   
-  QbarAW <- pred_Q
+  # pred_Q <- Q_fit$predict()
+  pred_Q_cf <- pred_Q_cf(df = df, Q_fit = Q_fit, folds = folds, cv = cv)
+  
+  # QbarAW <- pred_Q
   Qbar1W <- pred_Q_cf$Qbar1W
   Qbar0W <- pred_Q_cf$Qbar0W
+  QbarAW <- ifelse(df$A == 1, Qbar1W, Qbar0W)
   
   # bound Q (is there a better way???)
   if (!is.null(Q_bounds)){
@@ -77,13 +106,18 @@ fitSL <- function(df, Q_bounds = NULL, g_bounds = c(0.025, 0.975)){
     Qbar0W <- bound(Qbar0W, Q_bounds)
   }
   
-  task_g_pred <- sl3::make_sl3_Task(
-    data = df,
-    covariates = setdiff(names(df), c('Y', 'A')),
-    outcome = 'A',
-    folds = folds
-  )
-  pred_g <- g_fit$predict_fold(task_g_pred, "validation")
+  # task_g_pred <- sl3::make_sl3_Task(
+  #   data = df,
+  #   covariates = setdiff(names(df), c('Y', 'A')),
+  #   outcome = 'A',
+  #   folds = folds
+  # )
+  
+  if (cv){
+    pred_g <- g_fit$predict_fold(task_g, "validation")
+  }else{
+    pred_g <- g_fit$predict()
+  }
   
   # bound g
   pred_g <- bound(pred_g, g_bounds)
@@ -109,7 +143,7 @@ fitSL <- function(df, Q_bounds = NULL, g_bounds = c(0.025, 0.975)){
 
 
 # helper function to predict Qbar1W and Qbar0W
-pred_Q_cf <- function(df, Q_fit, folds){
+pred_Q_cf <- function(df, Q_fit, folds, cv){
   
   # cf data
   df1 <- df
@@ -133,8 +167,13 @@ pred_Q_cf <- function(df, Q_fit, folds){
   )
   
   # cf Q
-  Qbar1W <- Q_fit$predict_fold(Q_task1,"validation")
-  Qbar0W <- Q_fit$predict_fold(Q_task0,"validation")
+  if (cv){
+    Qbar1W <- Q_fit$predict_fold(Q_task1, "validation")
+    Qbar0W <- Q_fit$predict_fold(Q_task0, "validation")
+  }else{
+    Qbar1W <- Q_fit$predict(Q_task1)
+    Qbar0W <- Q_fit$predict(Q_task0)
+  }
   
   return(list('Qbar1W' = Qbar1W,
               'Qbar0W' = Qbar0W))

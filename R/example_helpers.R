@@ -24,20 +24,31 @@ generate_data_simple <- function(N, print_truth = FALSE){
 }
 
 
-# fitMods <- function(df,df_train=df,outcome_family = gaussian()){
-#   #Here we use a gam model as an example
-#   #Generally one could use any fitting procedure of interest
-#   mod.ps <- gam(A~s(X1)+s(X2)+ti(X1,X2),
-#                 family = binomial(),data=df_train) 
-#   mod.m <- gam(Y~s(X1) + s(X2) + ti(X1,X2)+s(X1,by=A) + s(X2,by=A) + ti(X1,X2,by=A),
-#                family = outcome_family,data=df_train)
-#   tibble(
-#     Y = df$Y, A=df$A,
-#     pi_hat  = predict(mod.ps,df,type="response"),
-#     mu1_hat = predict(mod.m,mutate(df,A=1),type="response"),
-#     mu0_hat = predict(mod.m,mutate(df,A=0),type="response")
-#   )%>% return()
-# }
+fitMods <- function(df,df_train=df,outcome_family = gaussian(), Q_bounds = NULL){
+  #Here we use a gam model as an example
+  #Generally one could use any fitting procedure of interest
+  mod.ps <- gam(A~s(X1)+s(X2)+ti(X1,X2),
+                family = binomial(),data=df_train)
+  mod.m <- gam(Y~s(X1) + s(X2) + ti(X1,X2)+s(X1,by=A) + s(X2,by=A) + ti(X1,X2,by=A),
+               family = outcome_family,data=df_train)
+  
+  mu1_hat = predict(mod.m,mutate(df,A=1),type="response")
+  mu0_hat = predict(mod.m,mutate(df,A=0),type="response")
+  mua_hat = ifelse(df$A == 1, mu1_hat, mu0_hat)
+  if (!is.null(Q_bounds)){
+    mua_hat <- bound(mua_hat, Q_bounds)
+    mu1_hat <- bound(mu1_hat, Q_bounds)
+    mu0_hat <- bound(mu0_hat, Q_bounds)
+  }
+  
+  tibble(
+    Y = df$Y, A=df$A,
+    pi_hat  = predict(mod.ps,df,type="response"),
+    mu1_hat = mu1_hat,
+    mu0_hat = mu0_hat,
+    mua_hat = mua_hat
+  )%>% return()
+}
 # 
 # 
 # crossFit <- function(df,foldIDs,Nfolds=max(foldIDs)){

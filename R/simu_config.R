@@ -18,8 +18,20 @@ run_all_simu <- function(B, N, truth, covar = c('X2'), max.it = 2e3){
     results_df_row$truth <- truth
     
     df <- generate_data_simple(N)
-    res_ee <- run_EE_VIM(df, covar)
-    res_tmle <- run_TMLE_VIM(df, covar, max.it)
+    # res_ee <- run_EE_VIM(df, covar)
+    # res_tmle <- run_TMLE_VIM(df, covar, max.it)
+    res <- run_ALL_VIM(df = df, 
+                       covar = covar, 
+                       cv = TRUE,
+                       max.it = max.it, 
+                       Q_bounds = c(0.001, 0.999), 
+                       g_bounds = c(0.025, 0.975),
+                       tau_bounds = c(-1+1e-3, 1-1e-3),
+                       tau_s_bounds = c(-1+1e-3, 1-1e-3),
+                       gamma_s_bounds = c(1e-6, 1-1e-6),
+                       cate_option = "DR-Learner")
+    res_ee <- res$resEE
+    res_tmle <- res$resTMLE
     
     # CVTMLE 
     results_df_row$cvtmle <- res_tmle$coef
