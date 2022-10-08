@@ -21,7 +21,7 @@ library(readr)
 ```{r}
 read_hp <- function(filename, 
                     savedate, 
-                    Ns = c(500, 1e3, 2e3, 3e3, 4e3, 5e3)){
+                    Ns = c(500, 1e3, 2e3, 3e3, 4e3, 5e3, 1e4)){
   res <- data.frame()
   for (N in Ns){
     output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',filename, N, "_", savedate,'.csv')
@@ -35,8 +35,10 @@ read_hp <- function(filename,
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # res <- read_hp(filename = 'local_earth_nocv_', savedate = '2022-10-06')
 res <- read_hp(filename = 'temp/local_earth_nocv_', savedate = '2022-10-07')
-# output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/temp/','local_earth_', N, "_", '2022-10-07','.csv')
-# res <- read_csv(output_filename) %>% mutate(n = 5e3)
+# res <- read_hp(filename = 'local_gam_nocv_', savedate = '2022-10-07')
+
+# output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/','local_gam_', 2e4, "_", '2022-10-07','.csv')
+# res <- read_csv(output_filename) %>% mutate(n = 2e4)
 ```
 
 
