@@ -1,4 +1,4 @@
-run_all_simu <- function(B, N, truth, cv = TRUE, dr = TRUE, lfm_linear = FALSE, ws = c('X2'), max.it = 1e3){
+run_all_simu <- function(B, N, truth, cv = TRUE, dr = TRUE, ws = c('X2'), max.it = 1e3){
   results_cols <- c('i', 'truth', 'cvtmle', 'cvtmle_se',
                     'cvtmle_lower', 'cvtmle_upper', 
                     'cvaiptw', 'cvaiptw_se', 'cvaiptw_lower', 
@@ -10,7 +10,6 @@ run_all_simu <- function(B, N, truth, cv = TRUE, dr = TRUE, lfm_linear = FALSE, 
   run_bootstrap <- foreach(b = 1:B, .combine = 'rbind') %dopar% {
     
     print(paste0("may the power be with you! ", b))
-    set.seed(1234 + b)
     
     results_df_row <- data.frame(matrix(NA, nrow = 1, ncol = length(results_cols)))
     colnames(results_df_row) <- results_cols
@@ -28,14 +27,12 @@ run_all_simu <- function(B, N, truth, cv = TRUE, dr = TRUE, lfm_linear = FALSE, 
                          ws = ws, 
                          cv = cv,
                          dr = dr,
-                         lfm_linear = lfm_linear,
                          max.it = max.it, 
                          Q_bounds = c(0.001, 0.999), 
                          g_bounds = c(0.025, 0.975),
                          tau_bounds = c(-1+1e-3, 1-1e-3),
                          tau_s_bounds = c(-1+1e-3, 1-1e-3),
-                         gamma_s_bounds = c(1e-6, 1-1e-6)
-                         )
+                         gamma_s_bounds = c(1e-6, 1-1e-6))
     res_ee <- res$resEE
     res_tmle <- res$resTMLE
     

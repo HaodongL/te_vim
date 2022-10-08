@@ -2,22 +2,33 @@
 # Parameter: \Theta_s
 
 # Estimator: EE
-# run_EE_VIM <- function(df, ws){
-#   # fit Q, g
-#   df_fit_sl <- fitSL(df)
-#   # df_fit_sl <- fitMods(df)
-#   # fit tau, tau_s, gamma_s
-#   df_fit_sl <- fit_tau(df, df_fit_sl, option = "T-Learner")
-#   df_fit_sl <- fit_tau_s(df, df_fit_sl, ws = ws)
-#   # tmle_vim
-#   res <- EE_VIM(df_fit_sl)
-#   return(res)
-# }
+run_EE_VIM <- function(df, ws){
+  # fit Q, g
+  df_fit_sl <- fitSL(df)
+  # df_fit_sl <- fitMods(df)
+  # fit tau, tau_s, gamma_s
+  df_fit_sl <- fit_tau(df, df_fit_sl, option = "T-Learner")
+  df_fit_sl <- fit_tau_s(df, df_fit_sl, ws = ws)
+  # tmle_vim
+  res <- EE_VIM(df_fit_sl)
+  return(res)
+}
 
 EE_VIM <- function(data){
   N <- NROW(data)
-  po <- data$po
-  tau <- data$tau
+  
+  if("tau" %in% names(data)) {
+    tau <- data$tau
+  } else{
+    tau <- with(data,mu1_hat - mu0_hat)  
+  }
+  
+  if("po" %in% names(data)) {
+    po <- data$po
+  } else{
+    po <- with(data,(Y-mu0_hat-A*(mu1_hat - mu0_hat))*(A-pi_hat)/(pi_hat*(1-pi_hat))+ mu1_hat - mu0_hat)
+  }
+  
   tau_s <- data$tau_s
   
   ATE <- sum(po)/N
@@ -42,22 +53,22 @@ EE_VIM <- function(data){
 }
 
 # Estimator: TMLE
-# run_TMLE_VIM <- function(df, ws, max.it=600, Q_bounds = c(0.001, 0.999), g_bounds = c(0.025, 0.975)){
-#   # transform Y into [0,1]
-#   y_l <- min(df$Y)
-#   y_u <- max(df$Y)
-#   df$Y <- scale01(df$Y, y_l, y_u)
-#   # fit Q, g
-#   df_fit_sl <- fitSL(df, Q_bounds, g_bounds)
-#   # df_fit_sl <- fitMods(df = df, Q_bounds = Q_bounds)
-#   # fit tau, tau_s, gamma_s
-#   df_fit_sl <- fit_tau(df, df_fit_sl, option = "T-Learner")
-#   df_fit_sl <- fit_tau_s(df, df_fit_sl, ws = ws)
-#   df_fit_sl <- fit_gamma_s(df, df_fit_sl, ws = ws)
-#   # tmle_vim
-#   res <- TMLE_VIM(df_fit_sl, y_l, y_u, max.it)
-#   return(res)
-# }
+run_TMLE_VIM <- function(df, ws, max.it=600, Q_bounds = c(0.001, 0.999), g_bounds = c(0.025, 0.975)){
+  # transform Y into [0,1]
+  y_l <- min(df$Y)
+  y_u <- max(df$Y)
+  df$Y <- scale01(df$Y, y_l, y_u)
+  # fit Q, g
+  df_fit_sl <- fitSL(df, Q_bounds, g_bounds)
+  # df_fit_sl <- fitMods(df = df, Q_bounds = Q_bounds)
+  # fit tau, tau_s, gamma_s
+  df_fit_sl <- fit_tau(df, df_fit_sl, option = "T-Learner")
+  df_fit_sl <- fit_tau_s(df, df_fit_sl, ws = ws)
+  df_fit_sl <- fit_gamma_s(df, df_fit_sl, ws = ws)
+  # tmle_vim
+  res <- TMLE_VIM(df_fit_sl, y_l, y_u, max.it)
+  return(res)
+}
 
 TMLE_VIM <- function(data, y_l, y_u, max.it=600){
   N <- NROW(data)
@@ -183,97 +194,44 @@ TMLE_VIM <- function(data, y_l, y_u, max.it=600){
 
 
 # Estimator: TMLE and EE
-run_VIM_Theta <- function(df, 
-                          sl_Q, 
-                          sl_g,
-                          sl_x,
-                          ws, 
-                          cv = TRUE,
-                          dr = TRUE,
-                          lfm_linear = FALSE,
-                          max.it=600, 
-                          Q_bounds = c(0.001, 0.999), 
-                          g_bounds = c(0.025, 0.975),
-                          tau_bounds = c(-1+1e-3, 1-1e-3),
-                          tau_s_bounds = c(-1+1e-3, 1-1e-3),
-                          gamma_s_bounds = c(1e-6, 1-1e-6)){
+run_ALL_VIM <- function(df, 
+                        ws, 
+                        cv = TRUE,
+                        max.it=600, 
+                        Q_bounds = c(0.001, 0.999), 
+                        g_bounds = c(0.025, 0.975),
+                        tau_bounds = c(-1+1e-3, 1-1e-3),
+                        tau_s_bounds = c(-1+1e-3, 1-1e-3),
+                        gamma_s_bounds = c(1e-6, 1-1e-6),
+                        dr = TRUE){
   # transform Y into [0,1]
   y_l <- min(df$Y)
   y_u <- max(df$Y)
   df$Y <- scale01(df$Y, y_l, y_u)
   
   # fit Q, g
+  df_fit_sl <- fitSL(df, Q_bounds, g_bounds, cv)
+  # df_fit_sl <- fitMods(df = df, Q_bounds = Q_bounds)
+  
   # fit tau, tau_s, gamma_s
-  if (cv){
-    fit_func <- fit_cvpara
-  }else{
-    fit_func <- fit_para
-  }
-  df_fit <- fit_func(df = df,
-                     sl_Q = sl_Q, 
-                     sl_g = sl_g,
-                     sl_x = sl_x,
-                     ws = ws,
-                     dr = dr,
-                     Q_bounds = Q_bounds,
-                     g_bounds = g_bounds,
-                     tau_bounds = tau_bounds,
-                     tau_s_bounds = tau_s_bounds,
-                     gamma_s_bounds = gamma_s_bounds)
+  df_fit_sl <- fit_tau(df, df_fit_sl, tau_bounds, dr, cv)
+  df_fit_sl <- fit_tau_s(df, df_fit_sl, tau_s_bounds, dr, cv, ws)
+  df_fit_sl <- fit_gamma_s(df, df_fit_sl, gamma_s_bounds, dr, cv, ws)
   
   # tmle_vim
-  resTMLE <- TMLE_VIM(df_fit, y_l, y_u, max.it)
+  resTMLE <- TMLE_VIM(df_fit_sl, y_l, y_u, max.it)
   
   # ee_vim
-  df_fit$Y <- rescale(df_fit$Y, y_l, y_u)
-  df_fit$tau <- df_fit$tau*(y_u - y_l)
-  df_fit$tau_s <- df_fit$tau_s*(y_u - y_l)
-  df_fit$po <- df_fit$po*(y_u - y_l)
-  resEE <- EE_VIM(df_fit)
+  df_fit_sl$Y <- rescale(df_fit_sl$Y, y_l, y_u)
+  df_fit_sl$tau <- df_fit_sl$tau*(y_u - y_l)
+  df_fit_sl$tau_s <- df_fit_sl$tau_s*(y_u - y_l)
+  df_fit_sl$po <- df_fit_sl$po*(y_u - y_l)
+  resEE <- EE_VIM(df_fit_sl)
   
   res <- list('resTMLE' = resTMLE, 
               'resEE' = resEE)
   return(res)
 }
-
-# run_ALL_VIM <- function(df, 
-#                         ws, 
-#                         cv = TRUE,
-#                         max.it=600, 
-#                         Q_bounds = c(0.001, 0.999), 
-#                         g_bounds = c(0.025, 0.975),
-#                         tau_bounds = c(-1+1e-3, 1-1e-3),
-#                         tau_s_bounds = c(-1+1e-3, 1-1e-3),
-#                         gamma_s_bounds = c(1e-6, 1-1e-6),
-#                         dr = TRUE){
-#   # transform Y into [0,1]
-#   y_l <- min(df$Y)
-#   y_u <- max(df$Y)
-#   df$Y <- scale01(df$Y, y_l, y_u)
-#   
-#   # fit Q, g
-#   df_fit_sl <- fitSL(df, Q_bounds, g_bounds, cv)
-#   # df_fit_sl <- fitMods(df = df, Q_bounds = Q_bounds)
-#   
-#   # fit tau, tau_s, gamma_s
-#   df_fit_sl <- fit_tau(df, df_fit_sl, tau_bounds, dr, cv)
-#   df_fit_sl <- fit_tau_s(df, df_fit_sl, tau_s_bounds, dr, cv, ws)
-#   df_fit_sl <- fit_gamma_s(df, df_fit_sl, gamma_s_bounds, dr, cv, ws)
-#   
-#   # tmle_vim
-#   resTMLE <- TMLE_VIM(df_fit_sl, y_l, y_u, max.it)
-#   
-#   # ee_vim
-#   df_fit_sl$Y <- rescale(df_fit_sl$Y, y_l, y_u)
-#   df_fit_sl$tau <- df_fit_sl$tau*(y_u - y_l)
-#   df_fit_sl$tau_s <- df_fit_sl$tau_s*(y_u - y_l)
-#   df_fit_sl$po <- df_fit_sl$po*(y_u - y_l)
-#   resEE <- EE_VIM(df_fit_sl)
-#   
-#   res <- list('resTMLE' = resTMLE, 
-#               'resEE' = resEE)
-#   return(res)
-# }
 
 # helper function
 scale01 <- function(x, x_l, x_u){

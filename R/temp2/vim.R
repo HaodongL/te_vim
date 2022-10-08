@@ -184,13 +184,9 @@ TMLE_VIM <- function(data, y_l, y_u, max.it=600){
 
 # Estimator: TMLE and EE
 run_VIM_Theta <- function(df, 
-                          sl_Q, 
-                          sl_g,
-                          sl_x,
                           ws, 
                           cv = TRUE,
                           dr = TRUE,
-                          lfm_linear = FALSE,
                           max.it=600, 
                           Q_bounds = c(0.001, 0.999), 
                           g_bounds = c(0.025, 0.975),
@@ -210,9 +206,6 @@ run_VIM_Theta <- function(df,
     fit_func <- fit_para
   }
   df_fit <- fit_func(df = df,
-                     sl_Q = sl_Q, 
-                     sl_g = sl_g,
-                     sl_x = sl_x,
                      ws = ws,
                      dr = dr,
                      Q_bounds = Q_bounds,

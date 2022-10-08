@@ -19,36 +19,29 @@ library(readr)
 ```
 
 ```{r}
-output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_", 500, "_", '2022-10-02','.csv')
-res1 <- read_csv(output_filename) %>% mutate(n = 500)
-
-output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_", 2000, "_", '2022-10-02','.csv')
-res2 <- read_csv(output_filename) %>% mutate(n = 2000)
-
-output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_", 5000, "_", '2022-10-02','.csv')
-res3 <- read_csv(output_filename) %>% mutate(n = 5000)
-
-output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_", 7000, "_", '2022-10-03','.csv')
-res4 <- read_csv(output_filename) %>% mutate(n = 7000)
-
-output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_", 10000, "_", '2022-10-03','.csv')
-res5 <- read_csv(output_filename) %>% mutate(n = 10000)
-
-res <- rbind(res1, res2, res3, res4, res5)
+read_hp <- function(filename, 
+                    savedate, 
+                    Ns = c(500, 1e3, 2e3, 3e3, 4e3, 5e3)){
+  res <- data.frame()
+  for (N in Ns){
+    output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',filename, N, "_", savedate,'.csv')
+    res1 <- read_csv(output_filename) %>% mutate(n = N)
+    res <- rbind(res, res1)
+  }
+  return(res)
+}
 ```
 
-```{r}
-output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_correct_", 500, "_", '2022-10-04','.csv')
-res1 <- read_csv(output_filename) %>% mutate(n = 500)
-
-output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_correct_", 1000, "_", '2022-10-04','.csv')
-res2 <- read_csv(output_filename) %>% mutate(n = 1000)
-
-res <- rbind(res1, res2)
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# res <- read_hp(filename = 'local_earth_nocv_', savedate = '2022-10-06')
+res <- read_hp(filename = 'temp/local_earth_nocv_', savedate = '2022-10-07')
+# output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/temp/','local_earth_', N, "_", '2022-10-07','.csv')
+# res <- read_csv(output_filename) %>% mutate(n = 5e3)
 ```
 
-```{r, echo=FALSE}
-res$truth <- 0.685757
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
 table_results_data <- res %>%
   dplyr::mutate(cvtmle_proportion = truth <= cvtmle_upper & truth >= cvtmle_lower,
                 cvaiptw_proportion = truth <= cvaiptw_upper & truth >= cvaiptw_lower,
