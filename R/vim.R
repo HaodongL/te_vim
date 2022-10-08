@@ -1,6 +1,32 @@
 
 # Parameter: \Theta_s
 
+# Estimator: SS
+SS_VIM <- function(data){
+  N <- NROW(data)
+  A <- data$A
+  Y <- data$Y
+  
+  # Q, g, tau, tau_s, gamma_s
+  QA_0 <- data$mua_hat
+  Q1_0 <- data$mu1_hat
+  Q0_0 <- data$mu0_hat
+  gn <- data$pi_hat
+  
+  tau_0 <- data$tau
+  tau_s_0 <- data$tau_s
+  gamma_s_0 <- data$gamma_s
+  
+  # theta_s_hat <- mean(gamma_s_0 - tau_s_0^2)
+  theta_s_hat <- mean((tau_0 - tau_s_0)^2)
+  
+  out<- list(
+    coef = theta_s_hat
+  )
+  return(out)
+}
+
+
 # Estimator: EE
 # run_EE_VIM <- function(df, ws){
 #   # fit Q, g
@@ -231,8 +257,11 @@ run_VIM_Theta <- function(df,
   df_fit$po <- df_fit$po*(y_u - y_l)
   resEE <- EE_VIM(df_fit)
   
+  df_fit$gamma_s <- df_fit$gamma_s*(y_u - y_l)^2
+  resSS <- SS_VIM(df_fit)
   res <- list('resTMLE' = resTMLE, 
-              'resEE' = resEE)
+              'resEE' = resEE,
+              'resSS' = resSS)
   return(res)
 }
 

@@ -75,6 +75,42 @@ table_results_data <- res %>%
   ) %>%  ungroup()
 ```
 
+```{r}
+# ss
+table_results_data <- res %>%
+  dplyr::mutate(cvtmle_proportion = truth <= cvtmle_upper & truth >= cvtmle_lower,
+                cvaiptw_proportion = truth <= cvaiptw_upper & truth >= cvaiptw_lower,
+                
+                cvtmle_widthCI = cvtmle_upper-cvtmle_lower,
+                cvaiptw_widthCI = cvaiptw_upper-cvaiptw_lower,
+  ) %>%
+  dplyr::group_by(n, truth) %>%
+  summarize(cvtmle_coverage = mean(cvtmle_proportion),
+            cvaiptw_coverage = mean(cvaiptw_proportion),
+            
+            ss_bias = mean(ss) - mean(truth),
+            cvtmle_bias = mean(cvtmle) - mean(truth),
+            cvaiptw_bias = mean(cvaiptw) - mean(truth),
+
+            ss_var = var(ss),
+            cvtmle_var = var(cvtmle),
+            cvaiptw_var = var(cvaiptw),
+
+            ss_mse = ss_bias^2 + var(ss),
+            cvtmle_mse = cvtmle_bias^2 + var(cvtmle),
+            cvaiptw_mse = cvaiptw_bias^2 + var(cvaiptw),
+            
+            
+            # 2020-02-01 coverage of oracle CI
+            cvtmle_oracle = mean(truth <= cvtmle + 1.96*sd(cvtmle) & truth >= cvtmle - 1.96*sd(cvtmle)),
+            cvaiptw_oracle = mean(truth <= cvaiptw + 1.96*sd(cvaiptw) & truth >= cvaiptw - 1.96*sd(cvaiptw)),
+
+            cvtmle_meanwidthCI = mean(cvtmle_widthCI),
+            cvaiptw_meanwidthCI = mean(cvaiptw_widthCI)
+
+  ) %>%  ungroup()
+```
+
 #wide to long
 ```{r, echo=FALSE}
 data_long_coverage <- gather(table_results_data, method, coverage, cvtmle_coverage:cvaiptw_coverage, factor_key=TRUE) %>%select(c(n, truth, method, coverage))

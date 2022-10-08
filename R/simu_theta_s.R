@@ -54,7 +54,7 @@ ncore <- floor(cpus_logical/2)
 
 set.seed(1234)
 B <- 500 #rounds of simu
-N <- 1e4 #size of data
+N <- 5e2 #size of data
 
 registerDoParallel(5)
 tic()

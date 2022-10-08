@@ -2,7 +2,7 @@ run_all_simu <- function(B, N, truth, cv = TRUE, dr = TRUE, lfm_linear = FALSE, 
   results_cols <- c('i', 'truth', 'cvtmle', 'cvtmle_se',
                     'cvtmle_lower', 'cvtmle_upper', 
                     'cvaiptw', 'cvaiptw_se', 'cvaiptw_lower', 
-                    'cvaiptw_upper')
+                    'cvaiptw_upper', 'ss')
   
   results_df <- data.frame(matrix(NA, nrow = B, ncol = length(results_cols)))
   colnames(results_df) <- results_cols
@@ -38,6 +38,10 @@ run_all_simu <- function(B, N, truth, cv = TRUE, dr = TRUE, lfm_linear = FALSE, 
                          )
     res_ee <- res$resEE
     res_tmle <- res$resTMLE
+    res_ss <- res$resSS
+    
+    # SS
+    results_df_row$ss <- res_ss$coef
     
     # CVTMLE 
     results_df_row$cvtmle <- res_tmle$coef
@@ -63,7 +67,8 @@ run_all_simu <- function(B, N, truth, cv = TRUE, dr = TRUE, lfm_linear = FALSE, 
                      'cvaiptw' = results_df_row$cvaiptw , 
                      'cvaiptw_se' = results_df_row$cvaiptw_se, 
                      'cvaiptw_lower' = results_df_row$cvaiptw_lower, 
-                     'cvaiptw_upper' = results_df_row$cvaiptw_upper)
+                     'cvaiptw_upper' = results_df_row$cvaiptw_upper,
+                     'ss' = results_df_row$ss)
     
     return(return_list)
   }
