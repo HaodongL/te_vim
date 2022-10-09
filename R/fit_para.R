@@ -323,35 +323,6 @@ fit_x <- function(df, sl_x, po = NULL, tau = NULL, outcome = 'po', para = 'tau',
   return(fit)
 }
 
-fit_gamma <- function(df, sl_x = sl_gamma, po = NULL, tau = NULL, outcome = 'po', para = 'tau', ws = NULL){
-  assertthat::assert_that(outcome %in% c('po', 'tau'))
-  assertthat::assert_that(para %in% c('tau', 'tau_s', 'gamma_s'))
-  if (outcome == 'po'){
-    assertthat::assert_that(!is.null(po))
-    if (para == 'gamma_s'){
-      po <- po^2
-    }
-    df_train <- cbind(df, po)
-  }else{
-    if (para == 'gamma_s'){
-      tau <- tau^2
-    }
-    df_train <- cbind(df, tau)
-  }
-  
-  folds <- origami::folds_vfold(nrow(df))
-  
-  # setup sl3
-  task <- sl3::make_sl3_Task(
-    data = df_train,
-    covariates = setdiff(names(df_train), c('Y', 'A', outcome, ws)),
-    outcome = outcome,
-    folds = folds
-  )
-  
-  fit <- sl_x$train(task)
-  return(fit)
-}
 
 bound <- function(x, bounds) {
   lower <- bounds[[1]]

@@ -54,15 +54,15 @@ ncore <- floor(cpus_logical/2)
 
 set.seed(1234)
 B <- 500 #rounds of simu
-N <- 5e2 #size of data
+N <- 2e4 #size of data
 
 registerDoParallel(5)
 tic()
-bootstrap_results <- run_all_simu(B = B, N = N, cv = FALSE, dr = TRUE, max.it = 1e3, truth = 0.686)
+bootstrap_results <- run_all_simu(B = B, N = N, cv = TRUE, dr = TRUE, max.it = 1e3, truth = 0.686)
 toc()
 
 
-output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_earth_nocv_", N, "_", Sys.Date(),'.csv')
+output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_earth_", N, "_", Sys.Date(),'.csv')
 write.csv(bootstrap_results, output_filename)
 
 

@@ -55,7 +55,7 @@ lb_metalearner <- Lrnr_cv_selector$new(loss_loglik_binomial)
 sl_Q <- lrnr_earth
 sl_g <- lrnr_earth
 sl_x <- lrnr_earth
-sl_gamma <- 
+
 # # -- sl modeling function
 # fitSL <- function(df, Q_bounds = NULL, g_bounds = c(0.025, 0.975), cv = TRUE){
 #   
