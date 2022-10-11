@@ -52,8 +52,8 @@ lb_metalearner <- Lrnr_cv_selector$new(loss_loglik_binomial)
 #   metalearner = ls_metalearner
 # )
 
-sl_Q <- lrnr_earth
-sl_g <- lrnr_earth
+sl_Q <- lrnr_gam_Q
+sl_g <- lrnr_gam_g
 sl_x <- lrnr_earth
 
 # # -- sl modeling function
