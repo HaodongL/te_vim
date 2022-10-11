@@ -144,7 +144,7 @@ For EE, $g_n$ $\in$ $[0.025, 0.975]$
 
 
 
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", fig.pos="H"}
 # meta table
 df_meta <- data.frame(Table_ID = c('Table 2', 'Table 3', 'Table 4', 'Table 5', 
                                    'Table 6', 'Table 7', 'Table 8', 'Table 9'),
@@ -163,9 +163,7 @@ df_meta %>%
 ```
 
 
-
-\newpage
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", fig.pos="H"}
 # Table, gam nocv, DR
 res <- read_hp(filename = 'local_gam_nocv_', savedate = '2022-10-07')
 data_long <- proc_df_tbl(res, N_len = 8)
@@ -177,7 +175,7 @@ data_long %>%
   kable_styling(latex_options = "scale_down")
 ```
 
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", fig.pos="H"}
 # Table, gam nocv, T
 res <- read_hp(filename = 'local_gam_t_nocv_', savedate = '2022-10-10')
 data_long <- proc_df_tbl(res, N_len = 8)
@@ -189,9 +187,7 @@ data_long %>%
   kable_styling(latex_options = "scale_down")
 ```
 
-\newpage
-
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", fig.pos="H"}
 # Table, earth nocv DR
 res <- read_hp(filename = 'temp/local_earth_nocv_', savedate = '2022-10-07')
 data_long <- proc_df_tbl(res, N_len = 8)
@@ -204,7 +200,7 @@ data_long %>%
 ```
 
 
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", fig.pos="H"}
 # Table, earth nocv
 res <- read_hp(filename = 'local_earth_t_nocv_', savedate = '2022-10-10')
 data_long <- proc_df_tbl(res, N_len = 8)
@@ -216,9 +212,7 @@ data_long %>%
   kable_styling(latex_options = "scale_down")
 ```
 
-\newpage
-
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", fig.pos="H"}
 # Table, gam cv
 res <- read_hp(filename = 'local_gam_', savedate = '2022-10-07')
 data_long <- proc_df_tbl(res, N_len = 8)
@@ -230,7 +224,7 @@ data_long %>%
   kable_styling(latex_options = "scale_down")
 ```
 
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", fig.pos="H"}
 # Table, gam T
 res <- read_hp(filename = 'local_gam_t_', savedate = '2022-10-10')
 data_long <- proc_df_tbl(res, N_len = 8)
@@ -242,8 +236,7 @@ data_long %>%
   kable_styling(latex_options = "scale_down")
 ```
 
-\newpage
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", fig.pos="H"}
 # Table, earth cv DR
 res <- read_hp(filename = 'temp/local_earth_', savedate = '2022-10-07')
 data_long <- proc_df_tbl(res, N_len = 8)
@@ -256,7 +249,7 @@ data_long %>%
 ```
 
 
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", fig.pos="H"}
 # Table, earth cv t-learner
 res <- read_hp(filename = 'local_earth_t_', savedate = '2022-10-09')
 data_long <- proc_df_tbl(res, N_len = 8)
@@ -270,8 +263,8 @@ data_long %>%
 
 
 
-\newpage
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", fig.pos="H"}
 # Table, ss
 output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/','local_ss_nocv_', 1e3, "_", '2022-10-09','.csv')
 res <- read_csv(output_filename) %>% mutate(n = 1e3)
@@ -335,7 +328,24 @@ data_long %>%
   kable_styling(font_size = 9)
 ```
 
+\clearpage
 
+```{r, echo=FALSE, fig.cap="Main performance metrics (T-learner, no CV)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/plot_dots_t_nocv_v.png")
+```
+
+```{r, echo=FALSE, fig.cap="Main performance metrics (DR-learner, no CV)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/plot_dots_dr_nocv_v.png")
+```
+
+
+```{r, echo=FALSE, fig.cap="Main performance metrics (T-learner, CV)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/plot_dots_t_cv_v.png")
+```
+
+```{r, echo=FALSE, fig.cap="Main performance metrics (DR-learner, CV)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/plot_dots_dr_cv_v.png")
+```
 
 
 ```{r, eval=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
@@ -356,6 +366,16 @@ data_long2 <- proc_df_tbl(res, N_len = 8)
 # res <- read_hp(filename = 'local_earth_t_nocv_', savedate = '2022-10-10')
 # data_long4 <- proc_df_tbl(res, N_len = 8)
 
+# res <- read_hp(filename = 'local_gam_', savedate = '2022-10-07')
+# data_long5 <- proc_df_tbl(res, N_len = 8)
+# res <- read_hp(filename = 'temp/local_earth_', savedate = '2022-10-07')
+# data_long6 <- proc_df_tbl(res, N_len = 8)
+
+# res <- read_hp(filename = 'local_gam_t_', savedate = '2022-10-10')
+# data_long7 <- proc_df_tbl(res, N_len = 8)
+# res <- read_hp(filename = 'local_earth_t_', savedate = '2022-10-09')
+# data_long8 <- proc_df_tbl(res, N_len = 8)
+
 data_long <- rbind(data_long1 %>% mutate(Q_g_model = 'GAM'), 
                    data_long2 %>% mutate(Q_g_model = 'Earth'))
 
@@ -368,54 +388,113 @@ temp_tbl_long <- data_long %>%
                          med_CIwidth = median(CI_width))
 
 temp_tbl_long <- temp_tbl_long %>% arrange(Method, Q_g_model)
-temp_tbl_long$n <- as.integer(temp_tbl_long$n)
+temp_tbl_long$n <- as.factor(temp_tbl_long$n)
 
 library(RColorBrewer)
-color.pal <- brewer.pal(n = 8, name = "Set1")
+color.pal <- brewer.pal(n = 8, name = "Dark2")
                 
 # MSE
-plot1 <- 
-temp_tbl_long %>% 
-  ggplot() + 
-  geom_point(aes(x= n, y =MSE, color = Q_g_model, shape= Method), size= 4) +
-  scale_shape_manual(values=c(2,1), name = "Method") + 
-  scale_color_manual(values=color.pal, name = "Q_g_model") + 
+plot1 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = MSE, color = Method, shape= Q_g_model), size= 4) +
+  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  scale_color_manual(values=color.pal, name = "Method") +
   labs(y='MSE',
        x="n") +
   theme_nice
 
 # Bias
-plot2 <- 
-temp_tbl_long %>% 
-  ggplot() + 
-  geom_point(aes(x= n, y =abs(Bias), color = Q_g_model, shape= Method), size= 4) +
-  scale_shape_manual(values=c(2,1), name = "Method") + 
-  scale_color_manual(values=color.pal, name = "Q_g_model") + 
+plot2 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Q_g_model), size= 4) +
+  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  scale_color_manual(values=color.pal, name = "Method") +
   labs(y='absBias',
        x="n") +
   theme_nice
 
 # Coverage
-plot3 <- 
-temp_tbl_long %>% 
-  ggplot() + 
-  geom_point(aes(x= n, y =Coverage, color = Q_g_model, shape= Method), size= 4) +
-  scale_shape_manual(values=c(2,1), name = "Method") + 
-  scale_color_manual(values=color.pal, name = "Q_g_model") + 
+plot3 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = Coverage, color = Method, shape= Q_g_model), size= 4) +
+  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  scale_color_manual(values=color.pal, name = "Method") +
   labs(y='Coverage',
        x="n") +
   theme_nice
 
 # meanCIwidth
-plot4 <- 
-temp_tbl_long %>% 
-  ggplot() + 
-  geom_point(aes(x= n, y =CI_width, color = Q_g_model, shape= Method), size= 4) +
-  scale_shape_manual(values=c(2,1), name = "Method") + 
-  scale_color_manual(values=color.pal, name = "Q_g_model") + 
+plot4 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = CI_width, color = Method, shape= Q_g_model), size= 4) +
+  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  scale_color_manual(values=color.pal, name = "Method") +
   labs(y='CI_width',
        x="n") +
   theme_nice
+
+# Horizontal plots
+# MSE
+# plot1 <-
+# temp_tbl_long %>%
+#   ggplot() +
+#   geom_point(aes(x= MSE, y =Method, color = n, shape= Q_g_model), size= 4) +
+#   scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+#   scale_color_manual(values=color.pal, name = "n") +
+#   geom_point(aes(x= med_mse, y = Method),
+#              shape = 21, color = "black", fill = "black", size= 2)+
+#   scale_y_discrete(limits=rev) +
+#   labs(y=NULL,
+#        x="MSE") +
+#   theme_nice
+# 
+# 
+# # Bias
+# plot2 <-
+# temp_tbl_long %>%
+#   ggplot() +
+#   geom_point(aes(x= Bias, y =Method, color = n, shape= Q_g_model), size= 4) +
+#   scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+#   scale_color_manual(values=color.pal, name = "n") +
+#   geom_point(aes(x= med_bias, y = Method),
+#              shape = 21, color = "black", fill = "black", size= 2)+
+#   scale_y_discrete(limits=rev) +
+#   labs(y=NULL,
+#        x="Bias") +
+#   theme_nice
+# 
+# # Coverage
+# plot3 <-
+# temp_tbl_long %>%
+#   ggplot() +
+#   geom_point(aes(x= Coverage, y =Method, color = n, shape= Q_g_model), size= 4) +
+#   scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+#   scale_color_manual(values=color.pal, name = "n") +
+#   geom_point(aes(x= med_coverage, y = Method),
+#              shape = 21, color = "black", fill = "black", size= 2) +
+#   coord_cartesian(xlim = c(0.8,1)) +
+#   geom_vline(aes(xintercept = 0.95), colour="#000000",size=0.5) +
+#   scale_y_discrete(limits=rev) +
+#   labs(y=NULL,
+#        x="Coverage") +
+#   theme_nice
+# # meanCIwidth
+# plot4 <-
+# temp_tbl_long %>%
+#   ggplot() +
+#   geom_point(aes(x= CI_width, y =Method, color = n, shape= Q_g_model), size= 4) +
+#   scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+#   scale_color_manual(values=color.pal, name = "n") +
+#   geom_point(aes(x= med_CIwidth, y = Method),
+#              shape = 21, color = "black", fill = "black", size= 2)+
+#   scale_y_discrete(limits=rev) +
+#   labs(y=NULL,
+#        x="CI_width") +
+#   theme_nice
 
 plot_dots <-
 ggarrange(plot1,
@@ -425,63 +504,11 @@ ggarrange(plot1,
           legend = "top", common.legend = TRUE)
 
 plotpath = paste0("~/Repo/te_vim/tnp")
-ggsave('plot_dots_dr_nocv_v.pdf', width = 14, height = 8,
+ggsave('plot_dots_dr_nocv_v.png', width = 14, height = 8,
        plot = plot_dots, path = plotpath)
 
 
-# plot1 <- 
-# temp_tbl_long %>% 
-#   ggplot() + 
-#   geom_point(aes(x= n, y =MSE, color = Q_g_model, shape= Method), size= 4) +
-#   scale_shape_manual(values=c(2,1), name = "Method") + 
-#   scale_color_manual(values=color.pal, name = "Q_g_model") + 
-#   scale_y_discrete(limits=rev) + 
-#   labs(y=NULL,
-#        x="MSE") +
-#   theme_nice
-# 
-# # Bias
-# plot2 <- 
-# temp_tbl_long %>% 
-#   ggplot() + 
-#   geom_point(aes(x= Bias, y =Method, color = n, shape= Q_g_model), size= 4) +
-#   scale_shape_manual(values=c(2,1), name = "Q_g_model") + 
-#   scale_color_manual(values=color.pal, name = "n") + 
-#   geom_point(aes(x= med_bias, y = Method), 
-#              shape = 21, color = "black", fill = "black", size= 2)+
-#   scale_y_discrete(limits=rev) + 
-#   labs(y=NULL,
-#        x="Bias") +
-#   theme_nice
-# 
-# # Coverage
-# plot3 <- 
-# temp_tbl_long %>% 
-#   ggplot() + 
-#   geom_point(aes(x= Coverage, y =Method, color = n, shape= Q_g_model), size= 4) +
-#   scale_shape_manual(values=c(2,1), name = "Q_g_model") + 
-#   scale_color_manual(values=color.pal, name = "n") + 
-#   geom_point(aes(x= med_coverage, y = Method), 
-#              shape = 21, color = "black", fill = "black", size= 2) +
-#   coord_cartesian(xlim = c(0.8,1)) + 
-#   geom_vline(aes(xintercept = 0.95), colour="#000000",size=0.5) +
-#   scale_y_discrete(limits=rev) + 
-#   labs(y=NULL,
-#        x="Coverage") +
-#   theme_nice
-# # meanCIwidth
-# plot4 <- 
-# temp_tbl_long %>% 
-#   ggplot() + 
-#   geom_point(aes(x= CI_width, y =Method, color = n, shape= Q_g_model), size= 4) +
-#   scale_shape_manual(values=c(2,1), name = "Q_g_model") + 
-#   scale_color_manual(values=color.pal, name = "n") + 
-#   geom_point(aes(x= med_CIwidth, y = Method), 
-#              shape = 21, color = "black", fill = "black", size= 2)+
-#   scale_y_discrete(limits=rev) + 
-#   labs(y=NULL,
-#        x="CI_width") +
-#   theme_nice
+
 
 
 ```
