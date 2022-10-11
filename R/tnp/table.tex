@@ -272,6 +272,50 @@
 \end{Highlighting}
 \end{Shaded}
 
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{output\_filename }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(}\StringTok{\textquotesingle{}\textasciitilde{}/Repo/te\_vim/simu\_res/theta\_s/\textquotesingle{}}\NormalTok{,}\StringTok{"local\_correct\_"}\NormalTok{, }\DecValTok{500}\NormalTok{, }\StringTok{"\_"}\NormalTok{, }\StringTok{\textquotesingle{}2022{-}10{-}04\textquotesingle{}}\NormalTok{,}\StringTok{\textquotesingle{}.csv\textquotesingle{}}\NormalTok{)}
+\NormalTok{res1 }\OtherTok{\textless{}{-}} \FunctionTok{read\_csv}\NormalTok{(output\_filename) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{mutate}\NormalTok{(}\AttributeTok{n =} \DecValTok{500}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## New names:
+## Rows: 500 Columns: 11
+## -- Column specification
+## -------------------------------------------------------- Delimiter: "," chr
+## (1): ...1 dbl (10): i, truth, cvtmle, cvtmle_se, cvtmle_lower, cvtmle_upper,
+## cvaiptw, ...
+## i Use `spec()` to retrieve the full column specification for this data. i
+## Specify the column types or set `show_col_types = FALSE` to quiet this message.
+## * `` -> `...1`
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{output\_filename }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(}\StringTok{\textquotesingle{}\textasciitilde{}/Repo/te\_vim/simu\_res/theta\_s/\textquotesingle{}}\NormalTok{,}\StringTok{"local\_correct\_"}\NormalTok{, }\DecValTok{1000}\NormalTok{, }\StringTok{"\_"}\NormalTok{, }\StringTok{\textquotesingle{}2022{-}10{-}04\textquotesingle{}}\NormalTok{,}\StringTok{\textquotesingle{}.csv\textquotesingle{}}\NormalTok{)}
+\NormalTok{res2 }\OtherTok{\textless{}{-}} \FunctionTok{read\_csv}\NormalTok{(output\_filename) }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{mutate}\NormalTok{(}\AttributeTok{n =} \DecValTok{1000}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## New names:
+## Rows: 500 Columns: 11
+## -- Column specification
+## -------------------------------------------------------- Delimiter: "," chr
+## (1): ...1 dbl (10): i, truth, cvtmle, cvtmle_se, cvtmle_lower, cvtmle_upper,
+## cvaiptw, ...
+## i Use `spec()` to retrieve the full column specification for this data. i
+## Specify the column types or set `show_col_types = FALSE` to quiet this message.
+## * `` -> `...1`
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{res }\OtherTok{\textless{}{-}} \FunctionTok{rbind}\NormalTok{(res1, res2)}
+\end{Highlighting}
+\end{Shaded}
+
 \begin{verbatim}
 ## `summarise()` has grouped output by 'n'. You can override using the `.groups`
 ## argument.
@@ -295,32 +339,20 @@
 
 \begin{table}
 
-\caption{\label{tab:unnamed-chunk-6}Performance of CV-TMLE and CV-EE for Theta}
+\caption{\label{tab:unnamed-chunk-7}Performance of CV-TMLE and CV-EE for Theta}
 \centering
 \resizebox{\linewidth}{!}{
 \begin{tabular}[t]{rlrrrrrrr}
 \toprule
 n & Method & True\_Theta & Variance & Bias & MSE & Coverage & Coverage\_or & CI\_width\\
 \midrule
- & CV-TMLE & 0.686 & 0.027 & -0.132 & 0.044 & 0.758 & 0.866 & 0.568\\
+ & CV-TMLE & 0.686 & 0.026 & 0.037 & 0.027 & 0.928 & 0.936 & 0.628\\
 
-\multirow{-2}{*}{\raggedleft\arraybackslash 500} & CV-EE & 0.686 & 0.029 & -0.173 & 0.059 & 0.734 & 0.834 & 0.614\\
+\multirow{-2}{*}{\raggedleft\arraybackslash 500} & CV-EE & 0.686 & 0.026 & 0.054 & 0.029 & 0.916 & 0.930 & 0.581\\
 \cmidrule{1-9}
- & CV-TMLE & 0.686 & 0.007 & -0.051 & 0.009 & 0.830 & 0.890 & 0.295\\
+ & CV-TMLE & 0.686 & 0.012 & 0.024 & 0.013 & 0.952 & 0.938 & 0.437\\
 
-\multirow{-2}{*}{\raggedleft\arraybackslash 2000} & CV-EE & 0.686 & 0.006 & -0.059 & 0.010 & 0.840 & 0.882 & 0.301\\
-\cmidrule{1-9}
- & CV-TMLE & 0.686 & 0.003 & -0.026 & 0.003 & 0.894 & 0.920 & 0.190\\
-
-\multirow{-2}{*}{\raggedleft\arraybackslash 5000} & CV-EE & 0.686 & 0.003 & -0.028 & 0.003 & 0.896 & 0.916 & 0.190\\
-\cmidrule{1-9}
- & CV-TMLE & 0.686 & 0.002 & -0.020 & 0.002 & 0.888 & 0.920 & 0.161\\
-
-\multirow{-2}{*}{\raggedleft\arraybackslash 7000} & CV-EE & 0.686 & 0.002 & -0.020 & 0.002 & 0.888 & 0.916 & 0.161\\
-\cmidrule{1-9}
- & CV-TMLE & 0.686 & 0.001 & -0.021 & 0.002 & 0.906 & 0.906 & 0.134\\
-
-\multirow{-2}{*}{\raggedleft\arraybackslash 10000} & CV-EE & 0.686 & 0.001 & -0.020 & 0.001 & 0.902 & 0.900 & 0.134\\
+\multirow{-2}{*}{\raggedleft\arraybackslash 1000} & CV-EE & 0.686 & 0.013 & 0.034 & 0.014 & 0.932 & 0.932 & 0.418\\
 \bottomrule
 \end{tabular}}
 \end{table}

@@ -144,7 +144,8 @@ df_OADINSTM <- read_csv("data/ADaM/FINAL2.csv")
 #             any_vars(str_detect(., "A10BA|A10BB|A10BC|A10BD|A10BF|
 #                                 A10BG|A10BH|A10BX09|A10BX11|A10BX12|A10BX"))) 
 
-  
+temp <- df_adae %>% filter(AEHLGT=="Acid-base disorders", AEONTRFL=="Y")
+temp %>% group_by(AEHLGT, AEDECOD) %>% summarise(n = n())
 
 
 # 'OADTM' %in% unique(df_ttse$PARAMCD)

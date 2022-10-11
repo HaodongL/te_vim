@@ -1,8 +1,8 @@
-run_all_simu <- function(B, N, truth, covar = c('X2'), max.it = 2e3){
+run_all_simu <- function(B, N, truth, cv = TRUE, dr = TRUE, lfm_linear = FALSE, ws = c('X2'), max.it = 1e3){
   results_cols <- c('i', 'truth', 'cvtmle', 'cvtmle_se',
                     'cvtmle_lower', 'cvtmle_upper', 
                     'cvaiptw', 'cvaiptw_se', 'cvaiptw_lower', 
-                    'cvaiptw_upper')
+                    'cvaiptw_upper', 'ss')
   
   results_df <- data.frame(matrix(NA, nrow = B, ncol = length(results_cols)))
   colnames(results_df) <- results_cols
@@ -10,6 +10,7 @@ run_all_simu <- function(B, N, truth, covar = c('X2'), max.it = 2e3){
   run_bootstrap <- foreach(b = 1:B, .combine = 'rbind') %dopar% {
     
     print(paste0("may the power be with you! ", b))
+    set.seed(1234 + b)
     
     results_df_row <- data.frame(matrix(NA, nrow = 1, ncol = length(results_cols)))
     colnames(results_df_row) <- results_cols
@@ -18,8 +19,29 @@ run_all_simu <- function(B, N, truth, covar = c('X2'), max.it = 2e3){
     results_df_row$truth <- truth
     
     df <- generate_data_simple(N)
-    res_ee <- run_EE_VIM(df, covar)
-    res_tmle <- run_TMLE_VIM(df, covar, max.it)
+    # res_ee <- run_EE_VIM(df, ws)
+    # res_tmle <- run_TMLE_VIM(df, ws, max.it)
+    res <- run_VIM_Theta(df = df, 
+                         sl_Q = sl_Q, 
+                         sl_g = sl_g,
+                         sl_x = sl_x,
+                         ws = ws, 
+                         cv = cv,
+                         dr = dr,
+                         lfm_linear = lfm_linear,
+                         max.it = max.it, 
+                         Q_bounds = c(0.001, 0.999), 
+                         g_bounds = c(0.025, 0.975),
+                         tau_bounds = c(-1+1e-3, 1-1e-3),
+                         tau_s_bounds = c(-1+1e-3, 1-1e-3),
+                         gamma_s_bounds = c(1e-6, 1-1e-6)
+                         )
+    res_ee <- res$resEE
+    res_tmle <- res$resTMLE
+    res_ss <- res$resSS
+    
+    # SS
+    results_df_row$ss <- res_ss$coef
     
     # CVTMLE 
     results_df_row$cvtmle <- res_tmle$coef
@@ -45,7 +67,8 @@ run_all_simu <- function(B, N, truth, covar = c('X2'), max.it = 2e3){
                      'cvaiptw' = results_df_row$cvaiptw , 
                      'cvaiptw_se' = results_df_row$cvaiptw_se, 
                      'cvaiptw_lower' = results_df_row$cvaiptw_lower, 
-                     'cvaiptw_upper' = results_df_row$cvaiptw_upper)
+                     'cvaiptw_upper' = results_df_row$cvaiptw_upper,
+                     'ss' = results_df_row$ss)
     
     return(return_list)
   }

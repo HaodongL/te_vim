@@ -19,26 +19,31 @@ library(readr)
 ```
 
 ```{r}
-output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_", 500, "_", '2022-10-02','.csv')
-res1 <- read_csv(output_filename) %>% mutate(n = 500)
-
-output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_", 2000, "_", '2022-10-02','.csv')
-res2 <- read_csv(output_filename) %>% mutate(n = 2000)
-
-output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_", 5000, "_", '2022-10-02','.csv')
-res3 <- read_csv(output_filename) %>% mutate(n = 5000)
-
-output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_", 7000, "_", '2022-10-03','.csv')
-res4 <- read_csv(output_filename) %>% mutate(n = 7000)
-
-output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_", 10000, "_", '2022-10-03','.csv')
-res5 <- read_csv(output_filename) %>% mutate(n = 10000)
-
-res <- rbind(res1, res2, res3, res4, res5)
+read_hp <- function(filename, 
+                    savedate, 
+                    Ns = c(500, 1e3, 2e3, 3e3, 4e3, 5e3, 1e4)){
+  res <- data.frame()
+  for (N in Ns){
+    output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',filename, N, "_", savedate,'.csv')
+    res1 <- read_csv(output_filename) %>% mutate(n = N)
+    res <- rbind(res, res1)
+  }
+  return(res)
+}
 ```
 
-```{r, echo=FALSE}
-res$truth <- 0.685757
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# res <- read_hp(filename = 'local_earth_nocv_', savedate = '2022-10-06')
+res <- read_hp(filename = 'temp/local_earth_nocv_', savedate = '2022-10-07')
+# res <- read_hp(filename = 'local_gam_nocv_', savedate = '2022-10-07')
+
+# output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/','local_gam_', 2e4, "_", '2022-10-07','.csv')
+# res <- read_csv(output_filename) %>% mutate(n = 2e4)
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+
 table_results_data <- res %>%
   dplyr::mutate(cvtmle_proportion = truth <= cvtmle_upper & truth >= cvtmle_lower,
                 cvaiptw_proportion = truth <= cvaiptw_upper & truth >= cvaiptw_lower,
@@ -56,6 +61,42 @@ table_results_data <- res %>%
             cvtmle_var = var(cvtmle),
             cvaiptw_var = var(cvaiptw),
 
+            cvtmle_mse = cvtmle_bias^2 + var(cvtmle),
+            cvaiptw_mse = cvaiptw_bias^2 + var(cvaiptw),
+            
+            
+            # 2020-02-01 coverage of oracle CI
+            cvtmle_oracle = mean(truth <= cvtmle + 1.96*sd(cvtmle) & truth >= cvtmle - 1.96*sd(cvtmle)),
+            cvaiptw_oracle = mean(truth <= cvaiptw + 1.96*sd(cvaiptw) & truth >= cvaiptw - 1.96*sd(cvaiptw)),
+
+            cvtmle_meanwidthCI = mean(cvtmle_widthCI),
+            cvaiptw_meanwidthCI = mean(cvaiptw_widthCI)
+
+  ) %>%  ungroup()
+```
+
+```{r}
+# ss
+table_results_data <- res %>%
+  dplyr::mutate(cvtmle_proportion = truth <= cvtmle_upper & truth >= cvtmle_lower,
+                cvaiptw_proportion = truth <= cvaiptw_upper & truth >= cvaiptw_lower,
+                
+                cvtmle_widthCI = cvtmle_upper-cvtmle_lower,
+                cvaiptw_widthCI = cvaiptw_upper-cvaiptw_lower,
+  ) %>%
+  dplyr::group_by(n, truth) %>%
+  summarize(cvtmle_coverage = mean(cvtmle_proportion),
+            cvaiptw_coverage = mean(cvaiptw_proportion),
+            
+            ss_bias = mean(ss) - mean(truth),
+            cvtmle_bias = mean(cvtmle) - mean(truth),
+            cvaiptw_bias = mean(cvaiptw) - mean(truth),
+
+            ss_var = var(ss),
+            cvtmle_var = var(cvtmle),
+            cvaiptw_var = var(cvaiptw),
+
+            ss_mse = ss_bias^2 + var(ss),
             cvtmle_mse = cvtmle_bias^2 + var(cvtmle),
             cvaiptw_mse = cvaiptw_bias^2 + var(cvaiptw),
             
@@ -97,7 +138,7 @@ data_long = cbind(data_long_coverage,
 setnames(data_long, old = c('n' ,'method','truth','var','bias','mse','coverage','oracle_coverage','CIwidth'), 
          new = c ('n',"Method",'True_Theta','Variance','Bias','MSE','Coverage','Coverage_or','CI_width'))
 
-data_long$Method = c(rep('CV-TMLE',5), rep('CV-EE',5))
+data_long$Method = c(rep('CV-TMLE',2), rep('CV-EE',2))
 data_long <- data_long %>% arrange(n)
 ```
 

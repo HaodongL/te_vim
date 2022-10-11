@@ -1,17 +1,18 @@
-.libPaths(c(.libPaths(), 
-            "~/Repo/Rlib_backup/library"))
+# .libPaths(c(.libPaths(), 
+#             "~/Repo/Rlib_backup/library"))
 
 require(tidyverse)
 repo_path = "/Users/haodongli/Repo/te_vim/"
-source(paste0(repo_path, "R/fit_sl3.R"))
 source(paste0(repo_path, "R/example_helpers.R")) #Used for the current examples
-source(paste0(repo_path, "R/fit_cate.R"))
+source(paste0(repo_path, "R/sl3_config.R"))
+source(paste0(repo_path, "R/fit_para.R"))
 source(paste0(repo_path, "R/vim.R"))
 source(paste0(repo_path, "R/simu_config.R"))
 
+
 library('foreach')
 library('doParallel')
-
+library('tictoc')
 
 ###### set up the number of cores for parallel loop
 # parallel
@@ -34,20 +35,53 @@ ncore <- floor(cpus_logical/2)
 # df <- generate_data_simple(N, print_truth = TRUE) # VIM_Theta_s: 0.686
 
 ###### run simu
+
+# for (N in c(500, 1e3, 2e3,  3e3, 4e3, 5e3)){
+#   print(N)
+#   set.seed(1234)
+#   B <- 500 #rounds of simu
+# 
+#   registerDoParallel(5)
+#   tic()
+#   bootstrap_results <- run_all_simu(B = B, N = N, cv = TRUE, dr = TRUE, truth = 0.686)
+#   toc()
+# 
+#   output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_gam_", N, "_", Sys.Date(),'.csv')
+#   write.csv(bootstrap_results, output_filename)
+# }
+
+
+
 set.seed(1234)
 B <- 500 #rounds of simu
-N <- 1e4 #size of data
+N <- 2e4 #size of data
 
 registerDoParallel(5)
-bootstrap_results <- run_all_simu(B = B, N = N, truth = 0.686)
+tic()
+bootstrap_results <- run_all_simu(B = B, N = N, cv = TRUE, dr = TRUE, max.it = 1e3, truth = 0.686)
+toc()
 
 
-output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_", N, "_", Sys.Date(),'.csv')
+output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_earth_", N, "_", Sys.Date(),'.csv')
 write.csv(bootstrap_results, output_filename)
 
 
 
 
 # local
-
-
+# res <- bootstrap_results %>% mutate(n = N)
+# 
+# res <- res[-which(is.na(res$cvtmle)),]
+# 
+# temp <- bootstrap_results
+# 
+# 
+# covar = c('X2')
+# cv = TRUE
+# max.it = 2e3
+# Q_bounds = c(0.001, 0.999)
+# g_bounds = c(0.025, 0.975)
+# tau_bounds = c(-1+1e-3, 1-1e-3)
+# tau_s_bounds = c(-1+1e-3, 1-1e-3)
+# gamma_s_bounds = c(1e-6, 1-1e-6)
+# cate_option = "DR-Learner"
