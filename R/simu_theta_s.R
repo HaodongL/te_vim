@@ -36,19 +36,19 @@ ncore <- floor(cpus_logical/2)
 
 ###### run simu
 
-for (N in c(500, 1e3, 2e3,  3e3, 4e3, 5e3, 1e4, 2e4)){
-  print(N)
-  set.seed(1234)
-  B <- 500 #rounds of simu
-
-  registerDoParallel(5)
-  tic()
-  bootstrap_results <- run_all_simu(B = B, N = N, cv = T, dr = F, truth = 0.686)
-  toc()
-
-  output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_gam_t_", N, "_", Sys.Date(),'.csv')
-  write.csv(bootstrap_results, output_filename)
-}
+# for (N in c(500, 1e3, 2e3,  3e3, 4e3, 5e3, 1e4, 2e4)){
+#   print(N)
+#   set.seed(1234)
+#   B <- 500 #rounds of simu
+# 
+#   registerDoParallel(5)
+#   tic()
+#   bootstrap_results <- run_all_simu(B = B, N = N, cv = T, dr = F, truth = 0.686)
+#   toc()
+# 
+#   output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_gam_t_", N, "_", Sys.Date(),'.csv')
+#   write.csv(bootstrap_results, output_filename)
+# }
 
 
 
@@ -58,11 +58,11 @@ N <- 2e4 #size of data
 
 registerDoParallel(5)
 tic()
-bootstrap_results <- run_all_simu(B = B, N = N, cv = TRUE, dr = TRUE, max.it = 1e3, truth = 0.686)
+bootstrap_results <- run_all_simu(B = B, N = N, cv = F, dr = TRUE, max.it = 1e3, truth = 0.686)
 toc()
 
 
-output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_earth_", N, "_", Sys.Date(),'.csv')
+output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_qgam_nocv", N, "_", Sys.Date(),'.csv')
 write.csv(bootstrap_results, output_filename)
 
 

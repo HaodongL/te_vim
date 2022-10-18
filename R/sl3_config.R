@@ -3,9 +3,8 @@ library(sl3)
 # -- sl setup
 lrnr_lm <- Lrnr_glm$new()
 lrnr_mean <- Lrnr_mean$new()
-lrnr_lm_inter<- Lrnr_glm$new(formula = "~.^2")
+lrnr_earth <- Lrnr_earth$new()
 lrnr_lasso <- Lrnr_glmnet$new()
-lrnr_grf <- Lrnr_grf$new()
 lrnr_xgb <- Lrnr_xgboost$new()
 lrnr_gam_Q <- Lrnr_gam$new('Y ~ s(X1) + s(X2) + ti(X1,X2) + s(X1,by=A) + s(X2,by=A) + ti(X1,X2,by=A)')
 lrnr_gam_g <- Lrnr_gam$new('A ~ s(X1) + s(X2) + ti(X1,X2)')
@@ -13,10 +12,11 @@ lrnr_gam_g <- Lrnr_gam$new('A ~ s(X1) + s(X2) + ti(X1,X2)')
 # lrnr_gam_tau_s <- Lrnr_gam$new('A ~ s(X1) + s(X2) + ti(X1,X2)')
 # lrnr_gam_gamma_s <- Lrnr_gam$new('A ~ s(X1) + s(X2) + ti(X1,X2)')
 # lrnr_gam <- Lrnr_gam$new()
-lrnr_polspline <- Lrnr_polspline$new()
-lrnr_earth <- Lrnr_earth$new()
-lrnr_ranger <- Lrnr_ranger$new()
-hal_faster <- Lrnr_hal9001$new()
+# lrnr_polspline <- Lrnr_polspline$new()
+# lrnr_ranger <- Lrnr_ranger$new()
+# hal_faster <- Lrnr_hal9001$new()
+# lrnr_grf <- Lrnr_grf$new()
+# lrnr_lm_inter<- Lrnr_glm$new(formula = "~.^2")
 
 # lrnr_stack <- make_learner("Stack",
 #                            lrnr_lm,
@@ -53,7 +53,7 @@ lb_metalearner <- Lrnr_cv_selector$new(loss_loglik_binomial)
 # )
 
 sl_Q <- lrnr_gam_Q
-sl_g <- lrnr_gam_g
+sl_g <- lrnr_earth
 sl_x <- lrnr_earth
 
 # # -- sl modeling function

@@ -356,10 +356,10 @@ theme_nice <- theme(panel.background = element_blank(),
                     panel.grid = element_line(size = 0.3, linetype = 'dashed',
                                               colour = "grey"))
 
-res <- read_hp(filename = 'local_gam_nocv_', savedate = '2022-10-07')
-data_long1 <- proc_df_tbl(res, N_len = 8)
-res <- read_hp(filename = 'temp/local_earth_nocv_', savedate = '2022-10-07')
-data_long2 <- proc_df_tbl(res, N_len = 8)
+# res <- read_hp(filename = 'local_gam_nocv_', savedate = '2022-10-07')
+# data_long1 <- proc_df_tbl(res, N_len = 8)
+# res <- read_hp(filename = 'temp/local_earth_nocv_', savedate = '2022-10-07')
+# data_long2 <- proc_df_tbl(res, N_len = 8)
 
 # res <- read_hp(filename = 'local_gam_t_nocv_', savedate = '2022-10-10')
 # data_long3 <- proc_df_tbl(res, N_len = 8)
@@ -371,13 +371,13 @@ data_long2 <- proc_df_tbl(res, N_len = 8)
 # res <- read_hp(filename = 'temp/local_earth_', savedate = '2022-10-07')
 # data_long6 <- proc_df_tbl(res, N_len = 8)
 
-# res <- read_hp(filename = 'local_gam_t_', savedate = '2022-10-10')
-# data_long7 <- proc_df_tbl(res, N_len = 8)
-# res <- read_hp(filename = 'local_earth_t_', savedate = '2022-10-09')
-# data_long8 <- proc_df_tbl(res, N_len = 8)
+res <- read_hp(filename = 'local_gam_t_', savedate = '2022-10-10')
+data_long7 <- proc_df_tbl(res, N_len = 8)
+res <- read_hp(filename = 'local_earth_t_', savedate = '2022-10-09')
+data_long8 <- proc_df_tbl(res, N_len = 8)
 
-data_long <- rbind(data_long1 %>% mutate(Q_g_model = 'GAM'), 
-                   data_long2 %>% mutate(Q_g_model = 'Earth'))
+data_long <- rbind(data_long7 %>% mutate(Q_g_model = 'GAM'), 
+                   data_long8 %>% mutate(Q_g_model = 'Earth'))
 
 # performance data
 temp_tbl_long <- data_long %>% 
@@ -422,6 +422,8 @@ temp_tbl_long %>%
   geom_point(aes(x= n, y = Coverage, color = Method, shape= Q_g_model), size= 4) +
   scale_shape_manual(values=c(2,1), name = "Q_g_model") +
   scale_color_manual(values=color.pal, name = "Method") +
+  geom_hline(yintercept = 0.95) +
+  ylim(0.85, 1) + 
   labs(y='Coverage',
        x="n") +
   theme_nice
@@ -504,10 +506,8 @@ ggarrange(plot1,
           legend = "top", common.legend = TRUE)
 
 plotpath = paste0("~/Repo/te_vim/tnp")
-ggsave('plot_dots_dr_nocv_v.png', width = 14, height = 8,
+ggsave('plot_dots_t_cv_v.png', width = 14, height = 8,
        plot = plot_dots, path = plotpath)
-
-
 
 
 
