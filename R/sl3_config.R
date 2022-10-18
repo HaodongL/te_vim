@@ -21,12 +21,18 @@ lrnr_gam_g <- Lrnr_gam$new('A ~ s(X1) + s(X2) + ti(X1,X2)')
 # lrnr_stack <- make_learner("Stack",
 #                            lrnr_lm,
 #                            lrnr_earth)
-# lrnr_stack_Q <- make_learner("Stack",
-#                            lrnr_lm,
-#                            lrnr_earth)
-# lrnr_stack_g <- make_learner("Stack",
-#                              lrnr_lm,
-#                              lrnr_earth)
+
+lrnr_stack_Q <- make_learner("Stack",
+                           lrnr_lm,
+                           lrnr_xgb,
+                           lrnr_ranger,
+                           lrnr_earth)
+
+lrnr_stack_g <- make_learner("Stack",
+                             lrnr_lm,
+                             lrnr_xgb,
+                             lrnr_ranger,
+                             lrnr_earth)
 
 
 # ls_metalearner <- make_learner(Lrnr_nnls)
@@ -36,24 +42,24 @@ lrnr_gam_g <- Lrnr_gam$new('A ~ s(X1) + s(X2) + ti(X1,X2)')
 ls_metalearner <- Lrnr_cv_selector$new(loss_squared_error)
 lb_metalearner <- Lrnr_cv_selector$new(loss_loglik_binomial)
 
-# sl_Q <- Lrnr_sl$new(
-#   learners = lrnr_stack_Q,
-#   metalearner = ls_metalearner
-# )
-# 
-# sl_g <- Lrnr_sl$new(
-#   learners = lrnr_stack_g,
-#   metalearner = lb_metalearner,
-#   outcome_type = 'binomial'
-# )
+sl_Q <- Lrnr_sl$new(
+  learners = lrnr_stack_Q,
+  metalearner = ls_metalearner
+)
+
+sl_g <- Lrnr_sl$new(
+  learners = lrnr_stack_g,
+  metalearner = lb_metalearner,
+  outcome_type = 'binomial'
+)
 # 
 # sl_x <- Lrnr_sl$new(
 #   learners = lrnr_stack,
 #   metalearner = ls_metalearner
 # )
 
-sl_Q <- lrnr_gam_Q
-sl_g <- lrnr_earth
+# sl_Q <- lrnr_gam_Q
+# sl_g <- lrnr_earth
 sl_x <- lrnr_earth
 
 # # -- sl modeling function

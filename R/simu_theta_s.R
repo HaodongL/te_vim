@@ -1,5 +1,4 @@
-# .libPaths(c(.libPaths(), 
-#             "~/Repo/Rlib_backup/library"))
+.libPaths("~/Repo/Rlib_backup/library")
 
 require(tidyverse)
 repo_path = "/Users/haodongli/Repo/te_vim/"
@@ -56,13 +55,13 @@ set.seed(1234)
 B <- 500 #rounds of simu
 N <- 2e4 #size of data
 
-registerDoParallel(5)
+registerDoParallel(10)
 tic()
 bootstrap_results <- run_all_simu(B = B, N = N, cv = F, dr = TRUE, max.it = 1e3, truth = 0.686)
 toc()
 
 
-output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_qgam_nocv", N, "_", Sys.Date(),'.csv')
+output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_sl_nocv", N, "_", Sys.Date(),'.csv')
 write.csv(bootstrap_results, output_filename)
 
 
