@@ -1,7 +1,7 @@
 .libPaths("~/Repo/Rlib_backup/library")
 
 require(tidyverse)
-repo_path = "/Users/haodongli/Repo/te_vim/"
+repo_path = "~/Repo/te_vim/"
 source(paste0(repo_path, "R/example_helpers.R")) #Used for the current examples
 source(paste0(repo_path, "R/sl3_config.R"))
 source(paste0(repo_path, "R/fit_para.R"))
