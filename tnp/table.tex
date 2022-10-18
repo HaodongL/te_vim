@@ -555,4 +555,66 @@ n & Method & True\_Theta & Variance & Bias & MSE\\
 \caption{Main performance metrics (DR-learner, CV)}\label{fig:unnamed-chunk-18}
 \end{figure}
 
+\begin{figure}[H]
+
+{\centering \includegraphics[width=1\linewidth]{plot_dots_dr_nocv_v} 
+
+}
+
+\caption{Main performance metrics (DR-learner, no CV)}\label{fig:unnamed-chunk-19}
+\end{figure}
+
+\begin{figure}[H]
+
+{\centering \includegraphics[width=1\linewidth]{plot_dots_dr_nocv_new_v} 
+
+}
+
+\caption{Main performance metrics (DR-learner, no CV)}\label{fig:unnamed-chunk-20}
+\end{figure}
+
+\begin{table}
+
+\caption{\label{tab:unnamed-chunk-21}Performance of TMLE (with DR CATE update) and EE for Theta (earth est Q and g, DR-learner, no CV)}
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}[t]{rlrrrrrrr}
+\toprule
+n & Method & True\_Theta & Variance & Bias & MSE & Coverage & Coverage\_or & CI\_width\\
+\midrule
+ & TMLE & 0.686 & 0.1881 & 0.1775 & 0.2196 & 0.930 & 0.954 & 0.9148\\
+
+\multirow{-2}{*}{\raggedleft\arraybackslash 500} & EE & 0.686 & 0.1354 & 0.1185 & 0.1495 & 0.930 & 0.952 & 1.0280\\
+\cmidrule{1-9}
+ & TMLE & 0.686 & 0.0653 & 0.1080 & 0.0769 & 0.930 & 0.964 & 0.5865\\
+
+\multirow{-2}{*}{\raggedleft\arraybackslash 1000} & EE & 0.686 & 0.0394 & 0.0628 & 0.0434 & 0.938 & 0.962 & 0.6009\\
+\cmidrule{1-9}
+ & TMLE & 0.686 & 0.0152 & 0.0645 & 0.0194 & 0.934 & 0.948 & 0.3735\\
+
+\multirow{-2}{*}{\raggedleft\arraybackslash 2000} & EE & 0.686 & 0.0153 & 0.0465 & 0.0174 & 0.928 & 0.966 & 0.3931\\
+\cmidrule{1-9}
+ & TMLE & 0.686 & 0.0070 & 0.0352 & 0.0083 & 0.946 & 0.962 & 0.2836\\
+
+\multirow{-2}{*}{\raggedleft\arraybackslash 3000} & EE & 0.686 & 0.0078 & 0.0259 & 0.0084 & 0.952 & 0.980 & 0.2897\\
+\cmidrule{1-9}
+ & TMLE & 0.686 & 0.0038 & 0.0225 & 0.0043 & 0.968 & 0.954 & 0.2409\\
+
+\multirow{-2}{*}{\raggedleft\arraybackslash 4000} & EE & 0.686 & 0.0039 & 0.0146 & 0.0042 & 0.968 & 0.960 & 0.2438\\
+\cmidrule{1-9}
+ & TMLE & 0.686 & 0.0033 & 0.0186 & 0.0036 & 0.942 & 0.942 & 0.2057\\
+
+\multirow{-2}{*}{\raggedleft\arraybackslash 5000} & EE & 0.686 & 0.0033 & 0.0127 & 0.0035 & 0.950 & 0.960 & 0.2083\\
+\cmidrule{1-9}
+ & TMLE & 0.686 & 0.0012 & 0.0038 & 0.0012 & 0.954 & 0.950 & 0.1390\\
+
+\multirow{-2}{*}{\raggedleft\arraybackslash 10000} & EE & 0.686 & 0.0012 & 0.0009 & 0.0012 & 0.954 & 0.948 & 0.1392\\
+\cmidrule{1-9}
+ & TMLE & 0.686 & 0.0006 & 0.0005 & 0.0006 & 0.950 & 0.948 & 0.0972\\
+
+\multirow{-2}{*}{\raggedleft\arraybackslash 20000} & EE & 0.686 & 0.0006 & -0.0021 & 0.0006 & 0.948 & 0.950 & 0.0971\\
+\bottomrule
+\end{tabular}}
+\end{table}
+
 \end{document}
