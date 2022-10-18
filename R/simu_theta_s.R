@@ -1,4 +1,4 @@
-.libPaths("~/Repo/Rlib_backup/library")
+# .libPaths("~/Repo/Rlib_backup/library")
 
 require(tidyverse)
 repo_path = "~/Repo/te_vim/"
