@@ -645,6 +645,111 @@ ggsave('plot_dots_dr_nocv_new_v.png', width = 14, height = 8,
 ```
 
 
+```{r, eval=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+# plot 
+library(ggplot2)
+library(ggpubr)
+theme_nice <- theme(panel.background = element_blank(), 
+                    panel.grid = element_line(size = 0.3, linetype = 'dashed',
+                                              colour = "grey"))
 
+### new dr update in TMLE
+# res <- read_hp(filename = 'local_gam_nocv_', savedate = '2022-10-07')
+# data_long9 <- proc_df_tbl(res, N_len = 8)
+# data_long9$Method[which(data_long9$Method == "TMLE")] <-  "TMLE1"
+
+res <- read_hp(filename = 'temp/local_earth_nocv_', savedate = '2022-10-07')
+data_long12 <- proc_df_tbl(res, N_len = 8)
+data_long12$Method[which(data_long12$Method == "TMLE")] <-  "TMLE1"
+# data_long12 <- data_long12 %>% filter(Method == "TMLE1")
+
+res <- read_hp(filename = 'local_earth_new_', savedate = '2022-10-17')
+data_long13 <- proc_df_tbl(res, N_len = 8)
+data_long13$Method[which(data_long13$Method == "TMLE")] <-  "TMLE2"
+data_long13 <- data_long13 %>% filter(Method == "TMLE2")
+
+res <- read_hp(filename = 'local_earth_new2_', savedate = '2022-10-18')
+data_long14 <- proc_df_tbl(res, N_len = 8)
+data_long14$Method[which(data_long14$Method == "TMLE")] <-  "TMLE3"
+data_long14 <- data_long14 %>% filter(Method == "TMLE3")
+
+data_long <- rbind(data_long12 %>% mutate(Q_g_model = 'Earth'), 
+                   data_long13 %>% mutate(Q_g_model = 'Earth'),
+                   data_long14 %>% mutate(Q_g_model = 'Earth'))
+
+# performance data
+temp_tbl_long <- data_long %>% 
+                  group_by(Method) %>% 
+                  mutate(med_mse = median(MSE),
+                         med_coverage = median(Coverage),
+                         med_bias = median(Bias),
+                         med_CIwidth = median(CI_width))
+
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Q_g_model)
+temp_tbl_long$n <- as.factor(temp_tbl_long$n)
+
+library(RColorBrewer)
+color.pal <- brewer.pal(n = 8, name = "Dark2")
+                
+# MSE
+plot1 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = MSE, color = Method, shape= Q_g_model), size= 4) +
+  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='MSE',
+       x="n") +
+  theme_nice
+
+# Bias
+plot2 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Q_g_model), size= 4) +
+  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='absBias',
+       x="n") +
+  theme_nice
+
+# Coverage
+plot3 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = Coverage, color = Method, shape= Q_g_model), size= 4) +
+  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  geom_hline(yintercept = 0.95) +
+  ylim(0.85, 1) + 
+  labs(y='Coverage',
+       x="n") +
+  theme_nice
+
+# meanCIwidth
+plot4 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = CI_width, color = Method, shape= Q_g_model), size= 4) +
+  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='CI_width',
+       x="n") +
+  theme_nice
+
+plot_dots <-
+ggarrange(plot1,
+          plot2,
+          plot3,
+          plot4,
+          legend = "top", common.legend = TRUE)
+
+plotpath = paste0("~/Repo/te_vim/tnp")
+ggsave('plot_dots_dr_nocv_new_v.png', width = 14, height = 8,
+       plot = plot_dots, path = plotpath)
+
+
+
+```
 
 
