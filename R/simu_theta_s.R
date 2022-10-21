@@ -54,7 +54,7 @@ for (N in c(500, 1e3, 2e3,  3e3, 4e3, 5e3, 1e4, 2e4)){
 
 set.seed(1234)
 B <- 500 #rounds of simu
-N <- 5e2 #size of data
+N <- 2e4 #size of data
 
 registerDoParallel(10)
 tic()
