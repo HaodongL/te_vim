@@ -100,7 +100,7 @@ f_cate <- function (x, y) {
 }
 
 
-png(filename= paste0("~/Repo/te_vim/tnp/cate_", N, "_hal_2",".png"),
+png(filename= paste0("~/Repo/te_vim/tnp/cate_", N,".png"),
     width = 2048,
     height = 1024,
     res = 180,
