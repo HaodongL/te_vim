@@ -673,9 +673,18 @@ data_long14 <- proc_df_tbl(res, N_len = 8)
 data_long14$Method[which(data_long14$Method == "TMLE")] <-  "TMLE3"
 data_long14 <- data_long14 %>% filter(Method == "TMLE3")
 
+
+res <- read_hp(filename = 'local_hal_nocv_', savedate = '2022-10-21')
+data_long15 <- proc_df_tbl(res, N_len = 8)
+data_long15$Method[which(data_long15$Method == "TMLE")] <-  "TMLE1"
+data_long15 <- data_long15 %>% filter(Method == "TMLE1")
+
+
+
 data_long <- rbind(data_long12 %>% mutate(Q_g_model = 'Earth'), 
                    data_long13 %>% mutate(Q_g_model = 'Earth'),
-                   data_long14 %>% mutate(Q_g_model = 'Earth'))
+                   data_long14 %>% mutate(Q_g_model = 'Earth'),
+                   data_long15 %>% mutate(Q_g_model = 'HAL'))
 
 # performance data
 temp_tbl_long <- data_long %>% 
@@ -690,13 +699,15 @@ temp_tbl_long$n <- as.factor(temp_tbl_long$n)
 
 library(RColorBrewer)
 color.pal <- brewer.pal(n = 8, name = "Dark2")
+
+shape_val <- c(2,0) # c(2,1)
                 
 # MSE
 plot1 <-
 temp_tbl_long %>%
   ggplot() +
   geom_point(aes(x= n, y = MSE, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  scale_shape_manual(values=shape_val, name = "Q_g_model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='MSE',
        x="n") +
@@ -707,7 +718,7 @@ plot2 <-
 temp_tbl_long %>%
   ggplot() +
   geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  scale_shape_manual(values=shape_val, name = "Q_g_model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='absBias',
        x="n") +
@@ -718,7 +729,7 @@ plot3 <-
 temp_tbl_long %>%
   ggplot() +
   geom_point(aes(x= n, y = Coverage, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  scale_shape_manual(values=shape_val, name = "Q_g_model") +
   scale_color_manual(values=color.pal, name = "Method") +
   geom_hline(yintercept = 0.95) +
   ylim(0.85, 1) + 
@@ -731,7 +742,7 @@ plot4 <-
 temp_tbl_long %>%
   ggplot() +
   geom_point(aes(x= n, y = CI_width, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  scale_shape_manual(values=shape_val, name = "Q_g_model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='CI_width',
        x="n") +
@@ -745,7 +756,7 @@ ggarrange(plot1,
           legend = "top", common.legend = TRUE)
 
 plotpath = paste0("~/Repo/te_vim/tnp")
-ggsave('plot_dots_dr_nocv_new_v.png', width = 14, height = 8,
+ggsave('plot_dots_dr_nocv_all.png', width = 14, height = 8,
        plot = plot_dots, path = plotpath)
 
 
