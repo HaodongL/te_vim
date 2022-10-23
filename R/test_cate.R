@@ -4,8 +4,8 @@ source(paste0(repo_path, "R/example_helpers.R")) #Used for the current examples
 source(paste0(repo_path, "R/sl3_config.R"))
 source(paste0(repo_path, "R/fit_para.R"))
 source(paste0(repo_path, "R/vim.R"))
-# source(paste0(repo_path, "R/tmle_v0.R"))
-# source(paste0(repo_path, "R/tmle_v1.R"))
+source(paste0(repo_path, "R/tmle_v0.R"))
+source(paste0(repo_path, "R/tmle_v1.R"))
 
 # source(paste0(repo_path, "R/sandbox/tmle_vim_linear.R"))
 library(tictoc)
