@@ -114,6 +114,10 @@ W <- W %>% mutate(statin_use = ifelse(is.na(statin_use), FALSE, statin_use),
                   statin_cm = ifelse(is.na(statin_cm), FALSE, statin_cm))
 
 
+
+
+
+
 # identify disease progression outcome
 
 Y_secondary <- df_ttse %>%
