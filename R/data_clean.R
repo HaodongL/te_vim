@@ -209,7 +209,7 @@ df_loopdiur <- df_cm %>%
 
 
 # Cross check numbers with SAS output
-df_adcm5 <- read_csv("data/ADaM/AD_CM_5_2.csv")
+df_adcm5 <- read_csv("data/ADaM/AD_CM_5.csv")
 df_adcm5 <- df_adcm5 %>% 
   filter(!is.na(cat)) %>% 
   group_by(USUBJID, cat, subcat) %>% 
@@ -257,7 +257,7 @@ df_w_summary <- df_w_summary %>%
 library(table1)
 library(r2rtf)
 
-tbl <- table1(~. | ACTARM, data = df_W)
+tbl <- table1(~. | ACTARM, data = df_w_summary)
 
 tbl
 
@@ -273,7 +273,7 @@ tbl
 
 ### ------------  Part 2. Process Outcomes  ------------ ###
 
-# identify disease progression outcome
+# diabetes outcome
 # First time insulin
 Y_insulin <- df_ttse %>%
   dplyr::select("USUBJID", 'PARAMCD', "AVAL", "PARCAT1") %>%
@@ -310,7 +310,7 @@ Y_keto <- df_adae %>%
 
 
 
-# outcomes
+# cv outcomes
 Y <- df_tte %>%
   dplyr::select("USUBJID", 'PARAMCD', "AVAL", "PARCAT1") %>%
   dplyr::filter(PARAMCD %in% c("MACEEVTM", "MCECVDTM", "MACEMITM",
