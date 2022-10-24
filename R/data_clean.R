@@ -26,6 +26,8 @@ out_subid_tte <- unique_subid_w[which(!(unique_subid_w %in% unique(df_tte$USUBJI
 out_subid_cm <- unique_subid_w[which(!(unique_subid_w %in% unique(df_cm$USUBJID)))]
 out_subid <- union(out_subid_tte, out_subid_cm)
 
+
+## -----  Part 1.1. Baseline Covariates  
 W <- subset(df_w, !USUBJID %in% out_subid)
 
 
@@ -86,11 +88,8 @@ W <- W %>% mutate(SMOKER = factor(SMOKER, ordered = T,
   mutate_if(is.character, as_factor)
 
 
+## -----  Part 1.2. Concomitant medications  
 # identify statin use and concomitant flag
-# temp <- adcm %>% group_by(SUBJID) %>% summarise(count_statin = sum(CMCLASCD == 'C10AA'))
-# unique(temp$count_statin)
-# temp <- adcm %>% filter(SUBJID == '15506', CMCLASCD == 'C10AA')
-
 df_cm <- df_cm %>%  
   filter(ANL01FL == "Y" & CONBLFL == "Y" & FASFL == "Y")
 
@@ -209,7 +208,7 @@ df_loopdiur <- df_cm %>%
 
 
 # Cross check numbers with SAS output
-df_adcm5 <- read_csv("data/ADaM/AD_CM_5.csv")
+df_adcm5 <- read_csv("data/supp/AD_CM_5.csv")
 df_adcm5 <- df_adcm5 %>% 
   filter(!is.na(cat)) %>% 
   group_by(USUBJID, cat, subcat) %>% 
@@ -271,6 +270,21 @@ tbl
 # apa_table(x, caption = "Output from table1 in a pdf document.")
 
 
+## -----  Part 1.3. HDL, NLR ratio
+# df_hdl <- df_adlb %>% filter(AVISIT %in% c("VISIT 1, V10", 
+#                                            "VISIT 2, V20",
+#                                            "VISIT 3 (DAY 0), V30"))
+# write_csv(df_hdl, file = "data/supp/hdl.csv")
+
+df_hdl <- read_csv("data/supp/hdl.csv")
+
+
+df_hdl_v3 <- df_hdl %>% filter(AVISIT == "VISIT 3 (DAY 0), V30")
+df_hdl_v1 <- df_hdl %>% filter(AVISIT == "VISIT 1, V10")
+
+
+
+
 ### ------------  Part 2. Process Outcomes  ------------ ###
 
 # diabetes outcome
@@ -284,8 +298,8 @@ Y_insulin <- df_ttse %>%
 #           ~as.numeric(. == "TIME TO EVENT"))
 
 # First time OAD
-df_OADTM <- read_csv("data/ADaM/FINAL1.csv")
-# df_OADINSTM <- read_csv("data/ADaM/FINAL2.csv")
+df_OADTM <- read_csv("data/supp/FINAL1.csv")
+# df_OADINSTM <- read_csv("data/supp/FINAL2.csv")
 Y_oad <- df_OADTM %>% 
   dplyr::select("USUBJID", 'PARAMCD', "AVAL", "PARCAT1") %>%
   dplyr::filter(PARAMCD %in% c("OADTM")) %>%
@@ -297,7 +311,7 @@ Y_hyper <- df_adae %>%
   dplyr::filter(AEDECOD %in% c("Hyperglycaemia") & AEONTRFL == "Y") %>% 
   dplyr::select("USUBJID", 'AEDECOD', 'AESTDTC')
 
-# Hyperglycaemia
+# Hypo
 # aval = ASTDT - ?
 Y_hypo <- df_hypo %>% 
   dplyr::filter(ACAT01  %in% c("SEVERE") & XHONTRFL == "Y") %>% 
@@ -307,8 +321,6 @@ Y_hypo <- df_hypo %>%
 Y_keto <- df_adae %>% 
   dplyr::filter(AEHLGT == "Acid-base disorders" & AEONTRFL == "Y") %>%
   dplyr::select("USUBJID", 'AEDECOD', 'AESTDTC')
-
-
 
 # cv outcomes
 Y <- df_tte %>%
