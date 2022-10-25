@@ -1,0 +1,803 @@
+---
+title: "Statin Simulation Report"
+author: "Haodong Li"
+date: "2022-10-03"
+output:
+  pdf_document:
+    keep_tex: true
+---
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(formattable)
+library(tables)
+library(stargazer)
+library(kableExtra)
+library(tidyr)
+library(dplyr)
+library(data.table)
+library(readr)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+read_hp <- function(filename, 
+                    savedate, 
+                    Ns = c(5e2, 1e3, 2e3, 3e3, 4e3, 5e3, 1e4, 2e4),
+                    ss = FALSE){
+  res <- data.frame()
+  for (N in Ns){
+    output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',filename, N, "_", savedate,'.csv')
+    res1 <- read_csv(output_filename) %>% mutate(n = N)
+    if (!ss & 'ss' %in% names(res1)){
+      res1 <- res1 %>% select(-c('ss'))
+    }
+    res <- rbind(res, res1)
+  }
+  return(res)
+}
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# res <- read_hp(filename = 'local_earth_nocv_', savedate = '2022-10-06')
+# res <- read_hp(filename = 'temp/local_earth_nocv_', savedate = '2022-10-07')
+# res <- read_hp(filename = 'local_gam_nocv_', savedate = '2022-10-07')
+
+# output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/','local_gam_', 2e4, "_", '2022-10-07','.csv')
+# res <- read_csv(output_filename) %>% mutate(n = 2e4)
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+proc_df_tbl <- function(res, N_len = 8){
+  table_results_data <- res %>%
+  dplyr::mutate(cvtmle_proportion = truth <= cvtmle_upper & truth >= cvtmle_lower,
+                cvaiptw_proportion = truth <= cvaiptw_upper & truth >= cvaiptw_lower,
+                
+                cvtmle_widthCI = cvtmle_upper-cvtmle_lower,
+                cvaiptw_widthCI = cvaiptw_upper-cvaiptw_lower,
+  ) %>%
+  dplyr::group_by(n, truth) %>%
+  summarize(cvtmle_coverage = mean(cvtmle_proportion),
+            cvaiptw_coverage = mean(cvaiptw_proportion),
+            
+            cvtmle_bias = mean(cvtmle) - mean(truth),
+            cvaiptw_bias = mean(cvaiptw) - mean(truth),
+
+            cvtmle_var = var(cvtmle),
+            cvaiptw_var = var(cvaiptw),
+
+            cvtmle_mse = cvtmle_bias^2 + var(cvtmle),
+            cvaiptw_mse = cvaiptw_bias^2 + var(cvaiptw),
+            
+            
+            # 2020-02-01 coverage of oracle CI
+            cvtmle_oracle = mean(truth <= cvtmle + 1.96*sd(cvtmle) & truth >= cvtmle - 1.96*sd(cvtmle)),
+            cvaiptw_oracle = mean(truth <= cvaiptw + 1.96*sd(cvaiptw) & truth >= cvaiptw - 1.96*sd(cvaiptw)),
+
+            cvtmle_meanwidthCI = mean(cvtmle_widthCI),
+            cvaiptw_meanwidthCI = mean(cvaiptw_widthCI)
+
+  ) %>%  ungroup()
+
+  #wide to long
+  data_long_coverage <- gather(table_results_data, method, coverage, cvtmle_coverage:cvaiptw_coverage, factor_key=TRUE) %>%select(c(n, truth, method, coverage))
+  
+  data_long_oracle <- gather(table_results_data, method, oracle_coverage, cvtmle_oracle:cvaiptw_oracle, factor_key=TRUE) %>% select(c(oracle_coverage))
+  
+  data_long_bias <- gather(table_results_data, method, bias, cvtmle_bias:cvaiptw_bias, factor_key=TRUE) %>% select(c(bias))
+  
+  data_long_var<- gather(table_results_data, method, var, cvtmle_var:cvaiptw_var, factor_key=TRUE) %>%select(c(var))
+  
+  data_long_mse <- gather(table_results_data, method, mse, cvtmle_mse:cvaiptw_mse, factor_key=TRUE) %>%select(c(mse))
+  
+  data_long_CIwidth <- gather(table_results_data, method, CIwidth, cvtmle_meanwidthCI:cvaiptw_meanwidthCI, factor_key=TRUE) %>%select(c(CIwidth))
+  
+  data_long = cbind(data_long_coverage,
+                    data_long_oracle, 
+                    data_long_bias,
+                    data_long_var,
+                    data_long_mse,
+                    data_long_CIwidth) %>% 
+    select(c(n, method,truth,var,bias,mse,coverage,oracle_coverage, CIwidth))
+  
+  setnames(data_long, old = c('n' ,'method','truth','var','bias','mse','coverage','oracle_coverage','CIwidth'), 
+           new = c ('n',"Method",'True_Theta','Variance','Bias','MSE','Coverage','Coverage_or','CI_width'))
+  
+  data_long$Method = c(rep('TMLE',N_len), rep('EE',N_len))
+  data_long <- data_long %>% arrange(n)
+  return(data_long)
+}
+```
+
+
+## Simulation 
+
+\underline{DGD:}
+\begin{eqnarray*}
+W_{1} &\sim& Unif(-1, 1)\\[1pt]
+W_{2} &\sim& Unif(-1, 1)\\[1pt]
+A &\sim& Bernoulli(p) \mbox{~~where~~} p = \mbox{expit}(0.1*W_1*W_2-0.4*W_1) \\[1pt]
+\tau &=& W_1^2*(W_1+7/5) + (5*W_2/3)^2\\[1pt]
+\mu_{Y} &=& A*\tau + W_1*W_2 + 2*W_2^2 - W_1 \\[1pt]
+Y &\sim& N(\mu_{Y}, 1)
+\end{eqnarray*}
+
+\underline{Initial estimating models for Q and g:} 
+
+1) GAM: General Additive Models (Correctly specified based on true DGD of Q and g)
+
+2) Earth: Multivariate Adaptive Regression Splines
+
+Note this is not SL, just individual algorithms. For estimations of other terms ($\tau,\tau_s,\gamma_s$), all use Earth.
+
+
+\underline{CATE estimation} 
+
+1) DR-learner: regress pseudo outcome estimates $\varphi_n^0$ on $W$.
+
+2) T-learner: just use $\bar{Q}_n^0(1,W)$ - $\bar{Q}_n^0(0,W)$
+
+\underline{Truncation:} 
+
+For TMLE, $\bar{Q}_n^{_{(0)}}$ $\in$ $[0.001, 0.999]$, $g_n$ $\in$ $[0.025, 0.975]$. 
+
+For EE, $g_n$ $\in$ $[0.025, 0.975]$
+
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", fig.pos="H"}
+# meta table
+df_meta <- data.frame(Table_ID = c('Table 2', 'Table 3', 'Table 4', 'Table 5', 
+                                   'Table 6', 'Table 7', 'Table 8', 'Table 9'),
+                      Model_Q_g = c('GAM', 'GAM', 'Earth', 'Earth', 
+                                    'GAM', 'GAM', 'Earth', 'Earth'),
+                      CATE_learner= c('DR-learner', 'T-learner', 'DR-learner', 'T-learner', 
+                                      'DR-learner', 'T-learner', 'DR-learner', 'T-learner'),
+                      CV = c('No', 'No', 'No', 'No',
+                             'Yes', 'Yes', 'Yes', 'Yes'))
+
+
+df_meta %>% 
+  kable("latex", booktabs = T, linesep = c("", "", "", "\\addlinespace"),
+        caption = "Configuration of simulations") %>% 
+  kable_styling(font_size = 10)
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", fig.pos="H"}
+# Table, gam nocv, DR
+res <- read_hp(filename = 'local_gam_nocv_', savedate = '2022-10-07')
+data_long <- proc_df_tbl(res, N_len = 8)
+
+data_long %>% 
+  mutate(across(where(is.numeric), ~ round(., 4))) %>% 
+  kable("latex", booktabs = T, caption = "Performance of TMLE and EE for Theta (Correct Q and g, DR-learner, no CV)") %>% 
+  collapse_rows(columns = 1, latex_hline = "major", valign = "middle")%>%
+  kable_styling(latex_options = "scale_down")
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", fig.pos="H"}
+# Table, gam nocv, T
+res <- read_hp(filename = 'local_gam_t_nocv_', savedate = '2022-10-10')
+data_long <- proc_df_tbl(res, N_len = 8)
+
+data_long %>% 
+  mutate(across(where(is.numeric), ~ round(., 4))) %>% 
+  kable("latex", booktabs = T, caption = "Performance of TMLE and EE for Theta (Correct Q and g, T-learner, no CV)") %>% 
+  collapse_rows(columns = 1, latex_hline = "major", valign = "middle")%>%
+  kable_styling(latex_options = "scale_down")
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", fig.pos="H"}
+# Table, earth nocv DR
+res <- read_hp(filename = 'temp/local_earth_nocv_', savedate = '2022-10-07')
+data_long <- proc_df_tbl(res, N_len = 8)
+
+data_long %>% 
+  mutate(across(where(is.numeric), ~ round(., 4))) %>% 
+  kable("latex", booktabs = T, caption = "Performance of TMLE and EE for Theta (earth est Q and g, DR-learner, no CV)") %>% 
+  collapse_rows(columns = 1, latex_hline = "major", valign = "middle")%>%
+  kable_styling(latex_options = "scale_down")
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", fig.pos="H"}
+# Table, earth nocv
+res <- read_hp(filename = 'local_earth_t_nocv_', savedate = '2022-10-10')
+data_long <- proc_df_tbl(res, N_len = 8)
+
+data_long %>% 
+  mutate(across(where(is.numeric), ~ round(., 4))) %>% 
+  kable("latex", booktabs = T, caption = "Performance of TMLE and EE for Theta (earth est Q and g, T-learner, no CV)") %>% 
+  collapse_rows(columns = 1, latex_hline = "major", valign = "middle")%>%
+  kable_styling(latex_options = "scale_down")
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", fig.pos="H"}
+# Table, gam cv
+res <- read_hp(filename = 'local_gam_', savedate = '2022-10-07')
+data_long <- proc_df_tbl(res, N_len = 8)
+
+data_long %>% 
+  mutate(across(where(is.numeric), ~ round(., 4))) %>% 
+  kable("latex", booktabs = T, caption = "Performance of TMLE and EE for Theta (Correct Q and g, DR-learner, CV)") %>% 
+  collapse_rows(columns = 1, latex_hline = "major", valign = "middle")%>%
+  kable_styling(latex_options = "scale_down")
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", fig.pos="H"}
+# Table, gam T
+res <- read_hp(filename = 'local_gam_t_', savedate = '2022-10-10')
+data_long <- proc_df_tbl(res, N_len = 8)
+
+data_long %>% 
+  mutate(across(where(is.numeric), ~ round(., 4))) %>% 
+  kable("latex", booktabs = T, caption = "Performance of TMLE and EE for Theta (Correct Q and g, T-learner, CV)") %>% 
+  collapse_rows(columns = 1, latex_hline = "major", valign = "middle")%>%
+  kable_styling(latex_options = "scale_down")
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", fig.pos="H"}
+# Table, earth cv DR
+res <- read_hp(filename = 'temp/local_earth_', savedate = '2022-10-07')
+data_long <- proc_df_tbl(res, N_len = 8)
+
+data_long %>% 
+  mutate(across(where(is.numeric), ~ round(., 4))) %>% 
+  kable("latex", booktabs = T, caption = "Performance of TMLE and EE for Theta (earth est Q and g, DR-learner, CV)") %>% 
+  collapse_rows(columns = 1, latex_hline = "major", valign = "middle")%>%
+  kable_styling(latex_options = "scale_down")
+```
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", fig.pos="H"}
+# Table, earth cv t-learner
+res <- read_hp(filename = 'local_earth_t_', savedate = '2022-10-09')
+data_long <- proc_df_tbl(res, N_len = 8)
+
+data_long %>%
+  mutate(across(where(is.numeric), ~ round(., 4))) %>%
+  kable("latex", booktabs = T, caption = "Performance of TMLE and EE for Theta (earth est Q and g, T-learner, CV)") %>%
+  collapse_rows(columns = 1, latex_hline = "major", valign = "middle")%>%
+  kable_styling(latex_options = "scale_down")
+```
+
+
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", fig.pos="H"}
+# Table, ss
+output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/','local_ss_nocv_', 1e3, "_", '2022-10-09','.csv')
+res <- read_csv(output_filename) %>% mutate(n = 1e3)
+table_results_data <- res %>%
+  dplyr::mutate(cvtmle_proportion = truth <= cvtmle_upper & truth >= cvtmle_lower,
+                cvaiptw_proportion = truth <= cvaiptw_upper & truth >= cvaiptw_lower,
+
+                cvtmle_widthCI = cvtmle_upper-cvtmle_lower,
+                cvaiptw_widthCI = cvaiptw_upper-cvaiptw_lower,
+  ) %>%
+  dplyr::group_by(n, truth) %>%
+  summarize(cvtmle_coverage = mean(cvtmle_proportion),
+            cvaiptw_coverage = mean(cvaiptw_proportion),
+
+            ss_bias = mean(ss) - mean(truth),
+            cvtmle_bias = mean(cvtmle) - mean(truth),
+            cvaiptw_bias = mean(cvaiptw) - mean(truth),
+
+            ss_var = var(ss),
+            cvtmle_var = var(cvtmle),
+            cvaiptw_var = var(cvaiptw),
+
+            ss_mse = ss_bias^2 + var(ss),
+            cvtmle_mse = cvtmle_bias^2 + var(cvtmle),
+            cvaiptw_mse = cvaiptw_bias^2 + var(cvaiptw),
+
+
+            # 2020-02-01 coverage of oracle CI
+            cvtmle_oracle = mean(truth <= cvtmle + 1.96*sd(cvtmle) & truth >= cvtmle - 1.96*sd(cvtmle)),
+            cvaiptw_oracle = mean(truth <= cvaiptw + 1.96*sd(cvaiptw) & truth >= cvaiptw - 1.96*sd(cvaiptw)),
+
+            cvtmle_meanwidthCI = mean(cvtmle_widthCI),
+            cvaiptw_meanwidthCI = mean(cvaiptw_widthCI)
+
+  ) %>%  ungroup()
+#wide to long
+
+
+data_long_bias <- gather(table_results_data, method, bias, ss_bias:cvtmle_bias, factor_key=TRUE) %>% select(c(n, truth, method, bias))
+
+data_long_var<- gather(table_results_data, method, var, ss_var:cvtmle_var, factor_key=TRUE) %>%select(c(var))
+
+data_long_mse <- gather(table_results_data, method, mse, ss_mse:cvtmle_mse, factor_key=TRUE) %>%select(c(mse))
+
+
+data_long = cbind(data_long_bias,
+                  data_long_var,
+                  data_long_mse) %>% 
+  select(c(n, method,truth,var,bias,mse))
+
+setnames(data_long, old = c('n' ,'method','truth','var','bias','mse'), 
+         new = c ('n',"Method",'True_Theta','Variance','Bias','MSE'))
+
+data_long$Method = c(rep('SS',1), rep('TMLE',1))
+data_long <- data_long %>% arrange(n)
+
+data_long %>% 
+  mutate(across(where(is.numeric), ~ round(., 4))) %>% 
+  kable("latex", booktabs = T, caption = "Performance of SS and TMLE for Theta (earth est Q and g, DR-learner, no CV)") %>% 
+  collapse_rows(columns = 1, latex_hline = "major", valign = "middle")%>%
+  kable_styling(font_size = 9)
+```
+
+\clearpage
+
+```{r, echo=FALSE, fig.cap="Main performance metrics (T-learner, no CV)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/plot_dots_t_nocv_v.png")
+```
+
+```{r, echo=FALSE, fig.cap="Main performance metrics (DR-learner, no CV)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/plot_dots_dr_nocv_v.png")
+```
+
+
+```{r, echo=FALSE, fig.cap="Main performance metrics (T-learner, CV)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/plot_dots_t_cv_v.png")
+```
+
+```{r, echo=FALSE, fig.cap="Main performance metrics (DR-learner, CV)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/plot_dots_dr_cv_v.png")
+```
+
+
+```{r, echo=FALSE, fig.cap="Main performance metrics (DR-learner, no CV)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/plot_dots_dr_nocv_v.png")
+```
+
+```{r, echo=FALSE, fig.cap="Main performance metrics (DR-learner, no CV)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/plot_dots_dr_nocv_all.png")
+```
+
+
+```{r, echo=FALSE, fig.cap="CATE estimation with Earth (n = 500)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/cate_500.png")
+```
+
+```{r, echo=FALSE, fig.cap="CATE estimation with Earth (n = 5000)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/cate_5000.png")
+```
+
+```{r, echo=FALSE, fig.cap="CATE estimation with HAL (n = 500)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/cate_500_hal.png")
+```
+
+```{r, echo=FALSE, fig.cap="CATE estimation with HAL (n = 5000)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/cate_5000_hal.png")
+```
+
+
+```{r, echo=FALSE, fig.cap="CATE estimation with Earth (n = 500, seed 2)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/cate_500_2.png")
+```
+
+```{r, echo=FALSE, fig.cap="CATE estimation with Earth (n = 5000, seed 2)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/cate_5000_2.png")
+```
+
+```{r, echo=FALSE, fig.cap="CATE estimation with HAL (n = 500, seed 2)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/cate_500_hal_2.png")
+```
+
+```{r, echo=FALSE, fig.cap="CATE estimation with HAL (n = 5000, seed 2)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/cate_5000_hal_2.png")
+```
+
+
+```{r, eval=FALSE, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", fig.pos="H"}
+res <- read_hp(filename = 'local_earth_new_', savedate = '2022-10-17')
+data_long <- proc_df_tbl(res, N_len = 8)
+
+data_long %>%
+  mutate(across(where(is.numeric), ~ round(., 4))) %>%
+  kable("latex", booktabs = T, caption = "Performance of TMLE (with DR CATE update) and EE for Theta (earth est Q and g, DR-learner, no CV)") %>%
+  collapse_rows(columns = 1, latex_hline = "major", valign = "middle")%>%
+  kable_styling(latex_options = "scale_down")
+```
+
+
+
+
+```{r, eval=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+# plot 
+library(ggplot2)
+library(ggpubr)
+theme_nice <- theme(panel.background = element_blank(), 
+                    panel.grid = element_line(size = 0.3, linetype = 'dashed',
+                                              colour = "grey"))
+
+# res <- read_hp(filename = 'local_gam_nocv_', savedate = '2022-10-07')
+# data_long1 <- proc_df_tbl(res, N_len = 8)
+# res <- read_hp(filename = 'temp/local_earth_nocv_', savedate = '2022-10-07')
+# data_long2 <- proc_df_tbl(res, N_len = 8)
+
+# res <- read_hp(filename = 'local_gam_t_nocv_', savedate = '2022-10-10')
+# data_long3 <- proc_df_tbl(res, N_len = 8)
+# res <- read_hp(filename = 'local_earth_t_nocv_', savedate = '2022-10-10')
+# data_long4 <- proc_df_tbl(res, N_len = 8)
+
+# res <- read_hp(filename = 'local_gam_', savedate = '2022-10-07')
+# data_long5 <- proc_df_tbl(res, N_len = 8)
+# res <- read_hp(filename = 'temp/local_earth_', savedate = '2022-10-07')
+# data_long6 <- proc_df_tbl(res, N_len = 8)
+
+# res <- read_hp(filename = 'local_gam_t_', savedate = '2022-10-10')
+# data_long7 <- proc_df_tbl(res, N_len = 8)
+# res <- read_hp(filename = 'local_earth_t_', savedate = '2022-10-09')
+# data_long8 <- proc_df_tbl(res, N_len = 8)
+
+### new dr update in TMLE
+res <- read_hp(filename = 'local_gam_nocv_', savedate = '2022-10-07')
+data_long9 <- proc_df_tbl(res, N_len = 8)
+res <- read_hp(filename = 'local_earth_new_', savedate = '2022-10-17')
+data_long10 <- proc_df_tbl(res, N_len = 8)
+
+data_long <- rbind(data_long7 %>% mutate(Q_g_model = 'GAM'), 
+                   data_long8 %>% mutate(Q_g_model = 'Earth'))
+
+# performance data
+temp_tbl_long <- data_long %>% 
+                  group_by(Method) %>% 
+                  mutate(med_mse = median(MSE),
+                         med_coverage = median(Coverage),
+                         med_bias = median(Bias),
+                         med_CIwidth = median(CI_width))
+
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Q_g_model)
+temp_tbl_long$n <- as.factor(temp_tbl_long$n)
+
+library(RColorBrewer)
+color.pal <- brewer.pal(n = 8, name = "Dark2")
+                
+# MSE
+plot1 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = MSE, color = Method, shape= Q_g_model), size= 4) +
+  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='MSE',
+       x="n") +
+  theme_nice
+
+# Bias
+plot2 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Q_g_model), size= 4) +
+  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='absBias',
+       x="n") +
+  theme_nice
+
+# Coverage
+plot3 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = Coverage, color = Method, shape= Q_g_model), size= 4) +
+  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  geom_hline(yintercept = 0.95) +
+  ylim(0.85, 1) + 
+  labs(y='Coverage',
+       x="n") +
+  theme_nice
+
+# meanCIwidth
+plot4 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = CI_width, color = Method, shape= Q_g_model), size= 4) +
+  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='CI_width',
+       x="n") +
+  theme_nice
+
+# Horizontal plots
+# MSE
+# plot1 <-
+# temp_tbl_long %>%
+#   ggplot() +
+#   geom_point(aes(x= MSE, y =Method, color = n, shape= Q_g_model), size= 4) +
+#   scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+#   scale_color_manual(values=color.pal, name = "n") +
+#   geom_point(aes(x= med_mse, y = Method),
+#              shape = 21, color = "black", fill = "black", size= 2)+
+#   scale_y_discrete(limits=rev) +
+#   labs(y=NULL,
+#        x="MSE") +
+#   theme_nice
+# 
+# 
+# # Bias
+# plot2 <-
+# temp_tbl_long %>%
+#   ggplot() +
+#   geom_point(aes(x= Bias, y =Method, color = n, shape= Q_g_model), size= 4) +
+#   scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+#   scale_color_manual(values=color.pal, name = "n") +
+#   geom_point(aes(x= med_bias, y = Method),
+#              shape = 21, color = "black", fill = "black", size= 2)+
+#   scale_y_discrete(limits=rev) +
+#   labs(y=NULL,
+#        x="Bias") +
+#   theme_nice
+# 
+# # Coverage
+# plot3 <-
+# temp_tbl_long %>%
+#   ggplot() +
+#   geom_point(aes(x= Coverage, y =Method, color = n, shape= Q_g_model), size= 4) +
+#   scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+#   scale_color_manual(values=color.pal, name = "n") +
+#   geom_point(aes(x= med_coverage, y = Method),
+#              shape = 21, color = "black", fill = "black", size= 2) +
+#   coord_cartesian(xlim = c(0.8,1)) +
+#   geom_vline(aes(xintercept = 0.95), colour="#000000",size=0.5) +
+#   scale_y_discrete(limits=rev) +
+#   labs(y=NULL,
+#        x="Coverage") +
+#   theme_nice
+# # meanCIwidth
+# plot4 <-
+# temp_tbl_long %>%
+#   ggplot() +
+#   geom_point(aes(x= CI_width, y =Method, color = n, shape= Q_g_model), size= 4) +
+#   scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+#   scale_color_manual(values=color.pal, name = "n") +
+#   geom_point(aes(x= med_CIwidth, y = Method),
+#              shape = 21, color = "black", fill = "black", size= 2)+
+#   scale_y_discrete(limits=rev) +
+#   labs(y=NULL,
+#        x="CI_width") +
+#   theme_nice
+
+plot_dots <-
+ggarrange(plot1,
+          plot2,
+          plot3,
+          plot4,
+          legend = "top", common.legend = TRUE)
+
+plotpath = paste0("~/Repo/te_vim/tnp")
+ggsave('plot_dots_t_cv_v.png', width = 14, height = 8,
+       plot = plot_dots, path = plotpath)
+
+
+
+```
+
+
+```{r, eval=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+# plot 
+library(ggplot2)
+library(ggpubr)
+theme_nice <- theme(panel.background = element_blank(), 
+                    panel.grid = element_line(size = 0.3, linetype = 'dashed',
+                                              colour = "grey"))
+
+### new dr update in TMLE
+res <- read_hp(filename = 'local_gam_nocv_', savedate = '2022-10-07')
+data_long9 <- proc_df_tbl(res, N_len = 8)
+data_long9$Method[which(data_long9$Method == "TMLE")] <-  "TMLE1"
+
+res <- read_hp(filename = 'temp/local_earth_nocv_', savedate = '2022-10-07')
+data_long10 <- proc_df_tbl(res, N_len = 8)
+data_long10$Method[which(data_long10$Method == "TMLE")] <-  "TMLE1"
+
+res <- read_hp(filename = 'local_earth_new_', savedate = '2022-10-17')
+data_long11 <- proc_df_tbl(res, N_len = 8)
+data_long11$Method[which(data_long11$Method == "TMLE")] <-  "TMLE2"
+data_long11 <- data_long11 %>% filter(Method == "TMLE2")
+
+data_long <- rbind(data_long9 %>% mutate(Q_g_model = 'GAM'), 
+                   data_long10 %>% mutate(Q_g_model = 'Earth'),
+                   data_long11 %>% mutate(Q_g_model = 'Earth'))
+
+# performance data
+temp_tbl_long <- data_long %>% 
+                  group_by(Method) %>% 
+                  mutate(med_mse = median(MSE),
+                         med_coverage = median(Coverage),
+                         med_bias = median(Bias),
+                         med_CIwidth = median(CI_width))
+
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Q_g_model)
+temp_tbl_long$n <- as.factor(temp_tbl_long$n)
+
+library(RColorBrewer)
+color.pal <- brewer.pal(n = 8, name = "Dark2")
+                
+# MSE
+plot1 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = MSE, color = Method, shape= Q_g_model), size= 4) +
+  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='MSE',
+       x="n") +
+  theme_nice
+
+# Bias
+plot2 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Q_g_model), size= 4) +
+  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='absBias',
+       x="n") +
+  theme_nice
+
+# Coverage
+plot3 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = Coverage, color = Method, shape= Q_g_model), size= 4) +
+  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  geom_hline(yintercept = 0.95) +
+  ylim(0.85, 1) + 
+  labs(y='Coverage',
+       x="n") +
+  theme_nice
+
+# meanCIwidth
+plot4 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = CI_width, color = Method, shape= Q_g_model), size= 4) +
+  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='CI_width',
+       x="n") +
+  theme_nice
+
+plot_dots <-
+ggarrange(plot1,
+          plot2,
+          plot3,
+          plot4,
+          legend = "top", common.legend = TRUE)
+
+plotpath = paste0("~/Repo/te_vim/tnp")
+ggsave('plot_dots_dr_nocv_new_v.png', width = 14, height = 8,
+       plot = plot_dots, path = plotpath)
+
+
+
+```
+
+
+```{r, eval=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+# plot 
+library(ggplot2)
+library(ggpubr)
+theme_nice <- theme(panel.background = element_blank(), 
+                    panel.grid = element_line(size = 0.3, linetype = 'dashed',
+                                              colour = "grey"))
+
+### new dr update in TMLE
+# res <- read_hp(filename = 'local_gam_nocv_', savedate = '2022-10-07')
+# data_long9 <- proc_df_tbl(res, N_len = 8)
+# data_long9$Method[which(data_long9$Method == "TMLE")] <-  "TMLE1"
+
+res <- read_hp(filename = 'temp/local_earth_nocv_', savedate = '2022-10-07')
+data_long12 <- proc_df_tbl(res, N_len = 8)
+data_long12$Method[which(data_long12$Method == "TMLE")] <-  "TMLE1"
+# data_long12 <- data_long12 %>% filter(Method == "TMLE1")
+
+res <- read_hp(filename = 'local_earth_new_', savedate = '2022-10-17')
+data_long13 <- proc_df_tbl(res, N_len = 8)
+data_long13$Method[which(data_long13$Method == "TMLE")] <-  "TMLE2"
+data_long13 <- data_long13 %>% filter(Method == "TMLE2")
+
+res <- read_hp(filename = 'local_earth_new2_', savedate = '2022-10-18')
+data_long14 <- proc_df_tbl(res, N_len = 8)
+data_long14$Method[which(data_long14$Method == "TMLE")] <-  "TMLE3"
+data_long14 <- data_long14 %>% filter(Method == "TMLE3")
+
+
+res <- read_hp(filename = 'local_hal_nocv_', savedate = '2022-10-21')
+data_long15 <- proc_df_tbl(res, N_len = 8)
+data_long15$Method[which(data_long15$Method == "TMLE")] <-  "TMLE1"
+data_long15 <- data_long15 %>% filter(Method == "TMLE1")
+
+
+
+data_long <- rbind(data_long12 %>% mutate(Q_g_model = 'Earth'), 
+                   data_long13 %>% mutate(Q_g_model = 'Earth'),
+                   data_long14 %>% mutate(Q_g_model = 'Earth'),
+                   data_long15 %>% mutate(Q_g_model = 'HAL'))
+
+# performance data
+temp_tbl_long <- data_long %>% 
+                  group_by(Method) %>% 
+                  mutate(med_mse = median(MSE),
+                         med_coverage = median(Coverage),
+                         med_bias = median(Bias),
+                         med_CIwidth = median(CI_width))
+
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Q_g_model)
+temp_tbl_long$n <- as.factor(temp_tbl_long$n)
+
+library(RColorBrewer)
+color.pal <- brewer.pal(n = 8, name = "Dark2")
+
+shape_val <- c(2,0) # c(2,1)
+                
+# MSE
+plot1 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = MSE, color = Method, shape= Q_g_model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='MSE',
+       x="n") +
+  theme_nice
+
+# Bias
+plot2 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Q_g_model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='absBias',
+       x="n") +
+  theme_nice
+
+# Coverage
+plot3 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = Coverage, color = Method, shape= Q_g_model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  geom_hline(yintercept = 0.95) +
+  ylim(0.85, 1) + 
+  labs(y='Coverage',
+       x="n") +
+  theme_nice
+
+# meanCIwidth
+plot4 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = CI_width, color = Method, shape= Q_g_model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='CI_width',
+       x="n") +
+  theme_nice
+
+plot_dots <-
+ggarrange(plot1,
+          plot2,
+          plot3,
+          plot4,
+          legend = "top", common.legend = TRUE)
+
+plotpath = paste0("~/Repo/te_vim/tnp")
+ggsave('plot_dots_dr_nocv_all.png', width = 14, height = 8,
+       plot = plot_dots, path = plotpath)
+
+
+
+```
+
+
+
+
+

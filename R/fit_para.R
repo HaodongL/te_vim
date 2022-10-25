@@ -43,10 +43,16 @@ fit_para <- function(df,
     tau_fit <- fit_x(df = df, sl_x = sl_x, po = po, outcome = 'po', para = 'tau')
     tau <- tau_fit$predict()
     
-    tau_s_fit <- fit_x(df = df, sl_x = sl_x, po = po, outcome = 'po', para = 'tau_s', ws = ws)
+    # tau_s_fit <- fit_x(df = df, sl_x = sl_x, po = po, outcome = 'po', para = 'tau_s', ws = ws)
+    # tau_s <- tau_s_fit$predict()
+    # 
+    # gamma_s_fit <- fit_x(df = df, sl_x = sl_x, po = po, outcome = 'po', para = 'gamma_s', ws = ws)
+    # gamma_s <- gamma_s_fit$predict()
+    
+    tau_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau, outcome = 'tau', para = 'tau_s', ws = ws)
     tau_s <- tau_s_fit$predict()
-
-    gamma_s_fit <- fit_x(df = df, sl_x = sl_x, po = po, outcome = 'po', para = 'gamma_s', ws = ws)
+    
+    gamma_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau, outcome = 'tau', para = 'gamma_s', ws = ws)
     gamma_s <- gamma_s_fit$predict()
     
   }else{

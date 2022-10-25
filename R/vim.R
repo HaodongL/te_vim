@@ -105,8 +105,8 @@ TMLE_VIM <- function(data, y_l, y_u, max.it=600){
   sig2 <- sd(2*tau_s_0*(tau_0 - tau_s_0))
   
   # eps1,eps2
-  eps1 <- 1e-3
-  eps2 <- 1e-3
+  eps1 <- 1e-4
+  eps2 <- 1e-4
   
   # i 
   i <- 1
