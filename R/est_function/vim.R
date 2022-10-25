@@ -1,5 +1,65 @@
-
 # Parameter: \Theta_s
+# Estimator: TMLE and EE
+run_VIM_Theta <- function(df, 
+                          sl_Q, 
+                          sl_g,
+                          sl_x,
+                          ws, 
+                          cv = TRUE,
+                          dr = TRUE,
+                          lfm_linear = FALSE,
+                          max.it=600, 
+                          Q_bounds = c(0.001, 0.999), 
+                          g_bounds = c(0.025, 0.975),
+                          tau_bounds = c(-1+1e-3, 1-1e-3),
+                          tau_s_bounds = c(-1+1e-3, 1-1e-3),
+                          gamma_s_bounds = c(1e-6, 1-1e-6)){
+  # transform Y into [0,1]
+  y_l <- min(df$Y)
+  y_u <- max(df$Y)
+  df$Y <- scale01(df$Y, y_l, y_u)
+  
+  # fit Q, g
+  # fit tau, tau_s, gamma_s
+  if (cv){
+    fit_func <- fit_cvpara
+  }else{
+    fit_func <- fit_para
+  }
+  df_fit <- fit_func(df = df,
+                     sl_Q = sl_Q, 
+                     sl_g = sl_g,
+                     sl_x = sl_x,
+                     ws = ws,
+                     dr = dr,
+                     Q_bounds = Q_bounds,
+                     g_bounds = g_bounds,
+                     tau_bounds = tau_bounds,
+                     tau_s_bounds = tau_s_bounds,
+                     gamma_s_bounds = gamma_s_bounds)
+  
+  # tmle_vim
+  if (dr){
+    resTMLE <- TMLE_VIM_b(df_fit, y_l, y_u, max.it)
+  }else{
+    resTMLE <- TMLE_VIM_a(df_fit, y_l, y_u, max.it)
+  }
+  
+  # ee_vim
+  df_fit$Y <- rescale(df_fit$Y, y_l, y_u)
+  df_fit$tau <- df_fit$tau*(y_u - y_l)
+  df_fit$tau_s <- df_fit$tau_s*(y_u - y_l)
+  df_fit$po <- df_fit$po*(y_u - y_l)
+  resEE <- EE_VIM(df_fit)
+  
+  df_fit$gamma_s <- df_fit$gamma_s*(y_u - y_l)^2
+  resSS <- SS_VIM(df_fit)
+  res <- list('resTMLE' = resTMLE, 
+              'resEE' = resEE,
+              'resSS' = resSS)
+  return(res)
+}
+
 
 # Estimator: SS
 SS_VIM <- function(data){
@@ -85,7 +145,7 @@ EE_VIM <- function(data){
 #   return(res)
 # }
 
-TMLE_VIM <- function(data, y_l, y_u, max.it=600){
+TMLE_VIM_a <- function(data, y_l, y_u, max.it=600){
   N <- NROW(data)
   A <- data$A
   Y <- data$Y
@@ -206,62 +266,123 @@ TMLE_VIM <- function(data, y_l, y_u, max.it=600){
 }
 
 
-# Estimator: TMLE and EE
-run_VIM_Theta <- function(df, 
-                          sl_Q, 
-                          sl_g,
-                          sl_x,
-                          ws, 
-                          cv = TRUE,
-                          dr = TRUE,
-                          lfm_linear = FALSE,
-                          max.it=600, 
-                          Q_bounds = c(0.001, 0.999), 
-                          g_bounds = c(0.025, 0.975),
-                          tau_bounds = c(-1+1e-3, 1-1e-3),
-                          tau_s_bounds = c(-1+1e-3, 1-1e-3),
-                          gamma_s_bounds = c(1e-6, 1-1e-6)){
-  # transform Y into [0,1]
-  y_l <- min(df$Y)
-  y_u <- max(df$Y)
-  df$Y <- scale01(df$Y, y_l, y_u)
+
+TMLE_VIM_b <- function(data, y_l, y_u, max.it=600){
+  N <- NROW(data)
+  A <- data$A
+  Y <- data$Y
   
-  # fit Q, g
-  # fit tau, tau_s, gamma_s
-  if (cv){
-    fit_func <- fit_cvpara
-  }else{
-    fit_func <- fit_para
+  # Q, g, tau, tau_s, gamma_s
+  QA_0 <- data$mua_hat
+  Q1_0 <- data$mu1_hat
+  Q0_0 <- data$mu0_hat
+  gn <- data$pi_hat
+  
+  tau_0 <- data$tau
+  tau_s_0 <- data$tau_s
+  gamma_s_0 <- data$gamma_s
+  
+  # sig1, sig2
+  sig1 <- sd(2*(tau_0 - tau_s_0)*((2*A-1)/gn)*(Y - QA_0))
+  sig2 <- sd(2*tau_s_0*(tau_0 - tau_s_0))
+  
+  # eps1,eps2
+  eps1 <- 1e-4
+  eps2 <- 1e-4
+  
+  # i 
+  i <- 1
+  QA_i <- QA_0
+  Q1_i <- Q1_0
+  Q0_i <- Q0_0
+  tau_i <- tau_0
+  tau_s_i <- tau_s_0
+  
+  # logging <- matrix(NA, max.it, 3)
+  
+  po <- (Y - QA_i)*(2*A - 1)/gn + Q1_i - Q0_i
+  H_1i <- 2*(tau_i - tau_s_i)
+  D_1i <- H_1i*(po - tau_i)
+  PnD_1i <- mean(D_1i)
+  a <- -1
+  b <- 1
+  
+  while(i <= max.it){
+    
+    # step 1. update tau and Q
+    tau_i_scale <- (tau_i - a)/(b - a)
+    H_1i_scale <- H_1i/(b - a)
+    tau_i_scale <- plogis(qlogis(tau_i_scale) + eps1*H_1i_scale*sign(PnD_1i))
+    tau_i <- tau_i_scale * (b - a) + a
+    Q1_i <- tau_i + Q0_0
+    QA_i[which(A == 1)] <- Q1_i[which(A == 1)]
+    
+    # step 2. update tau_s (think, how to transform/bound)
+    H_2i <- 2*tau_s_i
+    D_2i <- H_2i*(tau_i - tau_s_i)
+    PnD_2i <- mean(D_2i)
+    maxabs <- max(abs(tau_s_i))
+    eps2_new <- min(0.5*(1/maxabs - 1), eps2)
+    tau_s_i <- tau_s_i + eps2_new*H_2i*sign(PnD_2i)
+    
+    # update D1 D2, check creteria
+    po <- (Y - QA_i)*(2*A - 1)/gn + Q1_i - Q0_i
+    H_1i <- 2*(tau_i - tau_s_i)
+    D_1i <- H_1i*(po - tau_i)
+    PnD_1i <- mean(D_1i)
+    
+    H_2i <- 2*tau_s_i
+    D_2i <- H_2i*(tau_i - tau_s_i)
+    PnD_2i <- mean(D_2i)
+    
+    c1 <- abs(PnD_1i) <= sig1/(sqrt(N)*log(N))
+    c2 <- abs(PnD_2i) <= sig2/(sqrt(N)*log(N))
+    
+    if (c1 & c2){
+      break
+    }
+    i <- i + 1
   }
-  df_fit <- fit_func(df = df,
-                     sl_Q = sl_Q, 
-                     sl_g = sl_g,
-                     sl_x = sl_x,
-                     ws = ws,
-                     dr = dr,
-                     Q_bounds = Q_bounds,
-                     g_bounds = g_bounds,
-                     tau_bounds = tau_bounds,
-                     tau_s_bounds = tau_s_bounds,
-                     gamma_s_bounds = gamma_s_bounds)
   
-  # tmle_vim
-  resTMLE <- TMLE_VIM(df_fit, y_l, y_u, max.it)
+  QA_star <- QA_i
+  Q1_star <- Q1_i
+  Q0_star <- Q0_i
+  tau_star <- tau_i
+  tau_s_star <- tau_s_i
   
-  # ee_vim
-  df_fit$Y <- rescale(df_fit$Y, y_l, y_u)
-  df_fit$tau <- df_fit$tau*(y_u - y_l)
-  df_fit$tau_s <- df_fit$tau_s*(y_u - y_l)
-  df_fit$po <- df_fit$po*(y_u - y_l)
-  resEE <- EE_VIM(df_fit)
+  if(i>=max.it) warning("Max iterations reached in TMLE")
   
-  df_fit$gamma_s <- df_fit$gamma_s*(y_u - y_l)^2
-  resSS <- SS_VIM(df_fit)
-  res <- list('resTMLE' = resTMLE, 
-              'resEE' = resEE,
-              'resSS' = resSS)
-  return(res)
+  # update gamma_s
+  suppressWarnings({
+    logitUpdate <- glm(tau_star^2 ~ 1, 
+                       offset = qlogis(gamma_s_0),
+                       family = "quasibinomial")
+  })
+  eps3 <- coef(logitUpdate)
+  gamma_s_star <- plogis(qlogis(gamma_s_0) + eps3)
+  
+  # calculate Theta_s, scale back
+  theta_s_star <- mean(gamma_s_star - tau_s_star^2)*(y_u-y_l)^2
+  # theta_s_star <- mean((tau_star - tau_s_star)^2)*(y_u-y_l)^2
+  ic <- 2*(tau_star - tau_s_star)*((2*A-1)/gn)*(Y-QA_star) + (tau_star - tau_s_star)^2 - theta_s_star
+  ss <- sqrt(var(ic)/N)*(y_u-y_l)^2
+  
+  coef <- theta_s_star
+  std_err <- ss
+  names(coef) <- names(std_err) <- c("VIM_Theta_s")
+  
+  out<- list(
+    coef = coef,
+    std_err = std_err,
+    ci_l = coef - 1.96*std_err,
+    ci_u = coef + 1.96*std_err
+  )
+  
+  return(out)
 }
+
+
+
 
 # run_ALL_VIM <- function(df, 
 #                         ws, 

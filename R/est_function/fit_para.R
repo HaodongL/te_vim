@@ -9,7 +9,7 @@ fit_para <- function(df,
                      tau_bounds = NULL, 
                      tau_s_bounds = NULL, 
                      gamma_s_bounds = NULL, 
-                     dr = TRUE
+                     dr = TRUE,
                      add_tau_sc = FALSE){
   
   all_covar = setdiff(names(df), 'Y')
