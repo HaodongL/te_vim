@@ -1,4 +1,10 @@
-run_all_simu <- function(B, N, truth, cv = TRUE, dr = TRUE, lfm_linear = FALSE, ws = c('X2'), max.it = 1e3){
+run_all_simu <- function(B, N, truth, 
+                         cv = TRUE, 
+                         dr = TRUE, 
+                         lfm_linear = FALSE, 
+                         ws = c('X2'), 
+                         max.it = 1e3,
+                         lr = 1e-4){
   results_cols <- c('i', 'truth', 'cvtmle', 'cvtmle_se',
                     'cvtmle_lower', 'cvtmle_upper', 
                     'cvaiptw', 'cvaiptw_se', 'cvaiptw_lower', 
@@ -30,11 +36,12 @@ run_all_simu <- function(B, N, truth, cv = TRUE, dr = TRUE, lfm_linear = FALSE, 
                          dr = dr,
                          lfm_linear = lfm_linear,
                          max.it = max.it, 
-                         Q_bounds = c(0.001, 0.999), 
+                         lr = lr,
+                         Q_bounds = c(1e-4, 1-1e-4), 
                          g_bounds = c(0.025, 0.975),
-                         tau_bounds = c(-1+1e-3, 1-1e-3),
-                         tau_s_bounds = c(-1+1e-3, 1-1e-3),
-                         gamma_s_bounds = c(1e-6, 1-1e-6)
+                         tau_bounds = c(-1+1e-4, 1-1e-4),
+                         tau_s_bounds = c(-1+1e-4, 1-1e-4),
+                         gamma_s_bounds = c(1e-8, 1-1e-8)
                          )
     res_ee <- res$resEE
     res_tmle <- res$resTMLE
