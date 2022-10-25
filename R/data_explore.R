@@ -13,6 +13,10 @@ unique(d$CMTRT)
 adhypo <- box_read("946034248101")
 head(adhypo)
   
+
+
+#cleaned data
+final <- box_read("1048393668373")
   
 
 
