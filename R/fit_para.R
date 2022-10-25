@@ -9,7 +9,8 @@ fit_para <- function(df,
                      tau_bounds = NULL, 
                      tau_s_bounds = NULL, 
                      gamma_s_bounds = NULL, 
-                     dr = TRUE){
+                     dr = TRUE
+                     add_tau_sc = FALSE){
   
   all_covar = setdiff(names(df), 'Y')
   all_w = setdiff(all_covar, 'A')
@@ -48,27 +49,21 @@ fit_para <- function(df,
     # 
     # gamma_s_fit <- fit_x(df = df, sl_x = sl_x, po = po, outcome = 'po', para = 'gamma_s', ws = ws)
     # gamma_s <- gamma_s_fit$predict()
-    
-    tau_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau, outcome = 'tau', para = 'tau_s', ws = ws)
-    tau_s <- tau_s_fit$predict()
-    
-    gamma_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau, outcome = 'tau', para = 'gamma_s', ws = ws)
-    gamma_s <- gamma_s_fit$predict()
-    
   }else{
     tau <- Qbar1W - Qbar0W
-    
-    tau_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau, outcome = 'tau', para = 'tau_s', ws = ws)
-    tau_s <- tau_s_fit$predict()
-    
-    gamma_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau, outcome = 'tau', para = 'gamma_s', ws = ws)
-    gamma_s <- gamma_s_fit$predict()
   }
   
   # bound tau in [-1,1]
   if (!is.null(tau_bounds)){
     tau <- bound(tau, tau_bounds)
   }
+  
+  tau_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau, outcome = 'tau', para = 'tau_s', ws = ws)
+  tau_s <- tau_s_fit$predict()
+  
+  gamma_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau, outcome = 'tau', para = 'gamma_s', ws = ws)
+  gamma_s <- gamma_s_fit$predict()
+  
   # bound tau_s in [-1,1]
   if (!is.null(tau_s_bounds)){
     tau_s <- bound(tau_s, tau_s_bounds)
@@ -77,6 +72,19 @@ fit_para <- function(df,
   if (!is.null(gamma_s_bounds)){
     gamma_s <- bound(gamma_s, gamma_s_bounds)
   }
+  
+  if (add_tau_sc){
+    tau_sc_fit <- fit_x(df = df, sl_x = sl_x, tau = tau, outcome = 'tau', para = 'tau_sc', ws = all_wsc)
+    tau_sc <- tau_sc_fit$predict()
+    
+    # bound tau_s in [-1,1]
+    if (!is.null(tau_s_bounds)){
+      tau_sc <- bound(tau_sc, tau_s_bounds)
+    }
+  }else{
+    tau_sc <- NA
+  }
+  
   
   df_fit <- data.frame('Y' = df$Y, 
                        'A' = df$A, 
@@ -87,7 +95,8 @@ fit_para <- function(df,
                        'po' = po,
                        'tau' = tau,
                        'tau_s' = tau_s,
-                       'gamma_s' = gamma_s)
+                       'gamma_s' = gamma_s,
+                       'tau_sc' = tau_sc)
   return(df_fit)
 }
 
@@ -207,35 +216,29 @@ fit_cvpara <- function(df,
       tau_fit <- fit_x(df = df_t, sl_x = sl_x, po = po_t, outcome = 'po', para = 'tau')
       tau_v <- tau_fit$predict(tau_task_v)
       
-      tau_s_fit <- fit_x(df = df_t, sl_x = sl_x, po = po_t, outcome = 'po', para = 'tau_s', ws = ws)
-      tau_s_v <- tau_s_fit$predict(s_task_v)
-
-      gamma_s_fit <- fit_x(df = df_t, sl_x = sl_x, po = po_t, outcome = 'po', para = 'gamma_s', ws = ws)
-      gamma_s_v <- gamma_s_fit$predict(s_task_v)
-      
-      # tau_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t, outcome = 'tau', para = 'tau_s', ws = ws)
+      # tau_s_fit <- fit_x(df = df_t, sl_x = sl_x, po = po_t, outcome = 'po', para = 'tau_s', ws = ws)
       # tau_s_v <- tau_s_fit$predict(s_task_v)
       # 
-      # gamma_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t, outcome = 'tau', para = 'gamma_s', ws = ws)
+      # gamma_s_fit <- fit_x(df = df_t, sl_x = sl_x, po = po_t, outcome = 'po', para = 'gamma_s', ws = ws)
       # gamma_s_v <- gamma_s_fit$predict(s_task_v)
-      
     }else{
       # fit and pred
       tau_v <- Qbar1W_v - Qbar0W_v
-      
-      # fit and pred
-      tau_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t, outcome = 'tau', para = 'tau_s', ws = ws)
-      tau_s_v <- tau_s_fit$predict(s_task_v)
-      
-      # fit and pred
-      gamma_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t, outcome = 'tau', para = 'gamma_s', ws = ws)
-      gamma_s_v <- gamma_s_fit$predict(s_task_v)
     }
     
     # bound tau in [-1,1]
     if (!is.null(tau_bounds)){
       tau_v <- bound(tau_v, tau_bounds)
     }
+    
+    # fit and pred
+    tau_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t, outcome = 'tau', para = 'tau_s', ws = ws)
+    tau_s_v <- tau_s_fit$predict(s_task_v)
+    
+    # fit and pred
+    gamma_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t, outcome = 'tau', para = 'gamma_s', ws = ws)
+    gamma_s_v <- gamma_s_fit$predict(s_task_v)
+    
     # bound tau_s in [-1,1]
     if (!is.null(tau_s_bounds)){
       tau_s_v <- bound(tau_s_v, tau_s_bounds)
@@ -301,7 +304,7 @@ fitSL <- function(df, sl_Q, sl_g, Q_bounds = NULL, g_bounds = c(0.025, 0.975)){
 
 fit_x <- function(df, sl_x, po = NULL, tau = NULL, outcome = 'po', para = 'tau', ws = NULL){
   assertthat::assert_that(outcome %in% c('po', 'tau'))
-  assertthat::assert_that(para %in% c('tau', 'tau_s', 'gamma_s'))
+  assertthat::assert_that(para %in% c('tau', 'tau_s', 'gamma_s', 'tau_sc'))
   if (outcome == 'po'){
     assertthat::assert_that(!is.null(po))
     if (para == 'gamma_s'){
