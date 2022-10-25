@@ -55,14 +55,20 @@ N <- 5e2
 
 registerDoParallel(10)
 tic()
-bootstrap_results <- run_all_simu(B = B, N = N, cv = F, dr = F, max.it = 1e4, lr = 1e-3, truth = 0.686)
+bootstrap_results <- run_all_simu(B = B, 
+                                  N = N, 
+                                  truth = 0.686,
+                                  cv = F, 
+                                  dr = T, 
+                                  max.it = 1e4, 
+                                  lr = 1e-3, 
+                                  tmle_dr_update = T)
 toc()
 # 
 # 
 # 
 # output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_earth_nocv_", N, "_", Sys.Date(),'.csv')
 # write.csv(bootstrap_results, output_filename)
-
 
 
 

@@ -10,6 +10,7 @@ run_VIM_Theta <- function(df,
                           lfm_linear = FALSE,
                           max.it = 600, 
                           lr = 1e-4,
+                          tmle_dr_update = FALSE,
                           Q_bounds = c(0.001, 0.999), 
                           g_bounds = c(0.025, 0.975),
                           tau_bounds = c(-1+1e-3, 1-1e-3),
@@ -40,7 +41,7 @@ run_VIM_Theta <- function(df,
                      gamma_s_bounds = gamma_s_bounds)
   
   # tmle_vim
-  if (dr){
+  if (tmle_dr_update){
     resTMLE <- TMLE_VIM_b(df_fit, y_l, y_u, max.it)
   }else{
     resTMLE <- TMLE_VIM_a(df_fit, y_l, y_u, max.it)
