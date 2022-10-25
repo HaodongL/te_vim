@@ -24,6 +24,7 @@ out_subid <- union(out_subid_tte, out_subid_cm)
 W <- subset(df_w, !USUBJID %in% out_subid)
 
 
+
 # REMOVE UNITS, ID VARIABLES, AND POST-BASELINE VARIABLES
 W <- dplyr::select(W, -c(STUDYID, SUBJID, DIABDURU, WSTCRBLU,
                          BMIBLU, WGTBLU, WGTTBLU, PULSEBLU, SYSBPBLU,

@@ -6,14 +6,29 @@ library(mice)
 
 ### ------------  Part 0. Import Dataset  ------------ ###
 
-# read in subject level covariate dataset, tte, ttse and cm 
-df_w <- haven::read_sas("data/ADaM/adsl.sas7bdat")
-df_tte <- haven::read_sas("data/ADaM/adtte.sas7bdat")
-df_cm <- haven::read_sas("data/ADaM/adcm.sas7bdat")
-df_ttse <- haven::read_sas("data/ADaM/adttse.sas7bdat")
-df_hypo <- haven::read_sas("data/ADaM/adhypo.sas7bdat")
-df_adae <- haven::read_sas("data/ADaM/adae.sas7bdat")
-# df_adlb <- haven::read_sas("data/ADaM/adlb.sas7bdat")
+if(here::here()=="C:/Users/andre/Documents/te_vim"){
+  library(boxr)
+  box_auth()
+  
+  df_w <- box_read("946034250501")
+  df_tte <- box_read("946034258901")
+  df_cm <- box_read("946034255301")
+  df_ttse <- box_read("946034261301")
+  df_hypo <-box_read("946034248101")
+  df_adae <- box_read("946034244501")
+  
+}else{
+  # read in subject level covariate dataset, tte, ttse and cm 
+  df_w <- haven::read_sas("data/ADaM/adsl.sas7bdat")
+  df_tte <- haven::read_sas("data/ADaM/adtte.sas7bdat")
+  df_cm <- haven::read_sas("data/ADaM/adcm.sas7bdat")
+  df_ttse <- haven::read_sas("data/ADaM/adttse.sas7bdat")
+  df_hypo <- haven::read_sas("data/ADaM/adhypo.sas7bdat")
+  df_adae <- haven::read_sas("data/ADaM/adae.sas7bdat")
+  # df_adlb <- haven::read_sas("data/ADaM/adlb.sas7bdat")
+  
+}
+
 
 
 ### ------------  Part 1. Process Covariates  ------------ ###
