@@ -51,12 +51,11 @@ df <- df %>% mutate(Y = ifelse((AVAL_FRINSLTM <= cutoff_t & EVENT_FRINSLTM == 1 
 #                        "AVAL_OADTM", "EVENT_OADTM"))
 
 df <- df %>% mutate(across(where(is.character), ~ as.factor(.)))
-df <- df %>% mutate(A = ifelse(ACTARM == "Placebo", 0, 1)) %>% select(-"ACTARM")
-
-cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "minera_cm", "adp",
-              "vkantag", "caantag", "thiazide", "loopdiur")
-
-df <- df %>% mutate_at(cm_names, ~ifelse(is.na(.), FALSE, TRUE))
+# df <- df %>% mutate(A = ifelse(ACTARM == "Placebo", 0, 1)) %>% select(-"ACTARM")
+# 
+# cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "minera_cm", "adp",
+#               "vkantag", "caantag", "thiazide", "loopdiur")
+# df <- df %>% mutate_at(cm_names, ~ifelse(is.na(.), FALSE, TRUE))
 
 nodes <- list(W = setdiff(names(df), c("Y", "A")),
               A = 'A',

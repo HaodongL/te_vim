@@ -110,10 +110,10 @@ TMLE_VTE <- function(data,ab=NULL){
   if(it>=max.it) warning("Max iterations reached in TMLE")
   
   # print(paste0("it = ", it))
-  print(paste0("eic1 = ", N^2*pD1^2))
-  print(paste0("cutoff1 = ", Sig1))
-  print(paste0("eic2 = ", N^2*pD2^2))
-  print(paste0("cutoff2 = ", Sig2))
+  # print(paste0("eic1 = ", N^2*pD1^2))
+  # print(paste0("cutoff1 = ", Sig1))
+  # print(paste0("eic2 = ", N^2*pD2^2))
+  # print(paste0("cutoff2 = ", Sig2))
   
   
   rootV <- ifelse(VTE>=0,sqrt(VTE),NA)
