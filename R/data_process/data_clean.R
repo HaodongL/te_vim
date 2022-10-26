@@ -337,7 +337,7 @@ df_w_summary <- df_w_summary %>%
   mutate_at(cm_names, ~ifelse(is.na(.), FALSE, TRUE)) %>% 
   mutate(A = ifelse(A == 1, "Liraglutide", "Placebo"))
 
-
+df_w_summary <- labelled::remove_labels(df_w_summary)
 
 library(table1)
 library(r2rtf)
@@ -354,6 +354,15 @@ tbl
 # # Use apa_table()
 # apa_table(x, caption = "Output from table1 in a pdf document.")
 
+# all_exclude <- setdiff(names(df_w), names(df_w_summary))
+# var_ex <- data.frame("index" = c(1:length(all_exclude)),
+#                       "name" = all_exclude) 
+# 
+# all_include <- names(df_w_summary)
+# var_in <- data.frame("index" = c(1:length(all_include)),
+#                       "name" = all_include) 
+# write_excel_csv(var_ex, "~/Repo/te_vim/tnp/var_ex.csv")
+# write_excel_csv(var_in, "~/Repo/te_vim/tnp/var_in.csv")
 
 
 ### ------------  Part 2. Process Outcomes  ------------ ###

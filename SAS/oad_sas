@@ -1,0 +1,559 @@
+ libname adam "path";
+
+ * ADSL and ADCM data extraction;
+
+   proc sql;
+
+      create table tmp_adsl as
+
+      select *
+
+      from adam.adsl
+
+      where fasfl eq "Y"
+
+      ;
+
+      * First initiation of any OAD after treatment start, reference start cmstrf must be DURING or AFTER;
+
+      create table tmp_aod_after as
+
+      select *
+
+            ,catx("|",cmclascd,dcl1c,dcl2c,dcl3c,dcl4c,dcl5c,dcl6c,dcl7c,dcl8c,dcl9c,dcl10c,dcl11c,dcl12c,dcl13c,dcl14c) as string
+
+      from adam.adcm
+
+      where astrf in ("DURING" "AFTER") and fasfl eq "Y"
+
+      having index(string,"A10BA") or index(string,"A10BB")
+
+          or index(string,"A10BC") or index(string,"A10BD")
+
+              or index(string,"A10BF")
+
+         or index(string,"A10BG") or index(string,"A10BH")
+
+          or index(string,"A10BX09") or index(string,"A10BX11")
+
+          or index(string,"A10BX12") or (index(string,"A10BX") and CMDECOD ne 'LIRAGLUTIDE')
+
+      order by usubjid, astdt
+
+      ;
+
+      * Create OAD variables for post baseline;
+
+      create table tmp02 as
+
+      select *
+
+            ,case when index(string,"A10BA") then 1
+
+                  else 0 end as a1
+
+            ,case when index(string,"A10BB") then 1
+
+                  else 0 end as a2
+
+            ,case when index(string,"A10BC") then 1
+
+                  else 0 end as a3
+
+            ,case when index(string,"A10BD") then 1
+
+                  else 0 end as a4
+
+            ,case when index(string,"A10BF") then 1
+
+                  else 0 end as a5
+
+            ,case when index(string,"A10BG") then 1
+
+                  else 0 end as a6
+
+            ,case when index(string,"A10BH") then 1
+
+                  else 0 end as a7
+
+            ,case when index(string,"A10BX09") then 1
+
+                  else 0 end as a8
+
+            ,case when index(string,"A10BX11") then 1
+
+                  else 0 end as a9
+
+            ,case when index(string,"A10BX12") then 1
+
+                  else 0 end as a10
+
+            ,case when index(string,"A10BX") and CMDECOD ne 'LIRAGLUTIDE' then 1
+
+                  else 0 end as a11
+
+      from tmp_aod_after
+
+      order by studyid, usubjid, astdt, cmseq
+
+      ;    
+
+      * Baseline OAD, reference start cmstrf must be BEFORE or UNKNOWN, and cmenrf AFTER or ONGOING or DURING - or use conblfl flag;
+
+      create table tmp_aod_base as
+
+      select *
+
+            ,catx("|",cmclascd,dcl1c,dcl2c,dcl3c,dcl4c,dcl5c,dcl6c,dcl7c,dcl8c,dcl9c,dcl10c,dcl11c,dcl12c,dcl13c,dcl14c) as string
+
+      from adam.adcm
+
+      where conblfl eq "Y" and fasfl eq "Y"
+
+      having index(string,"A10BA") or index(string,"A10BB")
+
+          or index(string,"A10BC") or index(string,"A10BD")
+
+              or index(string,"A10BF")
+
+          or index(string,"A10BG") or index(string,"A10BH")
+
+          or index(string,"A10BX09") or index(string,"A10BX11")
+
+          or index(string,"A10BX12") or (index(string,"A10BX") and CMDECOD ne 'LIRAGLUTIDE')
+
+      order by usubjid, astdt
+
+      ;
+
+      * Create OAD variables for baseline;
+
+      create table tmp03 as
+
+      select *
+
+            ,case when index(string,"A10BA") then 1
+
+                  else 0 end as a1
+
+            ,case when index(string,"A10BB") then 1
+
+                  else 0 end as a2
+
+            ,case when index(string,"A10BC") then 1
+
+                  else 0 end as a3
+
+            ,case when index(string,"A10BD") then 1
+
+                  else 0 end as a4
+
+            ,case when index(string,"A10BF") then 1
+
+                  else 0 end as a5
+
+            ,case when index(string,"A10BG") then 1
+
+                  else 0 end as a6
+
+            ,case when index(string,"A10BH") then 1
+
+                  else 0 end as a7
+
+            ,case when index(string,"A10BX09") then 1
+
+                  else 0 end as a8
+
+            ,case when index(string,"A10BX11") then 1
+
+                  else 0 end as a9
+
+            ,case when index(string,"A10BX12") then 1
+
+                  else 0 end as a10
+
+            ,case when index(string,"A10BX") and CMDECOD ne 'LIRAGLUTIDE' then 1
+
+                  else 0 end as a11
+
+      from tmp_aod_base
+
+      order by usubjid, astdt, cmseq
+
+      ;   
+
+      * Per subject for baseline;
+
+      create table tmp04 as
+
+      select studyid, usubjid, subjid, max(a1) as a1_bl, max(a2) as a2_bl, max(a3) as a3_bl
+
+            ,max(a4) as a4_bl, max(a5) as a5_bl, max(a6) as a6_bl, max(a7) as a7_bl
+
+            ,max(a8) as a8_bl, max(a9) as a9_bl, max(a10) as a10_bl, max(a11)as a11_bl
+
+      from tmp03
+
+      group by studyid, usubjid, subjid
+
+      ;
+
+   quit;
+
+ 
+
+   * Any new OAD;
+
+   %macro new();
+
+    data tmp_aod_new;
+
+      merge tmp02 (in=a)
+
+            tmp04 (in=b)
+
+            ;
+
+      by studyid usubjid;
+
+        *All OADs started after start of treatment, and wee want to also include patients that did not get;
+
+      *OADs at baseline;
+
+      if a;
+
+      %do i=1 %to 11;
+
+         if not a&i._bl and a&i. then new&i.=1;
+
+      %end;
+
+      any_new = sum(of new1 - new11);
+
+      if any_new > 0 then output;
+
+    run;
+
+   %mend;
+
+   %new;
+
+ 
+
+   proc sort data=tmp_aod_new;
+
+      by usubjid astdt;
+
+   run;
+
+ 
+
+   data any_oad_first1;
+
+      set tmp_aod_new;
+
+      by usubjid astdt;
+
+      oad_first = astdt;
+
+      format oad_first date9.;
+
+      if first.usubjid then output;
+
+   run;
+
+ 
+
+   data any_oad_first2;
+
+      set any_oad_first1;
+
+      if oad_first >= randdt then ttf_oad_days = oad_first - randdt + 1;
+
+      ttf_oad_mth = (ttf_oad_days/365.25)*12;
+
+      TTFOAD = ttf_oad_mth;
+
+      label ttf_oad_days = "Time to first init. of any OAD (days)"
+
+            ttf_oad_mth = "Time to first init. of any OAD (months)"
+
+            TTFOAD = "Time (Months) to First OAD Event"
+
+            ;
+
+   run;
+
+ 
+
+   proc sql;
+
+      create table any_ins as
+
+      select *
+
+            ,catx("|",cmclascd,dcl1c,dcl2c,dcl3c,dcl4c,dcl5c,dcl6c,dcl7c,dcl8c,dcl9c,dcl10c,dcl11c,dcl12c,dcl13c,dcl14c) as string
+
+      from adam.adcm
+
+      where  astrf in ("DURING" "AFTER") and fasfl eq "Y"
+
+      having index(string,"A10A")
+
+      order by usubjid, astdt
+
+      ;
+
+      create table any_ins_first0 as
+
+      select usubjid, subjid, randdt, min(astdt) as oad_first format=date9.
+
+      from any_ins
+
+      group by usubjid, subjid, randdt
+
+      ;
+
+   quit;
+
+ 
+
+   data any_ins_first1;
+
+      set any_ins;
+
+      by usubjid astdt;
+
+      ins_first = astdt;
+
+      format ins_first date9.;
+
+      if first.usubjid then output;
+
+   run;
+
+ 
+
+   data any_ins_first2;
+
+      set any_ins_first1;
+
+      if ins_first >= randdt then ttf_ins_days = ins_first - randdt + 1;
+
+      ttf_ins_mth = (ttf_ins_days/365.25)*12;
+
+      TTFINS = ttf_ins_mth;
+
+      label ttf_ins_days = "Time to first init. of any INS (days)"
+
+            ttf_ins_mth = "Time to first init. of any INS (months)"
+
+            TTFINS = "Time (Months) to First INS Event"
+
+            ;
+
+   run;
+
+ 
+
+   * Merge oad and ins;
+
+   data oad_ins_first;
+
+      merge any_ins_first2 (in=a)
+
+            any_oad_first2 (rename=(astdt=astdt_ astdy=astdy_ cmrefid=cmrefid_) in=b)
+
+            tmp_adsl (keep=usubjid antdbfl in=c)
+
+            ;
+
+      by usubjid;
+
+      if (a or b) and c;
+
+ 
+
+      * For subjects already on insulin at randomisation do not check for insulin only OAD;
+
+      if index(antdbfl,"Insulin") then DO;
+
+ 
+
+                  TTFOADIN = ttfoad;
+
+                  astdt = astdt_;
+
+                  astdy = astdy_;
+
+      end;
+
+      else if not index(antdbfl,"Insulin") then do;
+
+                  TTFOADIN = min(ttfoad,ttfins);
+
+ 
+
+                    astdt = min(astdt,astdt_);
+
+                  astdy = min(astdy,astdy_);
+
+      end;
+
+ 
+
+      if TTFOADIN eq ttfoad then do;
+
+         cmrefid = cmrefid_;
+
+      end;
+
+      label TTFOADIN = "Time (Months) to First INS/OAD Event";
+
+      if TTFOAD ne . or TTFOADIN then output;
+
+      drop new: a1 - a10;
+
+   run;
+
+ 
+
+   * Censoring to last contact date (months) where no event is present;
+
+   proc sql;
+
+      create table final1 as
+
+      select A.*
+
+            ,cmclas
+
+            ,cmclascd
+
+            ,coalesce(B.trtp, A.trt01p) as TRTP
+
+            ,coalesce(B.trta, A.trt01a) as TRTA
+
+            ,coalesce(B.trtpn, A.trt01pn) as TRTPN
+
+            ,coalesce(B.trtan, A.trt01an) as TRTAN
+
+            ,astrf
+
+            ,case when B.TTFOAD ne . then B.TTFOAD
+
+                  else ((A.lstcondt - A.randdt +1)/365.25)*12
+
+                  end as AVAL
+
+            ,"Months" as AVALU
+
+            ,"OADTM" as PARAMCD
+
+            ,"Time (Months) to First OAD Event" as PARAM
+
+        ,case when B.TTFOAD ne . then upCase("Time (Months) to First OAD Event")
+
+            else "LAST CONTACT DATE"  
+
+            end as PARCAT1
+
+            ,case when B.TTFOAD ne . then B.astdy
+
+                  else A.lstcondt - A.randdt +1
+
+                  end as ADY
+
+            ,case when B.TTFOAD ne . then upCase("Time (Months) to First OAD Event")
+
+                    else "LAST CONTACT DATE -" || put(A.LSTCONDT,date9.)
+
+                    
+
+                  end as EVNTDESC
+
+            ,case when  B.TTFOAD ne . then B.astdt
+
+                  else A.lstcondt
+
+                  end as ADT format=date9.
+
+            ,case when B.TTFOAD ne . then 0
+
+                  else 1
+
+                  end as CNSR
+
+              ,A.RANDDT as STARTDT
+
+              ,A.RANDDT as AETRSDT
+
+              ,A.PYO16DT as AETREDT
+
+      from tmp_adsl as A
+
+      left join any_oad_first2 as B on A.usubjid=B.usubjid
+
+      ;
+
+   quit;
+
+ 
+
+   * Censoring to last contact date (months) where no event is present;
+
+   proc sql;
+
+      create table final2 as
+
+      select A.*
+
+            ,cmclas
+
+            ,cmclascd
+
+            ,coalesce(B.trtp, A.trt01p) as TRTP
+
+            ,coalesce(B.trta, A.trt01a) as TRTA
+
+            ,coalesce(B.trtpn, A.trt01pn) as TRTPN
+
+            ,coalesce(B.trtan, A.trt01an) as TRTAN        
+
+            ,astrf
+
+            ,case when B.TTFOADIN ne . then B.TTFOADIN
+
+                  else ((A.lstcondt /*A.eosdt*/ - A.randdt +1)/365.25)*12
+
+                  end as AVAL
+
+            ,"Months" as AVALU
+
+            ,"OADINSTM" as PARAMCD
+
+            ,"Time (Months) to First Insulin or OAD Event" as PARAM
+
+         ,case when B.TTFOADIN ne . then upCase("Time (Months) to First Insulin/OAD Event")
+
+            else "LAST CONTACT DATE"       
+
+            end as PARCAT1
+
+            ,case when B.TTFOADIN ne . then B.astdy
+
+                  else A.lstcondt - A.randdt +1
+
+                  end as ADY
+
+         ,case when B.TTFOADIN ne . then upCase("Time (Months) to First Insulin/OAD Event")
+
+                     else "LAST CONTACT DATE -" || put(A.LSTCONDT, date9.)
+
+                  end as EVNTDESC
+
+            ,case when  B.TTFOADIN ne . then B.astdt
+
+                  else A.lstcondt
+
+                  end as ADT format=date9.

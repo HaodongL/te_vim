@@ -1,0 +1,347 @@
+libname adam "path";
+
+
+
+/************* antidiabetic medication ***********************/
+
+proc sort data = adam.adcm  out = ad_cm(keep = studyid usubjid cmclascd /* cmstrf cmenrf */ fasfl continyn cmstdtc cmendtc
+
+                                               dcl: astdt aendt cmdecod);
+
+     by studyid usubjid;
+
+     where fasfl eq "Y" and upcase(ANL01FL) eq "Y" and upcase(CONBLFL) eq "Y";  /*** use the baseline flag**/
+
+run;
+
+ 
+
+/* Reading the adsl dataset */
+
+ 
+
+proc sort data = adam.adsl out = adsl (keep = studyid usubjid arm randdt ANTDBFL );
+
+     by studyid usubjid;
+
+     where fasfl eq "Y" ;
+
+run;
+
+ 
+
+/* Getting the atc codes in single variable for the multiple atc codes */
+
+ 
+
+data ad_cm_1 (rename =(atc_code = cmclascd));
+
+     length atc_code $200.;
+
+     set ad_cm;
+
+     array atc {*} cmclascd dcl1c dcl2c dcl3c dcl4c dcl5c dcl6c dcl7c dcl8c
+
+                   dcl9c dcl10c dcl11c dcl12c dcl13c dcl14c;
+
+     do i = 1 to dim(atc);
+
+        if atc{i} > " " then do;
+
+        atc_code = atc{i};
+
+        output;
+
+     end;
+
+     end;
+
+     drop cmclascd i;
+
+run;
+
+ 
+
+data ad_cm_2;
+
+     merge adsl (in = a) ad_cm_1(in = b);
+
+     by studyid usubjid;
+
+     if a and b;
+
+     /* Ongoing medication at randomisation (visit 3) */
+
+      /* we use now upcase(CONBLFL) eq "Y" see prior code
+
+     if (compress(upcase(cmstrf)) eq "BEFORE" and compress(upcase(cmenrf)) ne "BEFORE")
+
+     or (compress(upcase(cmstrf)) eq "UNKNOWN" and compress(upcase(cmenrf)) ne "BEFORE"); */
+
+run;
+
+ 
+
+/* Creating groups for the concomitant medications taken */
+
+ 
+
+ 
+
+data ad_cm_3;
+
+     set ad_cm_2;
+
+     length cat subcat $ 50;
+
+ 
+
+    /* Subjects taking Insulin treatment at baseline */
+
+      if antdbfl in ("Insulin-OAD" "Insulin+OAD(s)") then do;
+
+     if index(upcase(cmclascd),"A10A") > 0 then do;
+
+        cat = "Insulin treatment at baseline"; catn = 2;
+
+        if upcase(cmclascd) ="A10AD" then do;
+
+           subcat = "Premix"; subcatn = 1;
+
+        end;
+
+        else if upcase(cmclascd) ="A10AB" then do;
+
+           subcat = "Short acting"; subcatn = 2;
+
+        end;
+
+        else if upcase(cmclascd) ="A10AC" then do;
+
+           subcat = "Intermediate acting"; subcatn = 3;
+
+        end;
+
+        else if upcase(cmclascd) ="A10AE" then do;
+
+           subcat = "Long acting"; subcatn = 4;
+
+        end;
+
+        else do;
+
+           subcat = "Other insulins"; subcatn = 5;
+
+        end;
+
+     end;
+
+end; /** anti diab flag **/
+
+     /* Subjects taking blood lowering drugs at baseline */
+
+      if  ANTDBFL in ( "1 OAD"   "> 1 OADs" "Insulin+OAD(s)") then do; /*** check for antdb fl ***/
+
+ 
+
+     if index(upcase(cmclascd),"A10B") > 0 then do;
+
+        cat = "Blood glucose lowering drugs at baseline"; catn = 1;
+
+        if upcase(cmclascd) in ("A10BA","A10BD") then do;
+
+           subcat = "Metformin"; subcatn = 1;
+
+        end;
+
+        if upcase(cmclascd) ="A10BB" then do;
+
+           subcat = "SU"; subcatn = 2;
+
+        end;
+
+        if upcase(cmclascd) ="A10BF" then do;
+
+           subcat = "Alpha glucosidase inhibitors"; subcatn = 3;
+
+        end;
+
+        if upcase(cmclascd) ="A10BG" then do;
+
+           subcat = "TZD"; subcatn = 4;
+
+        end;
+
+        if upcase(cmclascd) ="A10BH" then do;
+
+           subcat = "DPP4 inhibitors"; subcatn = 5;
+
+        end;
+
+        if upcase(cmclascd) ="A10BX" and cmdecod in ('ALBIGLUTIDE','EXENATIDE','LIRAGLUTIDE','LIXISENATIDE','DULAGLUTIDE') then do;
+
+           subcat = "GLP1 receptor agonist"; subcatn = 6;
+
+        end;
+
+        if upcase(cmclascd) ="A10BX" and cmdecod in ('CANAGLIFLOZIN','DAPAGLIFLOZIN','EMPAGLIFLOZIN','IPRAGLIFLOZIN L-','PROLINE','TOFOGLIFLOZIN')
+
+           then do;
+
+           subcat = "SGLT2 inhibitors"; subcatn = 7;
+
+        end;
+
+        if upcase(cmclascd) ="A10BX" and cmdecod in ('MITIGLINIDE','MITIGLINIDE CALCIUM','NATEGLINIDE','REPAGLINIDE')
+
+           then do;
+
+           subcat = "Glinides"; subcatn = 8;
+
+        end;
+
+        if index(upcase(cmclascd),"A10B") > 0 and subcat eq " " then do;
+
+           subcat = "Other"; subcatn = 9;
+
+        end;
+
+      end;
+
+ 
+
+        end;
+
+      if subcat ne " ";
+
+run;
+
+ 
+
+ 
+
+ 
+
+/****** how to get number of e.g. subjects with metformin at baseline ****/
+
+ 
+
+data check;
+
+set ad_cm_3;
+
+where subcat = "Metformin";
+
+run;
+
+ 
+
+/***** supplementary *****/
+
+proc sort data=check nodupkey;by usubjid;run;
+
+proc freq data=check;
+
+tables arm*subcat;
+
+run;
+
+ 
+
+ 
+
+ 
+
+/******************* NOW CV medication *************************/
+
+ 
+
+ 
+
+data ad_cm_5;
+
+     set ad_cm_2;
+
+     length cat subcat $ 50;
+
+ 
+
+     if index(upcase(cmclascd),"C07") > 0 then do;
+
+        cat = "Antihypertensive therapy"; catn = 1; subcat = "Beta blockers"; subcatn = 1;
+
+     end;
+
+     else if index(upcase(cmclascd),"C08") > 0 then do;
+
+             cat    = "Antihypertensive therapy"; catn = 1; subcat = "Calcium channel blockers"; subcatn = 2;
+
+     end;
+
+     else if index(upcase(cmclascd),"C09A") > 0 or index(upcase(cmclascd),"C09B") > 0 then do;
+
+             cat    = "Antihypertensive therapy"; catn = 1; subcat = "ACE inhibitors"; subcatn = 3;
+
+     end;
+
+     else if index(upcase(cmclascd),"C09C") > 0 or index(upcase(cmclascd),"C09D") > 0 then do;
+
+                  cat    = "Antihypertensive therapy"; catn = 1; subcat = "Angiotensin receptor blockers"; subcatn = 4;
+
+     end;
+
+     else if index(upcase(cmclascd),"C02") > 0 then do;
+
+                       cat    = "Antihypertensive therapy"; catn = 1; subcat = "Others"; subcatn = 5;
+
+     end;
+
+     else if index(upcase(cmclascd),"C03C") > 0 or index(upcase(cmclascd),"C03EB") > 0 then do;
+
+                  cat    = "Diuretics"; catn = 2; subcat = "Loop diuretics"; subcatn = 1;
+
+     end;
+     
+          else if index(upcase(cmclascd),"B01AC06") > 0 or index(upcase(cmclascd),"N02BA01") > 0 then do;
+
+                       cat    = "Low dose aspirin"; catn = 3; subcat = "ASA"; subcatn = 1;
+
+     end;
+     
+     else if index(upcase(cmclascd),"C03D") > 0 then do;
+
+                       cat    = "Mineralocorticoid receptor antagonists"; catn = 4; subcat = "Mineralocorticoid"; subcatn = 1;
+
+     end;
+     
+     else if index(upcase(cmclascd),"B01AC") > 0 then do;
+
+                       cat    = "ADP"; catn = 5; subcat = "ADP"; subcatn = 1;
+
+     end;
+     
+     else if index(upcase(cmclascd),"B01AF") > 0 then do;
+
+                       cat    = "NOACS"; catn = 6; subcat = "NOACS"; subcatn = 1;
+
+     end;
+     
+     else if index(upcase(cmclascd),"B01AA") > 0 then do;
+
+                       cat    = "Vitamin K antagonists"; catn = 7; subcat = "Vitamin"; subcatn = 1;
+
+     end;
+     
+     else if index(upcase(cmclascd),"C01AA05") > 0 then do;
+
+                       cat    = "Digoxin"; catn = 8; subcat = "Digoxin"; subcatn = 1;
+
+     end;
+     
+     else if index(upcase(cmclascd),"C03A") > 0 then do;
+
+                       cat    = "Thiazide"; catn = 9; subcat = "Thiazide"; subcatn = 1;
+
+     end;
+     
+run;
