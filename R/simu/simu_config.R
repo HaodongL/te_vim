@@ -2,7 +2,7 @@ run_all_simu <- function(B, N, truth,
                          cv = TRUE, 
                          dr = TRUE, 
                          lfm_linear = FALSE, 
-                         tmle_dr_update =FALSE,
+                         tmle_dr_update = FALSE,
                          ws = c('X2'), 
                          max.it = 1e3,
                          lr = 1e-4){

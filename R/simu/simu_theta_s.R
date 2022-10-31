@@ -7,6 +7,7 @@ source(paste0(repo_path, "R/est_function/sl3_config.R"))
 source(paste0(repo_path, "R/est_function/fit_para.R"))
 source(paste0(repo_path, "R/simu/simu_config.R"))
 source(paste0(repo_path, "R/est_function/vim.R"))
+# source(paste0(repo_path, "R/est_function/tmle_lin.R"))
 
 library('foreach')
 library('doParallel')
@@ -34,18 +35,25 @@ ncore <- floor(cpus_logical/2)
 
 ###### run simu
 
-# for (N in c(500, 1e3, 2e3,  3e3, 4e3, 5e3, 1e4, 2e4)){
-#   print(N)
-#   B <- 500 #rounds of simu
-# 
-#   registerDoParallel(10)
-#   tic()
-#   bootstrap_results <- run_all_simu(B = B, N = N, cv = F, dr = F, max.it = 1e4, truth = 0.686)
-#   toc()
-# 
-#   output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_earth_nocv_t_", N, "_", Sys.Date(),'.csv')
-#   write.csv(bootstrap_results, output_filename)
-# }
+for (N in c(500, 1e3, 2e3,  3e3, 4e3, 5e3, 1e4, 2e4)){
+  print(N)
+  B <- 500 #rounds of simu
+
+  registerDoParallel(10)
+  tic()
+  bootstrap_results <- run_all_simu(B = B, 
+                                    N = N, 
+                                    cv = F, 
+                                    dr = T, 
+                                    lfm_linear = F, 
+                                    tmle_dr_update = F, 
+                                    max.it = 1e4, 
+                                    truth = 0.686)
+  toc()
+
+  output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_sl_nocv_", N, "_", Sys.Date(),'.csv')
+  write.csv(bootstrap_results, output_filename)
+}
 
 
 

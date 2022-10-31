@@ -16,10 +16,20 @@ run_VIM_Theta <- function(df,
                           tau_bounds = c(-1+1e-3, 1-1e-3),
                           tau_s_bounds = c(-1+1e-3, 1-1e-3),
                           gamma_s_bounds = c(1e-6, 1-1e-6)){
-  # transform Y into [0,1]
-  y_l <- min(df$Y)
-  y_u <- max(df$Y)
-  df$Y <- scale01(df$Y, y_l, y_u)
+  
+  if (lfm_linear){
+    Q_bounds <- NULL
+    tau_bounds <- NULL
+    tau_s_bounds <- NULL
+    gamma_s_bounds <- NULL
+    y_l <- 0
+    y_u <- 1
+  }else{
+    # transform Y into [0,1]
+    y_l <- min(df$Y)
+    y_u <- max(df$Y)
+    df$Y <- scale01(df$Y, y_l, y_u)
+  }
   
   # fit Q, g
   # fit tau, tau_s, gamma_s

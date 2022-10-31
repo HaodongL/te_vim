@@ -7,6 +7,7 @@ lrnr_earth <- Lrnr_earth$new()
 lrnr_lasso <- Lrnr_glmnet$new()
 lrnr_xgb <- Lrnr_xgboost$new()
 lrnr_ranger <- Lrnr_ranger$new()
+lrnr_gam <- Lrnr_gam$new()
 lrnr_gam_Q <- Lrnr_gam$new('Y ~ s(X1) + s(X2) + ti(X1,X2) + s(X1,by=A) + s(X2,by=A) + ti(X1,X2,by=A)')
 lrnr_gam_g <- Lrnr_gam$new('A ~ s(X1) + s(X2) + ti(X1,X2)')
 # lrnr_gam_tau <- Lrnr_gam$new('A ~ s(X1) + s(X2) + ti(X1,X2)')
@@ -25,6 +26,7 @@ lrnr_hal <- Lrnr_hal9001$new(num_knots = c(50, 25, 15))
 lrnr_stack_Q <- make_learner("Stack",
                            lrnr_lm,
                            lrnr_lasso,
+                           lrnr_gam,
                            lrnr_xgb,
                            lrnr_earth)
 
@@ -50,23 +52,27 @@ lb_metalearner <- Lrnr_cv_selector$new(loss_loglik_binomial)
 
 # sl_Q <- Lrnr_sl$new(
 #   learners = lrnr_stack_Q,
-#   metalearner = Lrnr_cv_selector$new(loss_loglik_binomial)
-# )
-# 
-# sl_g <- Lrnr_sl$new(
-#   learners = lrnr_stack_g,
-#   metalearner = lb_metalearner,
-#   outcome_type = 'binomial'
-# )
-# 
-# sl_x <- Lrnr_sl$new(
-#   learners = lrnr_stack_x,
-#   metalearner = ls_metalearner
+#   metalearner = lb_metalearner
 # )
 
-sl_Q <- lrnr_earth
-sl_g <- lrnr_earth
-sl_x <- lrnr_earth
-# sl_x_t <- lrnr_lm
+sl_Q <- Lrnr_sl$new(
+  learners = lrnr_stack_Q,
+  metalearner = ls_metalearner
+)
+
+sl_g <- Lrnr_sl$new(
+  learners = lrnr_stack_g,
+  metalearner = lb_metalearner,
+  outcome_type = 'binomial'
+)
+
+sl_x <- Lrnr_sl$new(
+  learners = lrnr_stack_x,
+  metalearner = ls_metalearner
+)
+
+# sl_Q <- lrnr_earth
+# sl_g <- lrnr_earth
+# sl_x <- lrnr_earth
 
 
