@@ -127,7 +127,6 @@ df_ldasp <- df_cm %>%
   summarise(
     low_dose_aspirin = TRUE) 
 
-  
 
 # Antihypertensives
 df_antihypert <- df_cm %>% 
@@ -330,11 +329,10 @@ W <- W %>% mutate(COUNTRY = case_when(str_detect(COUNTRY, "America") ~ "America"
 ## -----  Part 1.5. Table of Baseline Characteristics 
 df_w_summary <- W %>% select(-c("USUBJID"))
 
-cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "minera_cm", "adp",
-              "vkantag", "caantag", "thiazide", "loopdiur")
+# cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "minera_cm", "adp",
+#               "vkantag", "caantag", "thiazide", "loopdiur")
 
 df_w_summary <- df_w_summary %>%
-  mutate_at(cm_names, ~ifelse(is.na(.), FALSE, TRUE)) %>% 
   mutate(A = ifelse(A == 1, "Liraglutide", "Placebo"))
 
 df_w_summary <- labelled::remove_labels(df_w_summary)
