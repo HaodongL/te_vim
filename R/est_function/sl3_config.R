@@ -71,8 +71,8 @@ sl_x <- Lrnr_sl$new(
   metalearner = ls_metalearner
 )
 
-# sl_Q <- lrnr_earth
-# sl_g <- lrnr_earth
-# sl_x <- lrnr_earth
+sl_Q <- lrnr_earth
+sl_g <- lrnr_earth
+sl_x <- lrnr_earth
 
 

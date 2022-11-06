@@ -37,7 +37,11 @@ fit_para <- function(df,
   # bound g
   gn <- bound(gn, g_bounds)
   
-  po = (y - QbarAW)*(2*a - 1)/gn + Qbar1W - Qbar0W
+  # true g
+  # gn <- plogis(0.1*df$X1*df$X2-0.4*df$X1)
+  
+  # po = (y - QbarAW)*(2*a - 1)/gn + Qbar1W - Qbar0W
+  po = (y - QbarAW)*(a/gn - (1-a)/(1-gn)) + Qbar1W - Qbar0W
   
   if (dr){
     # fit and predict tau, tau_s, gamma_s 
@@ -165,8 +169,8 @@ fit_cvpara <- function(df,
     gn_t <- g_fit$predict()
     # bound g
     gn_t <- bound(gn_t, g_bounds)
-    po_t <- (y_t - QbarAW_t)*(2*a_t - 1)/gn_t + Qbar1W_t - Qbar0W_t
-    
+    # po_t <- (y_t - QbarAW_t)*(2*a_t - 1)/gn_t + Qbar1W_t - Qbar0W_t
+    po_t <- (y_t - QbarAW_t)*(a_t/gn_t - (1-a_t)/(1-gn_t)) + Qbar1W_t - Qbar0W_t
 
     # ---------- V ------------- #
     index_v <- folds[[k]]$validation_set
@@ -319,6 +323,8 @@ fit_x <- function(df, sl_x, po = NULL, tau = NULL, outcome = 'po', para = 'tau',
   }
   
   folds <- origami::folds_vfold(nrow(df))
+  
+  # print(setdiff(names(df_train), c('Y', 'A', outcome, ws)))
   
   # setup sl3
   task <- sl3::make_sl3_Task(

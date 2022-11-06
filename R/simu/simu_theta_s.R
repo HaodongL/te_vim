@@ -39,19 +39,18 @@ for (N in c(500, 1e3, 2e3,  3e3, 4e3, 5e3, 1e4, 2e4)){
   print(N)
   B <- 500 #rounds of simu
 
-  registerDoParallel(10)
+  registerDoParallel(5)
   tic()
   bootstrap_results <- run_all_simu(B = B, 
                                     N = N, 
                                     cv = F, 
                                     dr = T, 
                                     lfm_linear = F, 
-                                    tmle_dr_update = F, 
-                                    max.it = 1e4, 
+                                    tmle_dr_update = T, 
                                     truth = 0.686)
   toc()
 
-  output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_sl_nocv_", N, "_", Sys.Date(),'.csv')
+  output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"local_earth_b_tg_", N, "_", Sys.Date(),'.csv')
   write.csv(bootstrap_results, output_filename)
 }
 
@@ -65,12 +64,11 @@ registerDoParallel(10)
 tic()
 bootstrap_results <- run_all_simu(B = B, 
                                   N = N, 
-                                  truth = 0.686,
                                   cv = F, 
                                   dr = T, 
-                                  max.it = 1e4, 
-                                  lr = 1e-3, 
-                                  tmle_dr_update = T)
+                                  lfm_linear = F, 
+                                  tmle_dr_update = T,
+                                  truth = 0.686)
 toc()
 # 
 # 

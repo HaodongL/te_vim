@@ -4,7 +4,7 @@ source(paste0(repo_path, "R/simu/simu_dgd.R")) #Used for the current examples
 source(paste0(repo_path, "R/est_function/sl3_config.R"))
 source(paste0(repo_path, "R/est_function/fit_para.R"))
 source(paste0(repo_path, "R/est_function/vim.R"))
-source(paste0(repo_path, "R/est_function/tmle_lin.R"))
+# source(paste0(repo_path, "R/est_function/tmle_lin.R"))
 
 # source(paste0(repo_path, "R/sandbox/tmle_vim_linear.R"))
 library(tictoc)
@@ -48,7 +48,7 @@ res <- run_VIM_Theta(df = df,
                      ws = c('X2'), 
                      cv = F,
                      dr = T,
-                     lfm_linear = T, 
+                     lfm_linear = F, 
                      tmle_dr_update = T, 
                      max.it = 1e4, 
                      Q_bounds = c(0.001, 0.999), 

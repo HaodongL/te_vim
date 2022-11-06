@@ -6,15 +6,15 @@ source(paste0(repo_path, "R/est_function/fit_para.R"))
 source(paste0(repo_path, "R/est_function/vim.R"))
 
 # Q, g
-set.seed(1)
-N <- 1e4 #size of generated data
+set.seed(1994)
+N <- 5e2 #size of generated data
 df <- generate_data_simple(N)
 
 ws = c('X2')
 cv = F
 dr = T
 lfm_linear = FALSE
-max.it=600
+max.it = 600
 
 Q_bounds = c(0.001, 0.999)
 g_bounds = c(0.025, 0.975)
@@ -62,6 +62,12 @@ gn <- g_fit$predict()
 # bound g
 gn <- bound(gn, g_bounds)
 
+
+# use true g
+# gn <- plogis(0.1*df$X1*df$X2-0.4*df$X1)
+
+
+
 po = (y - QbarAW)*(2*a - 1)/gn + Qbar1W - Qbar0W
 tau_fit <- fit_x(df = df, sl_x = sl_x, po = po, outcome = 'po', para = 'tau')
 
@@ -80,7 +86,6 @@ f_cate_t <- function(w1, w2){
   tau_t <- tau*(y_u - y_l)
   return(tau_t)
 }
-
 
 
 # DR cate

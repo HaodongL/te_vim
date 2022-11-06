@@ -4,7 +4,7 @@ run_all_simu <- function(B, N, truth,
                          lfm_linear = FALSE, 
                          tmle_dr_update = FALSE,
                          ws = c('X2'), 
-                         max.it = 1e3,
+                         max.it = 1e4,
                          lr = 1e-4){
   results_cols <- c('i', 'truth', 'cvtmle', 'cvtmle_se',
                     'cvtmle_lower', 'cvtmle_upper', 
@@ -88,4 +88,41 @@ run_all_simu <- function(B, N, truth,
   traceback()
   gc()
   return(results_df)
+}
+
+
+
+# 
+sum_metric <- function(res){
+  table_results_data <- res %>%
+    dplyr::mutate(cvtmle_proportion = truth <= cvtmle_upper & truth >= cvtmle_lower,
+                  cvaiptw_proportion = truth <= cvaiptw_upper & truth >= cvaiptw_lower,
+                  
+                  cvtmle_widthCI = cvtmle_upper-cvtmle_lower,
+                  cvaiptw_widthCI = cvaiptw_upper-cvaiptw_lower,
+    ) %>%
+    dplyr::group_by(n, truth) %>%
+    summarize(cvtmle_coverage = mean(cvtmle_proportion),
+              cvaiptw_coverage = mean(cvaiptw_proportion),
+              
+              cvtmle_bias = mean(cvtmle) - mean(truth),
+              cvaiptw_bias = mean(cvaiptw) - mean(truth),
+              
+              cvtmle_var = var(cvtmle),
+              cvaiptw_var = var(cvaiptw),
+              
+              cvtmle_mse = cvtmle_bias^2 + var(cvtmle),
+              cvaiptw_mse = cvaiptw_bias^2 + var(cvaiptw),
+              
+              
+              # 2020-02-01 coverage of oracle CI
+              cvtmle_oracle = mean(truth <= cvtmle + 1.96*sd(cvtmle) & truth >= cvtmle - 1.96*sd(cvtmle)),
+              cvaiptw_oracle = mean(truth <= cvaiptw + 1.96*sd(cvaiptw) & truth >= cvaiptw - 1.96*sd(cvaiptw)),
+              
+              cvtmle_meanwidthCI = mean(cvtmle_widthCI),
+              cvaiptw_meanwidthCI = mean(cvaiptw_widthCI)
+              
+    ) %>%  ungroup()
+  
+  return(table_results_data)
 }
