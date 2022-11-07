@@ -1,5 +1,5 @@
 run_all_simu <- function(B, N, truth, 
-                         cv = TRUE, 
+                         cv = FALSE, 
                          dr = TRUE, 
                          lfm_linear = FALSE, 
                          tmle_dr_update = FALSE,

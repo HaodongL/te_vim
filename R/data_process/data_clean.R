@@ -2,6 +2,7 @@ library(here)
 library(tidyverse)
 library(dplyr)
 library(mice)
+rm(list = ls())
 
 
 ### ------------  Part 0. Import Dataset  ------------ ###
@@ -10,7 +11,7 @@ if(here::here()=="C:/Users/andre/Documents/te_vim"){
   library(boxr)
   box_auth()
   
-  df_w <- box_read("946034250501")
+  df_adsl <- box_read("946034250501")
   df_tte <- box_read("946034258901")
   df_cm <- box_read("946034255301")
   df_ttse <- box_read("946034261301")
@@ -19,7 +20,7 @@ if(here::here()=="C:/Users/andre/Documents/te_vim"){
   
 }else{
   # read in subject level covariate dataset, tte, ttse and cm 
-  df_w <- haven::read_sas("data/ADaM/adsl.sas7bdat")
+  df_adsl <- haven::read_sas("data/ADaM/adsl.sas7bdat")
   df_tte <- haven::read_sas("data/ADaM/adtte.sas7bdat")
   df_cm <- haven::read_sas("data/ADaM/adcm.sas7bdat")
   df_ttse <- haven::read_sas("data/ADaM/adttse.sas7bdat")
@@ -35,7 +36,7 @@ if(here::here()=="C:/Users/andre/Documents/te_vim"){
 ### ------------  Part 1. Process Covariates  ------------ ###
 
 # remove the subjects who are not in df_tte or df_cm
-unique_subid_w = unique(df_w$USUBJID)
+unique_subid_w = unique(df_adsl$USUBJID)
 # 1 subject in subject level dataset, not in the time-to-event dataset
 out_subid_tte <- unique_subid_w[which(!(unique_subid_w %in% unique(df_tte$USUBJID)))]
 # 2 subjects in subject level dataset, not in the concomitant med dataset
@@ -44,7 +45,7 @@ out_subid <- union(out_subid_tte, out_subid_cm)
 
 
 ## -----  Part 1.1. Baseline Covariates  
-W <- subset(df_w, !USUBJID %in% out_subid)
+W <- subset(df_adsl, !USUBJID %in% out_subid)
 
 
 # REMOVE UNITS, ID VARIABLES, AND POST-BASELINE VARIABLES
@@ -69,13 +70,13 @@ W <- dplyr::select(W, -c(PREVTFL, HBC2BL, ARMCD, # ??? WGTBL,
                          CVHIFL, CVMEDFL, CVRISKN, age_category))
 
 W <- W %>%
-  mutate(RETINSEV = case_when(RETINSEV == "" ~ "NA",
+  mutate(RETINSEV = case_when(RETINSEV == "" ~ "retinsev NA",
                               T ~ RETINSEV),
          RETINSEV = factor(RETINSEV, ordered = T,
-                           levels = c("NA", "no retinopathy", "non-proliferative", "proliferative")),
-         NYHACLAS = factor(case_when(NYHACLAS == "" ~ "NA",
+                           levels = c("retinsev NA", "no retinopathy", "non-proliferative", "proliferative")),
+         NYHACLAS = factor(case_when(NYHACLAS == "" ~ "NYHA CLAS NA",
                                      T ~ NYHACLAS), ordered = T,
-                           levels = c("NA", "NYHA CLASS I", "NYHA CLASS II", "NYHA CLASS III")))
+                           levels = c("NYHA CLAS NA", "NYHA CLASS I", "NYHA CLASS II", "NYHA CLASS III")))
 
 # make logical variables logicals
 W <- W %>%
@@ -155,8 +156,7 @@ df_minera <- df_cm %>%
   select(USUBJID, CMCLASCD, CONBLFL) %>% 
   group_by(USUBJID) %>% 
   summarise(
-    minera = TRUE,
-    minera_cm = sum(CONBLFL == 'Y') > 0) 
+    minera = TRUE) 
 
 # ADP (any ADP, including ASA)
 df_adp <- df_cm %>% 
@@ -242,7 +242,7 @@ for (df_i in list_df_cm){
   W <- left_join(W, df_i, by = 'USUBJID')
 }
 
-cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "minera_cm", "adp",
+cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
               "vkantag", "caantag", "thiazide", "loopdiur")
 
 W <- W %>% mutate_at(cm_names, ~ifelse(is.na(.), FALSE, TRUE))
@@ -311,10 +311,10 @@ W <- W %>%
            "DIABDUR", "INSNVFL", "INSNVFL", "ANTDBFL", "AHYPERFL", "INCPASSN", 
            "BMIBL", "PULSEBL", "SYSBPBL", "DIABPBL", "HBA1CBL", "HDL1BL", "LDL1BL",
            "CHOL1BL", "RC", "RCoverHDL","TRIG1BL", "CREATBL", "EGFREPI", "EGFRMDRC", 
-           "EGFREPB", "EGFMDRBC", "EGFRMDR", "RETINSEV", "RETISEVN", "GERDBLFL", "PPIFL", "H2BLFL", 
+           "EGFREPB", "EGFMDRBC", "EGFRMDR", "RETINSEV", "GERDBLFL", "PPIFL", "H2BLFL", 
            "MIFL", "STROKEFL", "REVASFL", "STENFL", "CHDFL", "IHDFL", "CHFFL",
            "KIDFL", "MICFL", "HYPFL", "LVSDFL", "PADFL", "CVRISK", "HBA1CGRN", "DDURGRN", 
-           "statin_use", "antihypertensives", "betab", "minera", "minera_cm", "adp",
+           "statin_use", "antihypertensives", "betab", "minera", "adp",
            "vkantag", "caantag", "thiazide", "loopdiur")) %>% 
   rename("A" = "ARM")
 
@@ -325,11 +325,13 @@ W <- W %>% mutate(COUNTRY = case_when(str_detect(COUNTRY, "America") ~ "America"
                                       str_detect(COUNTRY, "Europe") ~ "Europe",
                                       str_detect(COUNTRY, "Pacific") ~ "Pacific"))
 
+# write_csv(W, file = "data/supp/df_w.csv")
+
 
 ## -----  Part 1.5. Table of Baseline Characteristics 
 df_w_summary <- W %>% select(-c("USUBJID"))
 
-# cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "minera_cm", "adp",
+# cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
 #               "vkantag", "caantag", "thiazide", "loopdiur")
 
 df_w_summary <- df_w_summary %>%
@@ -343,24 +345,6 @@ library(r2rtf)
 tbl <- table1(~. | A, data = df_w_summary)
 tbl
 
-
-# library(papaja)
-# # Restructure object
-# x <- attr(tbl, "obj")$contents
-# names(x) <- lapply(x, function(x){rownames(x)[[1L]]})
-# x <- lapply(x, function(x){x[-1L, ]})
-# # Use apa_table()
-# apa_table(x, caption = "Output from table1 in a pdf document.")
-
-# all_exclude <- setdiff(names(df_w), names(df_w_summary))
-# var_ex <- data.frame("index" = c(1:length(all_exclude)),
-#                       "name" = all_exclude) 
-# 
-# all_include <- names(df_w_summary)
-# var_in <- data.frame("index" = c(1:length(all_include)),
-#                       "name" = all_include) 
-# write_excel_csv(var_ex, "~/Repo/te_vim/tnp/var_ex.csv")
-# write_excel_csv(var_in, "~/Repo/te_vim/tnp/var_in.csv")
 
 
 ### ------------  Part 2. Process Outcomes  ------------ ###
@@ -491,11 +475,24 @@ df_a1c <- df_a1c %>%
 
 
 
-### ------------  Part final. Export Dataset  ------------ ###
-# setdiff(unique(Y$USUBJID), unique(W$USUBJID))
-# Y <- Y %>% filter(USUBJID != "EX2211-3748/39588")
-# df_all <- left_join(Y, W, by = 'USUBJID')
-# 
-# df_all <- left_join(df_all, Y_insulin, by = 'USUBJID')
-# df_all <- left_join(df_all, Y_oad, by = 'USUBJID')
-# write_csv(df_all, file = "data/df_all.csv")
+### ------------  Part 3. Export Dataset  ------------ ###
+
+df_w <- read_csv(file = "data/supp/df_w.csv")
+
+# 3.1 diabetes progression
+Y_diab <- read_csv(file = "data/supp/Y_diab.csv")
+df_all_diab <- left_join(df_w, Y_diab, by = 'USUBJID')
+
+# write_csv(df_all_diab, file = "data/supp/df_all_diab.csv")
+
+# 3.2 cv outcomes
+Y_cv <- read_csv(file = "data/supp/Y_cv.csv")
+df_all_cv <- left_join(df_w, Y_cv, by = 'USUBJID')
+
+# write_csv(df_all_cv, file = "data/supp/df_all_cv.csv")
+
+# 3.2 HBA1C
+Y_a1c <- read_csv(file = "data/supp/Y_a1c.csv")
+df_all_a1c <- left_join(df_w, Y_a1c, by = 'USUBJID')
+
+# write_csv(df_all_a1c, file = "data/supp/df_all_a1c.csv")
