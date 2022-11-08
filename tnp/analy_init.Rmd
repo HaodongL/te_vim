@@ -1,0 +1,256 @@
+---
+title: "Initial Analysis"
+author: "Haodong, Andrew"
+date: "2022-11-07"
+output: html_document
+---
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(formattable)
+library(tables)
+library(stargazer)
+library(kableExtra)
+library(tidyr)
+library(dplyr)
+library(data.table)
+library(readr)
+library(ggcorrplot)
+library(tmle3)
+```
+
+# Part 1. Variable Correlations
+```{r, message=FALSE, warning=FALSE}
+# read baseline variables
+df_w <- read_csv("~/Repo/te_vim/data/supp/df_w.csv")
+df_w <- df_w %>% 
+  mutate(across(where(is.character), ~ as.factor(.))) %>% 
+  mutate(across(where(is.logical), ~ as.factor(.))) 
+df_w <- df_w %>% select(-c('A', 'USUBJID'))
+
+# remove INSNVFL == TRUE
+df_w <- df_w %>% filter(INSNVFL == FALSE) %>% select(-INSNVFL)
+
+df_w_numeric <- df_w %>% select(where(is.numeric))
+df_w_factor <- df_w %>% select(where(is.factor))
+```
+
+```{r}
+# correlation (numeric W)
+color_corr <- c("#023e8a", "white", "#ae2012")
+model.matrix(~0+., data=df_w_numeric) %>% 
+  cor(use="pairwise.complete.obs") %>% 
+  ggcorrplot(show.diag = F, type="lower", lab=TRUE, lab_size=2, colors = color_corr)
+```
+
+```{r}
+# correlation (concomitant med (factor))
+cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
+              "vkantag", "caantag", "thiazide", "loopdiur")
+df_cm <- df_w_factor %>% select(all_of(cm_names))
+
+model.matrix(~., data=df_cm)[,-1] %>% 
+  cor(use="pairwise.complete.obs") %>% 
+  ggcorrplot(show.diag = F, type="lower", lab=TRUE, lab_size=2, colors = color_corr)
+```
+
+
+# Part 2. Survival Plots
+```{r, message=FALSE, warning=FALSE}
+rm(list = ls())
+source("~/Repo/te_vim/R/data_process/data_helper.R")
+library(survival)
+library(ggsurvfit)
+
+df <- get_data_tte(outcome = 'diab', t = 24)
+```
+
+```{r}
+# KM plot
+p_KM <- survfit2(Surv(Y, delta) ~ 1, data = df) %>% 
+  ggsurvfit() +
+  labs(
+    x = "Months",
+    y = "Survival Probability"
+  ) + 
+  add_confidence_interval() + 
+  add_risktable()
+p_KM
+```
+
+```{r}
+# survival plot (Liraglutide v.s. Placebo)
+p_A <- survfit2(Surv(Y, delta) ~ A, data = df %>% 
+                   mutate(A = ifelse(A == 1, 'Liraglutide', 'Placebo'))
+                 ) %>% 
+  ggsurvfit() +
+  labs(
+    x = "Months",
+    y = "Survival Probability"
+  ) + 
+  add_confidence_interval() +
+  add_risktable()
+p_A
+```
+
+```{r}
+# survival plot (Liraglutide v.s. Placebo)
+p_statin <- survfit2(Surv(Y, delta) ~ statin_use, data = df %>% 
+                        mutate(statin_use = ifelse(statin_use == TRUE, 'Statin', 'Non-statin'))
+                      ) %>% 
+  ggsurvfit() +
+  labs(
+    x = "Months",
+    y = "Survival Probability"
+  ) + 
+  add_confidence_interval() +
+  add_risktable()
+p_statin
+```
+
+# Part 3. Treatment Effect
+### CATE ($\tau = E(Y|A=1,W) - E(Y|A=0,W)$)
+```{r, message=FALSE, warning=FALSE}
+rm(list = ls())
+repo_path = "~/Repo/te_vim/"
+source(paste0(repo_path, "R/data_process/data_helper.R"))
+source(paste0(repo_path, "R/simu/simu_dgd.R")) 
+source(paste0(repo_path, "R/simu/simu_config.R"))
+source(paste0(repo_path, "R/est_function/sl3_config.R"))
+source(paste0(repo_path, "R/est_function/fit_para.R"))
+source(paste0(repo_path, "R/est_function/vim.R"))
+source(paste0(repo_path, "R/est_function/vte.R"))
+source(paste0(repo_path, "R/analysis/analy_helper.R"))
+```
+
+```{r}
+### ------------  Part 1. import data  ------------ ###
+outcome = 'diab'; t = 24
+df <- get_data(outcome, t)
+
+nodes <- list(W = setdiff(names(df), c("Y", "A")),
+              A = 'A',
+              Y = 'Y')
+
+df <- process_missing(df, nodes)$data
+```
+
+```{r}
+
+### ------------  Part 2. Estimation ------------ ###
+set.seed(123)
+if (outcome == "a1c"){
+  sl_Q <- Lrnr_sl$new(
+    learners = lrnr_stack_Q,
+    metalearner = ls_metalearner
+  )
+}
+
+
+# ATE
+# Diff in mean
+mean(df$Y[which(df$A == 1)]) - mean(df$Y[which(df$A == 0)])
+
+
+y_l <- min(df$Y)
+y_u <- max(df$Y)
+df$Y <- scale01(df$Y, y_l, y_u)
+
+# CATE
+ws = c('statin_use')
+cv = F
+dr = T
+max.it = 1e4
+Q_bounds = c(1e-4, 1-1e-4)
+g_bounds = c(0.025, 0.975)
+tau_bounds = c(-1+1e-4, 1-1e-4)
+tau_s_bounds = c(-1+1e-4, 1-1e-4)
+gamma_s_bounds = c(1e-8, 1-1e-8)
+add_tau_sc = T
+
+df_fit <- fit_para(df = df,
+                   sl_Q = sl_Q, 
+                   sl_g = sl_g,
+                   sl_x = sl_x,
+                   ws = ws,
+                   dr = dr,
+                   Q_bounds = Q_bounds,
+                   g_bounds = g_bounds,
+                   tau_bounds = tau_bounds,
+                   tau_s_bounds = tau_s_bounds,
+                   gamma_s_bounds = gamma_s_bounds,
+                   add_tau_sc = add_tau_sc)
+```
+
+```{r}
+# visualize CATE_{-s} ($\tau_{-s} = E(Y|A=1,W_s) - E(Y|A=0,W_s)$)
+cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
+              "vkantag", "caantag", "thiazide", "loopdiur")
+
+p_cate <- plot_cate(cm_names, cbind(df, "tau" = df_fit$tau))
+p_cate
+# ggsave("tnp/plot/p_cate.png", p_cate)
+```
+
+```{r}
+# GRF cate
+library(grf)
+
+df_W <- df %>% select(setdiff(names(df), c("Y", "A")))
+W <- model.matrix(~. , data=df_W)
+Y <- df$Y
+A <- df$A
+
+c_forest <- causal_forest(X = W , Y = Y, W = A)
+
+p_cate_grf <- plot_cate(cm_names, 
+                        cbind(df, "tau" = predict(c_forest)$predictions))
+p_cate_grf
+```
+
+### VTE ($Var(\tau)$)
+```{r}
+# VTE 
+aipw_vte <- VTE(df_fit, method="AIPW")
+tmle_vte <- VTE(df_fit, method="TMLE")
+```
+
+```{r}
+aipw_vte
+```
+
+```{r}
+tmle_vte
+```
+
+
+### VIM ($Var(\tau) - Var(\tau_s)$)
+```{r}
+# tmle vim
+theta_TMLE_a <- VIM(df_fit, method = "TMLE_a", y_l = 0, y_u = 1, max.it)
+theta_TMLE_b <- VIM(df_fit, method = "TMLE_b", y_l = 0, y_u = 1, max.it)
+
+# ee vim
+df_fit$Y <- rescale(df_fit$Y, y_l, y_u)
+df_fit$tau <- df_fit$tau*(y_u - y_l)
+df_fit$tau_s <- df_fit$tau_s*(y_u - y_l)
+df_fit$po <- df_fit$po*(y_u - y_l)
+
+theta_EE <- VIM(df_fit, method = "AIPW")
+```
+
+```{r}
+theta_EE
+```
+
+```{r}
+theta_TMLE_a
+```
+
+```{r}
+theta_TMLE_b
+```
+
+
+
+
+
