@@ -407,7 +407,7 @@ source(&quot;~/Repo/te_vim/R/data_process/data_helper.R&quot;)
 library(survival)
 library(ggsurvfit)
 
-df &lt;- get_data_tte(outcome = &#39;diab&#39;, t = 24)</code></pre>
+df &lt;- get_data_tte(outcome = &#39;diab&#39;)</code></pre>
 <pre class="r"><code># KM plot
 p_KM &lt;- survfit2(Surv(Y, delta) ~ 1, data = df) %&gt;% 
   ggsurvfit() +

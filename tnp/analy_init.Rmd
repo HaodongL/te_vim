@@ -62,7 +62,7 @@ source("~/Repo/te_vim/R/data_process/data_helper.R")
 library(survival)
 library(ggsurvfit)
 
-df <- get_data_tte(outcome = 'diab', t = 24)
+df <- get_data_tte(outcome = 'diab')
 ```
 
 ```{r, fig.width = 6, fig.height = 6}
