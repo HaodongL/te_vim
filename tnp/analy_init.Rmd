@@ -16,6 +16,7 @@ library(data.table)
 library(readr)
 library(ggcorrplot)
 library(tmle3)
+# knitr::opts_chunk$set(fig.width = 12, fig.height = 8)
 ```
 
 # Part 1. Variable Correlations
@@ -64,7 +65,7 @@ library(ggsurvfit)
 df <- get_data_tte(outcome = 'diab', t = 24)
 ```
 
-```{r}
+```{r, fig.width = 6, fig.height = 6}
 # KM plot
 p_KM <- survfit2(Surv(Y, delta) ~ 1, data = df) %>% 
   ggsurvfit() +
@@ -77,7 +78,7 @@ p_KM <- survfit2(Surv(Y, delta) ~ 1, data = df) %>%
 p_KM
 ```
 
-```{r}
+```{r, fig.width = 6, fig.height = 8}
 # survival plot (Liraglutide v.s. Placebo)
 p_A <- survfit2(Surv(Y, delta) ~ A, data = df %>% 
                    mutate(A = ifelse(A == 1, 'Liraglutide', 'Placebo'))
@@ -92,7 +93,7 @@ p_A <- survfit2(Surv(Y, delta) ~ A, data = df %>%
 p_A
 ```
 
-```{r}
+```{r, fig.width = 6, fig.height = 8}
 # survival plot (Liraglutide v.s. Placebo)
 p_statin <- survfit2(Surv(Y, delta) ~ statin_use, data = df %>% 
                         mutate(statin_use = ifelse(statin_use == TRUE, 'Statin', 'Non-statin'))
@@ -122,7 +123,7 @@ source(paste0(repo_path, "R/est_function/vte.R"))
 source(paste0(repo_path, "R/analysis/analy_helper.R"))
 ```
 
-```{r}
+```{r, eval=FALSE}
 ### ------------  Part 1. import data  ------------ ###
 outcome = 'diab'; t = 24
 df <- get_data(outcome, t)
@@ -132,9 +133,7 @@ nodes <- list(W = setdiff(names(df), c("Y", "A")),
               Y = 'Y')
 
 df <- process_missing(df, nodes)$data
-```
 
-```{r}
 
 ### ------------  Part 2. Estimation ------------ ###
 set.seed(123)
@@ -167,6 +166,7 @@ tau_s_bounds = c(-1+1e-4, 1-1e-4)
 gamma_s_bounds = c(1e-8, 1-1e-8)
 add_tau_sc = T
 
+
 df_fit <- fit_para(df = df,
                    sl_Q = sl_Q, 
                    sl_g = sl_g,
@@ -179,19 +179,21 @@ df_fit <- fit_para(df = df,
                    tau_s_bounds = tau_s_bounds,
                    gamma_s_bounds = gamma_s_bounds,
                    add_tau_sc = add_tau_sc)
-```
 
-```{r}
-# visualize CATE_{-s} ($\tau_{-s} = E(Y|A=1,W_s) - E(Y|A=0,W_s)$)
+
+# visualize CATE
 cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
               "vkantag", "caantag", "thiazide", "loopdiur")
 
 p_cate <- plot_cate(cm_names, cbind(df, "tau" = df_fit$tau))
 p_cate
-# ggsave("tnp/plot/p_cate.png", p_cate)
 ```
 
-```{r}
+```{r, echo=FALSE, fig.pos="H", out.width="60%"}
+knitr::include_graphics("~/Repo/te_vim/tnp/plot/p_cate.png")
+```
+
+```{r, eval=FALSE}
 # GRF cate
 library(grf)
 
@@ -207,8 +209,13 @@ p_cate_grf <- plot_cate(cm_names,
 p_cate_grf
 ```
 
+```{r, echo=FALSE, fig.pos="H", out.width="60%"}
+knitr::include_graphics("~/Repo/te_vim/tnp/plot/p_cate_grf.png")
+```
+
 ### VTE ($Var(\tau)$)
 ```{r}
+df_fit <- readRDS("~/Repo/te_vim/data/df_fit.RDS")
 # VTE 
 aipw_vte <- VTE(df_fit, method="AIPW")
 tmle_vte <- VTE(df_fit, method="TMLE")
@@ -226,15 +233,10 @@ tmle_vte
 ### VIM ($Var(\tau) - Var(\tau_s)$)
 ```{r}
 # tmle vim
-theta_TMLE_a <- VIM(df_fit, method = "TMLE_a", y_l = 0, y_u = 1, max.it)
-theta_TMLE_b <- VIM(df_fit, method = "TMLE_b", y_l = 0, y_u = 1, max.it)
+theta_TMLE_a <- VIM(df_fit, method = "TMLE_a", y_l = 0, y_u = 1, max.it = 1e4)
+theta_TMLE_b <- VIM(df_fit, method = "TMLE_b", y_l = 0, y_u = 1, max.it = 1e4)
 
 # ee vim
-df_fit$Y <- rescale(df_fit$Y, y_l, y_u)
-df_fit$tau <- df_fit$tau*(y_u - y_l)
-df_fit$tau_s <- df_fit$tau_s*(y_u - y_l)
-df_fit$po <- df_fit$po*(y_u - y_l)
-
 theta_EE <- VIM(df_fit, method = "AIPW")
 ```
 
