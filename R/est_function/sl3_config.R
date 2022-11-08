@@ -19,6 +19,17 @@ lrnr_hal <- Lrnr_hal9001$new(num_knots = c(50, 25, 15))
 lrnr_hal_fast <- Lrnr_hal9001$new(num_knots = c(40, 15, 10))
 # lrnr_grf <- Lrnr_grf$new()
 # lrnr_lm_inter<- Lrnr_glm$new(formula = "~.^2")
+grid_params <- list(
+  max_depth = c(3, 5, 8),
+  eta = c(0.05, 0.1, 0.3),
+  nrounds = 100
+)
+
+grid <- expand.grid(grid_params, KEEP.OUT.ATTRS = FALSE)
+
+xgb_learners <- apply(grid, MARGIN = 1, function(tuning_params) {
+  do.call(Lrnr_xgboost$new, as.list(tuning_params))
+})
 
 # lrnr_stack <- make_learner("Stack",
 #                            lrnr_lm,
@@ -26,20 +37,41 @@ lrnr_hal_fast <- Lrnr_hal9001$new(num_knots = c(40, 15, 10))
 
 lrnr_stack_Q <- make_learner("Stack",
                            lrnr_lm,
-                           lrnr_lasso,
-                           lrnr_xgb,
+                           xgb_learners[[1]],
+                           xgb_learners[[2]],
+                           xgb_learners[[3]],
+                           xgb_learners[[4]],
+                           xgb_learners[[5]],
+                           xgb_learners[[6]],
+                           xgb_learners[[7]],
+                           xgb_learners[[8]],
+                           xgb_learners[[9]],
                            lrnr_earth)
 
 lrnr_stack_g <- make_learner("Stack",
                              lrnr_lm,
-                             lrnr_lasso,
-                             lrnr_xgb,
+                             xgb_learners[[1]],
+                             xgb_learners[[2]],
+                             xgb_learners[[3]],
+                             xgb_learners[[4]],
+                             xgb_learners[[5]],
+                             xgb_learners[[6]],
+                             xgb_learners[[7]],
+                             xgb_learners[[8]],
+                             xgb_learners[[9]],
                              lrnr_earth)
 
 lrnr_stack_x <- make_learner("Stack",
                              lrnr_lm,
-                             lrnr_lasso,
-                             lrnr_xgb,
+                             xgb_learners[[1]],
+                             xgb_learners[[2]],
+                             xgb_learners[[3]],
+                             xgb_learners[[4]],
+                             xgb_learners[[5]],
+                             xgb_learners[[6]],
+                             xgb_learners[[7]],
+                             xgb_learners[[8]],
+                             xgb_learners[[9]],
                              lrnr_earth)
 
 
@@ -66,13 +98,13 @@ sl_Q <- Lrnr_sl$new(
 #   outcome_type = 'binomial'
 # )
 # 
-# sl_x <- Lrnr_sl$new(
-#   learners = lrnr_stack_x,
-#   metalearner = ls_metalearner
-# )
+sl_x <- Lrnr_sl$new(
+  learners = lrnr_stack_x,
+  metalearner = ls_metalearner
+)
 
 # sl_Q <- lrnr_hal_fast
 sl_g <- lrnr_earth
-sl_x <- lrnr_earth
+# sl_x <- lrnr_earth
 
 

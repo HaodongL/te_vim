@@ -107,8 +107,10 @@ p_statin <- survfit2(Surv(Y, delta) ~ statin_use, data = df %>%
 p_statin
 ```
 
-# Part 3. CATE
+# Part 3. Treatment Effect
+### CATE ($\tau = E(Y|A=1,W) - E(Y|A=0,W)$)
 ```{r, message=FALSE, warning=FALSE}
+rm(list = ls())
 repo_path = "~/Repo/te_vim/"
 source(paste0(repo_path, "R/data_process/data_helper.R"))
 source(paste0(repo_path, "R/simu/simu_dgd.R")) 
@@ -180,7 +182,7 @@ df_fit <- fit_para(df = df,
 ```
 
 ```{r}
-# visualize CATE
+# visualize CATE_{-s} ($\tau_{-s} = E(Y|A=1,W_s) - E(Y|A=0,W_s)$)
 cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
               "vkantag", "caantag", "thiazide", "loopdiur")
 
@@ -205,8 +207,9 @@ p_cate_grf <- plot_cate(cm_names,
 p_cate_grf
 ```
 
+### VTE ($Var(\tau)$)
 ```{r}
-# VTE
+# VTE 
 aipw_vte <- VTE(df_fit, method="AIPW")
 tmle_vte <- VTE(df_fit, method="TMLE")
 ```
@@ -219,6 +222,8 @@ aipw_vte
 tmle_vte
 ```
 
+
+### VIM ($Var(\tau) - Var(\tau_s)$)
 ```{r}
 # tmle vim
 theta_TMLE_a <- VIM(df_fit, method = "TMLE_a", y_l = 0, y_u = 1, max.it)
