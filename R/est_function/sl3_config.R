@@ -16,6 +16,7 @@ lrnr_gam_g <- Lrnr_gam$new('A ~ s(X1) + s(X2) + ti(X1,X2)')
 # lrnr_gam <- Lrnr_gam$new()
 # lrnr_polspline <- Lrnr_polspline$new()
 lrnr_hal <- Lrnr_hal9001$new(num_knots = c(50, 25, 15))
+lrnr_hal_fast <- Lrnr_hal9001$new(num_knots = c(40, 15, 10))
 # lrnr_grf <- Lrnr_grf$new()
 # lrnr_lm_inter<- Lrnr_glm$new(formula = "~.^2")
 
@@ -70,7 +71,7 @@ sl_Q <- Lrnr_sl$new(
 #   metalearner = ls_metalearner
 # )
 
-# sl_Q <- lrnr_hal
+# sl_Q <- lrnr_hal_fast
 sl_g <- lrnr_earth
 sl_x <- lrnr_earth
 

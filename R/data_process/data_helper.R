@@ -9,7 +9,7 @@ get_data <- function(outcome, t = 24){
   assertthat::assert_that(outcome %in% c("diab", "cv", 'a1c'))
   
   # read data based on outcome
-  filepath <- paste0("data/supp/df_all_", outcome, ".csv")
+  filepath <- paste0("~/Repo/te_vim/data/supp/df_all_", outcome, ".csv")
   df <- read_csv(filepath)
   
   # convert character/logical to factor
@@ -76,7 +76,7 @@ get_data_tte <- function(outcome, t = 24){
   assertthat::assert_that(outcome %in% c("diab", "cv"))
   
   # read data based on outcome
-  filepath <- paste0("data/supp/df_all_", outcome, ".csv")
+  filepath <- paste0("~/Repo/te_vim/data/supp/df_all_", outcome, ".csv")
   df <- read_csv(filepath)
   
   # convert character/logical to factor
