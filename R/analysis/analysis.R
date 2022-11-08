@@ -84,20 +84,21 @@ p_cate <- plot_cate(cm_names, cbind(df, "tau" = df_fit$tau))
 
 # VIM
 # tmle vim
-theta_TMLE_a <- TMLE_VIM_a(df_fit, y_l = 0, y_u = 1, max.it)
-theta_TMLE_b <- TMLE_VIM_b(df_fit, y_l = 0, y_u = 1, max.it)
+theta_TMLE_a <- VIM(df_fit, method = "TMLE_a", y_l = 0, y_u = 1, max.it)
+theta_TMLE_b <- VIM(df_fit, method = "TMLE_b", y_l = 0, y_u = 1, max.it)
 
 # ee vim
 df_fit$Y <- rescale(df_fit$Y, y_l, y_u)
 df_fit$tau <- df_fit$tau*(y_u - y_l)
 df_fit$tau_s <- df_fit$tau_s*(y_u - y_l)
 df_fit$po <- df_fit$po*(y_u - y_l)
-theta_EE <- EE_VIM(df_fit)
+
+theta_EE <- VIM(df_fit, method = "AIPW")
 
 
 # VTE
-aipw_vte <- VTE(df_fit, method="AIPW")
-tmle_vte <- VTE(df_fit, method="TMLE")
+aipw_vte <- VTE(df_fit, method = "AIPW")
+tmle_vte <- VTE(df_fit, method = "TMLE")
 
 
 # GRF cate

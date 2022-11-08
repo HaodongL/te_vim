@@ -25,7 +25,7 @@ print.VTE <- function(object){
   cat("\nCall:\n", paste(deparse(a$call), sep = "\n", collapse = "\n"), "\n\n", sep = "")
   cat("Estimator:",a$Method)
   
-  cat("\nEstimand Values:\n")
+  cat("\nEstimate Values:\n")
   
   wald <- (a$coef/a$std.err)^2
   df <- data.frame(Estimate = a$coef, Std.Error = a$std.err ,
@@ -49,7 +49,7 @@ print.VTE <- function(object){
 
 TMLE_VTE <- function(data,ab=NULL){
   ## Some params
-  max.it <- 600 #maximum number of iterations in targetting step
+  max.it <- 1e4 #maximum number of iterations in targetting step
   eps <- 0.0001 #TMLE target step size
   
   a <- with(data,min(Y,mu1_hat,mu0_hat))

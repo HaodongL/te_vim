@@ -9,7 +9,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Haodong Li" />
+<meta name="author" content="Haodong, Andrew" />
 
 <meta name="date" content="2022-11-07" />
 
@@ -364,7 +364,7 @@ pre code {
 
 
 <h1 class="title toc-ignore">Initial Analysis</h1>
-<h4 class="author">Haodong Li</h4>
+<h4 class="author">Haodong, Andrew</h4>
 <h4 class="date">2022-11-07</h4>
 
 </div>
@@ -373,17 +373,8 @@ pre code {
 <div id="part-1.-variable-correlations" class="section level1">
 <h1>Part 1. Variable Correlations</h1>
 <pre class="r"><code># read baseline variables
-df_w &lt;- read_csv(&quot;~/Repo/te_vim/data/supp/df_w.csv&quot;)</code></pre>
-<pre><code>## Rows: 9339 Columns: 58
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr  (9): USUBJID, SEX, RACE, COUNTRY, SMOKER, NYHACLAS, ANTDBFL, RETINSEV, ...
-## dbl (23): A, AGE, DIABDUR, INCPASSN, BMIBL, PULSEBL, SYSBPBL, DIABPBL, HBA1C...
-## lgl (26): INSNVFL, AHYPERFL, GERDBLFL, PPIFL, H2BLFL, MIFL, STROKEFL, REVASF...
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<pre class="r"><code>df_w &lt;- df_w %&gt;% 
+df_w &lt;- read_csv(&quot;~/Repo/te_vim/data/supp/df_w.csv&quot;)
+df_w &lt;- df_w %&gt;% 
   mutate(across(where(is.character), ~ as.factor(.))) %&gt;% 
   mutate(across(where(is.logical), ~ as.factor(.))) 
 df_w &lt;- df_w %&gt;% select(-c(&#39;A&#39;, &#39;USUBJID&#39;))
@@ -417,15 +408,6 @@ library(survival)
 library(ggsurvfit)
 
 df &lt;- get_data_tte(outcome = &#39;diab&#39;, t = 24)</code></pre>
-<pre><code>## Rows: 9339 Columns: 68
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr  (9): USUBJID, SEX, RACE, COUNTRY, SMOKER, NYHACLAS, ANTDBFL, RETINSEV, ...
-## dbl (33): A, AGE, DIABDUR, INCPASSN, BMIBL, PULSEBL, SYSBPBL, DIABPBL, HBA1C...
-## lgl (26): INSNVFL, AHYPERFL, GERDBLFL, PPIFL, H2BLFL, MIFL, STROKEFL, REVASF...
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
 <pre class="r"><code># KM plot
 p_KM &lt;- survfit2(Surv(Y, delta) ~ 1, data = df) %&gt;% 
   ggsurvfit() +
@@ -468,34 +450,8 @@ p_statin</code></pre>
 <h1>Part 3. CATE</h1>
 <pre class="r"><code>repo_path = &quot;~/Repo/te_vim/&quot;
 source(paste0(repo_path, &quot;R/data_process/data_helper.R&quot;))
-source(paste0(repo_path, &quot;R/simu/simu_dgd.R&quot;)) </code></pre>
-<pre><code>## Loading required package: tidyverse</code></pre>
-<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
-## ✔ tibble  3.1.8     ✔ stringr 1.4.1
-## ✔ purrr   0.3.4     ✔ forcats 0.5.2
-## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-## ✖ data.table::between() masks dplyr::between()
-## ✖ dplyr::filter()       masks stats::filter()
-## ✖ data.table::first()   masks dplyr::first()
-## ✖ dplyr::group_rows()   masks kableExtra::group_rows()
-## ✖ dplyr::lag()          masks stats::lag()
-## ✖ data.table::last()    masks dplyr::last()
-## ✖ purrr::transpose()    masks data.table::transpose()
-## Loading required package: mgcv
-## 
-## Loading required package: nlme
-## 
-## 
-## Attaching package: &#39;nlme&#39;
-## 
-## 
-## The following object is masked from &#39;package:dplyr&#39;:
-## 
-##     collapse
-## 
-## 
-## This is mgcv 1.8-40. For overview type &#39;help(&quot;mgcv-package&quot;)&#39;.</code></pre>
-<pre class="r"><code>source(paste0(repo_path, &quot;R/simu/simu_config.R&quot;))
+source(paste0(repo_path, &quot;R/simu/simu_dgd.R&quot;)) 
+source(paste0(repo_path, &quot;R/simu/simu_config.R&quot;))
 source(paste0(repo_path, &quot;R/est_function/sl3_config.R&quot;))
 source(paste0(repo_path, &quot;R/est_function/fit_para.R&quot;))
 source(paste0(repo_path, &quot;R/est_function/vim.R&quot;))
@@ -586,14 +542,13 @@ p_cate_grf</code></pre>
 <pre class="r"><code># VTE
 aipw_vte &lt;- VTE(df_fit, method=&quot;AIPW&quot;)
 tmle_vte &lt;- VTE(df_fit, method=&quot;TMLE&quot;)</code></pre>
-<pre><code>## Warning in TMLE_VTE(data, ...): Max iterations reached in TMLE</code></pre>
 <pre class="r"><code>aipw_vte</code></pre>
 <pre><code>## 
 ## Call:
 ## VTE(data = df_fit, method = &quot;AIPW&quot;)
 ## 
 ## Estimator: AIPW
-## Estimand Values:
+## Estimate Values:
 ##             Estimate    Std.Error Wald.value  Wald.pval    
 ## ATE     -6.36512e-02  1.13350e-02   31.53313 1.9607e-08 ***
 ## rootVTE  9.87271e-03  3.60648e-02    0.07494    0.78428    
@@ -606,25 +561,55 @@ tmle_vte &lt;- VTE(df_fit, method=&quot;TMLE&quot;)</code></pre>
 ## VTE(data = df_fit, method = &quot;TMLE&quot;)
 ## 
 ## Estimator: TMLE
-## Estimand Values:
+## Estimate Values:
 ##             Estimate    Std.Error Wald.value  Wald.pval    
-## ATE     -0.063892484  0.011329508   31.80368 1.7057e-08 ***
-## rootVTE  0.017569815  0.025450361    0.47659    0.48997    
-## VTE      0.000308698  0.000447158    0.47659    0.48997    
+## ATE     -0.064703398  0.011312797   32.71254 1.0685e-08 ***
+## rootVTE  0.037839410  0.023951846    2.49581    0.11415    
+## VTE      0.001431821  0.000906324    2.49581    0.11415    
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
-<pre class="r"><code># VIM
-# tmle vim
-theta_TMLE_a &lt;- TMLE_VIM_a(df_fit, y_l = 0, y_u = 1, max.it)
-theta_TMLE_b &lt;- TMLE_VIM_b(df_fit, y_l = 0, y_u = 1, max.it)</code></pre>
-<pre><code>## Warning in TMLE_VIM_b(df_fit, y_l = 0, y_u = 1, max.it): Max iterations reached
-## in TMLE</code></pre>
+<pre class="r"><code># tmle vim
+theta_TMLE_a &lt;- VIM(df_fit, method = &quot;TMLE_a&quot;, y_l = 0, y_u = 1, max.it)
+theta_TMLE_b &lt;- VIM(df_fit, method = &quot;TMLE_b&quot;, y_l = 0, y_u = 1, max.it)</code></pre>
+<pre><code>## Warning in TMLE_VIM_b(data, ...): Max iterations reached in TMLE</code></pre>
 <pre class="r"><code># ee vim
-# df_fit$Y &lt;- rescale(df_fit$Y, y_l, y_u)
-# df_fit$tau &lt;- df_fit$tau*(y_u - y_l)
-# df_fit$tau_s &lt;- df_fit$tau_s*(y_u - y_l)
-# df_fit$po &lt;- df_fit$po*(y_u - y_l)
-theta_EE &lt;- EE_VIM(df_fit)</code></pre>
+df_fit$Y &lt;- rescale(df_fit$Y, y_l, y_u)
+df_fit$tau &lt;- df_fit$tau*(y_u - y_l)
+df_fit$tau_s &lt;- df_fit$tau_s*(y_u - y_l)
+df_fit$po &lt;- df_fit$po*(y_u - y_l)
+
+theta_EE &lt;- VIM(df_fit, method = &quot;AIPW&quot;)</code></pre>
+<pre class="r"><code>theta_EE</code></pre>
+<pre><code>## 
+## Call:
+## VIM(data = df_fit, method = &quot;AIPW&quot;)
+## 
+## Estimator: AIPW
+## Estimate Values:
+##               Estimate  Std.Error Wald.value Wald.pval   
+## VIM_Theta_s 0.00551909 0.00211946    6.78088 0.0092139 **
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>theta_TMLE_a</code></pre>
+<pre><code>## 
+## Call:
+## VIM(data = df_fit, method = &quot;TMLE_a&quot;, ... = pairlist(y_l = 0, y_u = 1, max.it))
+## 
+## Estimator: TMLE_a
+## Estimate Values:
+##                Estimate   Std.Error Wald.value Wald.pval
+## VIM_Theta_s 0.000405625 0.000445036    0.83073   0.36206</code></pre>
+<pre class="r"><code>theta_TMLE_b</code></pre>
+<pre><code>## 
+## Call:
+## VIM(data = df_fit, method = &quot;TMLE_b&quot;, ... = pairlist(y_l = 0, y_u = 1, max.it))
+## 
+## Estimator: TMLE_b
+## Estimate Values:
+##               Estimate  Std.Error Wald.value Wald.pval  
+## VIM_Theta_s 0.00793541 0.00421651    3.54187  0.059838 .
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 </div>
 
 

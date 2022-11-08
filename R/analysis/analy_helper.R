@@ -4,7 +4,7 @@ plot_cate <- function(varname,
   
   cates <- lapply(varname, function(x) {
     tmp <- df_plot %>% 
-      group_by(.dots = x) %>% 
+      group_by_at(x) %>% 
       transmute(
         variable = x,
         cate = round(mean(tau) * 1, 4)

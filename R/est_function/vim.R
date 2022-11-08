@@ -414,3 +414,43 @@ bound <- function(x, bounds) {
 }
 
 
+VIM <- function(data, method="AIPW",...){
+  
+  cnames <- c("Y","A","mu1_hat","mu0_hat","pi_hat")
+  if(any(!cnames %in% colnames(data))) stop("Data must contain estimated outcome and propensity score values")
+  
+  ## Use appropriate fitting method
+  if (method == "TMLE_a"){
+    a <- TMLE_VIM_a(data, ...)
+  }else if (method == "TMLE_b"){
+    a <- TMLE_VIM_b(data, ...)
+  }else if (method == "AIPW"){
+    a <- EE_VIM(data, ...)
+  }else{
+    stop("Method not recognized")
+  }
+  
+  a$Method <- method
+  a$call <- match.call(expand.dots = FALSE)
+  class(a) <- "VIM"
+  a
+}
+
+
+print.VIM <- function(object){
+  a <- object
+  
+  cat("\nCall:\n", paste(deparse(a$call), sep = "\n", collapse = "\n"), "\n\n", sep = "")
+  cat("Estimator:",a$Method)
+  
+  cat("\nEstimate Values:\n")
+  
+  wald <- (a$coef/a$std_err)^2
+  df <- data.frame(Estimate = a$coef, Std.Error = a$std_err ,
+                   Wald.value = wald,
+                   Wald.pval = pchisq(wald, df=1, lower.tail = F))
+  
+  printCoefmat(df, digits = 6, signif.stars = T, na.print = "NA",
+               tst.ind = 3, P.values=T, has.Pvalue=T)
+}
+
