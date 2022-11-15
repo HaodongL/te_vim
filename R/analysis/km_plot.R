@@ -4,7 +4,7 @@ source("R/data_process/data_helper.R")
 library(survival)
 library(ggsurvfit)
 
-df <- get_data_tte(outcome = 'diab', t = 24)
+df <- get_data_tte(outcome = 'diab')
 
 
 # KM plot

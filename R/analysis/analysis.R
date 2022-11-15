@@ -28,7 +28,7 @@ df <- process_missing(df, nodes)$data
 
 
 ### ------------  Part 2. Estimation ------------ ###
-set.seed(123)
+set.seed(1)
 if (outcome == "a1c"){
   sl_Q <- Lrnr_sl$new(
     learners = lrnr_stack_Q,
@@ -73,13 +73,15 @@ df_fit <- fit_para(df = df,
                    add_tau_sc = add_tau_sc)
 toc()
 
+# saveRDS(df_fit, file = "~/Repo/te_vim/data/df_fit.RDS")
+
 # visualize CATE
 cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
               "vkantag", "caantag", "thiazide", "loopdiur")
 
 p_cate <- plot_cate(cm_names, cbind(df, "tau" = df_fit$tau))
 
-# ggsave("tnp/plot/p_cate.png", p_cate)
+# ggsave("tnp/plot/p_cate.png", p_cate, width = 5, height = 5)
 
 
 # VIM
@@ -114,7 +116,7 @@ c_forest <- causal_forest(X = W , Y = Y, W = A)
 p_cate_grf <- plot_cate(cm_names, 
                         cbind(df, "tau" = predict(c_forest)$predictions))
 
-# ggsave("tnp/plot/p_cate_grf.png", p_cate_grf)
+# ggsave("tnp/plot/p_cate_grf.png", p_cate_grf, width = 5, height = 5)
 
 # # aggregating up ---------------------------------------------------------------
 # mod = c_forest

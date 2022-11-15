@@ -68,10 +68,8 @@ get_data <- function(outcome, t = 24){
 }
 
 
-outcome = "diab"
-t = 24
 
-get_data_tte <- function(outcome, t = 24){
+get_data_tte <- function(outcome){
   
   assertthat::assert_that(outcome %in% c("diab", "cv"))
   
