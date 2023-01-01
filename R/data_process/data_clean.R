@@ -308,10 +308,10 @@ df_base <- W %>% select(USUBJID, RANDDT)
 
 W <- W %>% 
   select(c("USUBJID", "ARM", "AGE", "SEX", "RACE", "COUNTRY", "SMOKER", "NYHACLAS",
-           "DIABDUR", "INSNVFL", "INSNVFL", "ANTDBFL", "AHYPERFL", "INCPASSN", 
+           "DIABDUR", "INSNVFL", "ANTDBFL", "AHYPERFL", "INCPASSN", 
            "BMIBL", "PULSEBL", "SYSBPBL", "DIABPBL", "HBA1CBL", "HDL1BL", "LDL1BL",
-           "CHOL1BL", "RC", "RCoverHDL","TRIG1BL", "CREATBL", "EGFREPI", "EGFRMDRC", 
-           "EGFREPB", "EGFMDRBC", "EGFRMDR", "RETINSEV", "GERDBLFL", "PPIFL", "H2BLFL", 
+           "CHOL1BL", "RC", "RCoverHDL","TRIG1BL", "CREATBL", "EGFMDRBC", 
+           "RETINSEV", "GERDBLFL", "PPIFL", "H2BLFL", 
            "MIFL", "STROKEFL", "REVASFL", "STENFL", "CHDFL", "IHDFL", "CHFFL",
            "KIDFL", "MICFL", "HYPFL", "LVSDFL", "PADFL", "CVRISK", "HBA1CGRN", "DDURGRN", 
            "statin_use", "antihypertensives", "betab", "minera", "adp",
@@ -441,6 +441,17 @@ Y_cv <- df_tte %>%
   mutate_at(vars(starts_with("EVENT")),
             ~as.numeric(. == "TIME TO EVENT"))
 
+# check delta
+temp <- Y_cv %>% 
+  select("USUBJID", "AVAL", "EVENT") %>% 
+  filter(EVENT == "LAST CONTACT DATE") 
+
+temp <- temp[!duplicated(temp), ]
+
+temp <- temp %>% filter(USUBJID %in% W$USUBJID[W$INSNVFL == FALSE])
+
+# hist(temp$AVAL)
+# temp_sub <- temp %>% filter(temp$AVAL <= 24)
 
 # df_id <- W %>% select(USUBJID)
 # Y_cv <- left_join(df_id, Y_cv, by = "USUBJID")

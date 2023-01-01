@@ -1,5 +1,4 @@
-# non-cv fit Q, g, po, tau, tau_s, gamma_s
-fit_para <- function(df, 
+fit_paraloop <- function(df, 
                      sl_Q, 
                      sl_g,
                      sl_x,
@@ -14,10 +13,10 @@ fit_para <- function(df,
   
   all_covar = setdiff(names(df), 'Y')
   all_w = setdiff(all_covar, 'A')
-  all_wsc = setdiff(all_w, ws)
+  # all_wsc = setdiff(all_w, ws)
+  n <- nrow(df)
   y <- df[["Y"]]
   a <- df[["A"]]
-  n = nrow(df)
   
   res_Qg <- fitSL(df, sl_Q, sl_g, Q_bounds, g_bounds) # big object rm later
   Q_fit <- res_Qg$Q_fit # big object rm later
@@ -63,54 +62,43 @@ fit_para <- function(df,
     tau <- bound(tau, tau_bounds)
   }
   
-  # temp, add tiny values to prevent constant cols
-  tau_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau + runif(n, 1e-11, 1e-10), 
-                     outcome = 'tau', para = 'tau_s', ws = ws)
-  tau_s <- tau_s_fit$predict()
-  
-  gamma_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau + runif(n, 1e-11, 1e-10),  
-                       outcome = 'tau', para = 'gamma_s', ws = ws)
-  gamma_s <- gamma_s_fit$predict()
-  
-  # bound tau_s in [-1,1]
-  if (!is.null(tau_s_bounds)){
-    tau_s <- bound(tau_s, tau_s_bounds)
-  }
-  # bound gamma_s in [0,1]
-  if (!is.null(gamma_s_bounds)){
-    gamma_s <- bound(gamma_s, gamma_s_bounds)
-  }
-  
-  if (add_tau_sc){
-    tau_sc_fit <- fit_x(df = df, sl_x = sl_x, tau = tau, outcome = 'tau', para = 'tau_sc', ws = all_wsc)
-    tau_sc <- tau_sc_fit$predict()
+  df_fit_list <- list()
+  for (j in c(1:length(ws))){
+    print(paste0("fit ws", j, ' of ', length(ws)))
+    tau_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau, outcome = 'tau', para = 'tau_s', ws = ws[j])
+    tau_s <- tau_s_fit$predict()
+    
+    gamma_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau, outcome = 'tau', para = 'gamma_s', ws = ws[j])
+    gamma_s <- gamma_s_fit$predict()
     
     # bound tau_s in [-1,1]
     if (!is.null(tau_s_bounds)){
-      tau_sc <- bound(tau_sc, tau_s_bounds)
+      tau_s <- bound(tau_s, tau_s_bounds)
     }
-  }else{
-    tau_sc <- NA
+    # bound gamma_s in [0,1]
+    if (!is.null(gamma_s_bounds)){
+      gamma_s <- bound(gamma_s, gamma_s_bounds)
+    }
+    
+    df_fit <- data.frame('Y' = y, 
+                         'A' = a, 
+                         'pi_hat' = gn, 
+                         'mu0_hat' = Qbar0W,
+                         'mu1_hat' = Qbar1W,
+                         'mua_hat' = QbarAW,
+                         'po' = po,
+                         'tau' = tau,
+                         'tau_s' = tau_s,
+                         'gamma_s' = gamma_s)
+    
+    df_fit_list[[j]] <- df_fit
   }
-  
-  
-  df_fit <- data.frame('Y' = df$Y, 
-                       'A' = df$A, 
-                       'pi_hat' = gn, 
-                       'mu0_hat' = Qbar0W,
-                       'mu1_hat' = Qbar1W,
-                       'mua_hat' = QbarAW,
-                       'po' = po,
-                       'tau' = tau,
-                       'tau_s' = tau_s,
-                       'gamma_s' = gamma_s,
-                       'tau_sc' = tau_sc)
-  return(df_fit)
+  return(df_fit_list)
 }
 
 
 # cv fit Q, g, po, tau, tau_s, gamma_s
-fit_cvpara <- function(df, 
+fit_cvparaloop <- function(df, 
                        sl_Q, 
                        sl_g,
                        sl_x,
@@ -125,7 +113,7 @@ fit_cvpara <- function(df,
   V = 10
   all_covar = setdiff(names(df), 'Y')
   all_w = setdiff(all_covar, 'A')
-  all_wsc = setdiff(all_w, ws)
+  # all_wsc = setdiff(all_w, ws)
   
   # make folds
   folds = origami::make_folds(n = N, V = V)
@@ -138,8 +126,11 @@ fit_cvpara <- function(df,
   gn = rep(NA, N)
   po = rep(NA, N)
   tau = rep(NA, N)
-  tau_s = rep(NA, N)
-  gamma_s = rep(NA, N)
+  # tau_s = rep(NA, N)
+  # gamma_s = rep(NA, N)
+  df_fit_list <- list()
+  tau_s <- matrix(NA, N, length(ws))
+  gamma_s <- matrix(NA, N, length(ws))
   
   # fit sl models on training set, predict on validation set
   for (k in 1:V){
@@ -175,7 +166,7 @@ fit_cvpara <- function(df,
     gn_t <- bound(gn_t, g_bounds)
     # po_t <- (y_t - QbarAW_t)*(2*a_t - 1)/gn_t + Qbar1W_t - Qbar0W_t
     po_t <- (y_t - QbarAW_t)*(a_t/gn_t - (1-a_t)/(1-gn_t)) + Qbar1W_t - Qbar0W_t
-
+    
     # ---------- V ------------- #
     index_v <- folds[[k]]$validation_set
     df_v <- df[index_v, ]
@@ -202,8 +193,7 @@ fit_cvpara <- function(df,
     gn_v <- g_fit$predict(g_task_v)
     # bound g
     gn_v <- bound(gn_v, g_bounds)
-    # po_v <- (y_v - QbarAW_v)*(2*a_v - 1)/gn_v + Qbar1W_v - Qbar0W_v
-    po_v <- (y_v - QbarAW_v)*(a_v/gn_v - (1-a_v)/(1-gn_v)) + Qbar1W_v - Qbar0W_v
+    po_v <- (y_v - QbarAW_v)*(2*a_v - 1)/gn_v + Qbar1W_v - Qbar0W_v
     
     # update Q, g, po
     Qbar0W[index_v] <- Qbar0W_v
@@ -242,119 +232,47 @@ fit_cvpara <- function(df,
       tau_t <- bound(tau_t, tau_bounds)
       tau_v <- bound(tau_v, tau_bounds)
     }
-    
-    # fit and pred
-    tau_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t, outcome = 'tau', para = 'tau_s', ws = ws)
-    tau_s_v <- tau_s_fit$predict(s_task_v)
-    
-    # fit and pred
-    gamma_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t, outcome = 'tau', para = 'gamma_s', ws = ws)
-    gamma_s_v <- gamma_s_fit$predict(s_task_v)
-    
-    # bound tau_s in [-1,1]
-    if (!is.null(tau_s_bounds)){
-      tau_s_v <- bound(tau_s_v, tau_s_bounds)
-    }
-    # bound gamma_s in [0,1]
-    if (!is.null(gamma_s_bounds)){
-      gamma_s_v <- bound(gamma_s_v, gamma_s_bounds)
-    }
-    
-    # update tau, tau_s, gamma_s
+    # update tau
     tau[index_v] <- tau_v
-    tau_s[index_v] <- tau_s_v
-    gamma_s[index_v] <- gamma_s_v
     
+    for (j in length(ws)){
+      # fit and pred
+      tau_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t, outcome = 'tau', para = 'tau_s', ws = ws[j])
+      tau_s_v <- tau_s_fit$predict(s_task_v)
+      
+      # fit and pred
+      gamma_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t, outcome = 'tau', para = 'gamma_s', ws = ws[j])
+      gamma_s_v <- gamma_s_fit$predict(s_task_v)
+      
+      # bound tau_s in [-1,1]
+      if (!is.null(tau_s_bounds)){
+        tau_s_v <- bound(tau_s_v, tau_s_bounds)
+      }
+      # bound gamma_s in [0,1]
+      if (!is.null(gamma_s_bounds)){
+        gamma_s_v <- bound(gamma_s_v, gamma_s_bounds)
+      }
+      
+      # update tau_s, gamma_s
+      tau_s[index_v,j] <- tau_s_v
+      gamma_s[index_v,j] <- gamma_s_v
+    }
     # remove big object
     rm(res_Qg, Q_fit, g_fit)
   }
   
-  df_fit <- data.frame('Y' = df$Y, 
-                       'A' = df$A, 
-                       'pi_hat' = gn, 
-                       'mu0_hat' = Qbar0W,
-                       'mu1_hat' = Qbar1W,
-                       'mua_hat' = QbarAW,
-                       'po' = po,
-                       'tau' = tau,
-                       'tau_s' = tau_s,
-                       'gamma_s' = gamma_s)
-  return(df_fit)
-}
-
-
-fitSL <- function(df, sl_Q, sl_g, Q_bounds = NULL, g_bounds = c(0.025, 0.975)){
-  
-  folds <- origami::make_folds(strata_ids = df$A)
-  # folds <- origami::folds_vfold(nrow(df))
-  
-  # setup sl3
-  task_Q <- sl3::make_sl3_Task(
-    data = df,
-    covariates = setdiff(names(df), c('Y')),
-    outcome = 'Y',
-    folds = folds
-  )
-  
-  task_g <- sl3::make_sl3_Task(
-    data = df,
-    covariates = setdiff(names(df), c('Y', 'A')),
-    outcome = 'A',
-    folds = folds
-  )
-  
-  # fit Q and g
-  Q_fit <- sl_Q$train(task_Q)
-  g_fit <- sl_g$train(task_g)
-  
-  res = list('Q_fit' = Q_fit,
-             'g_fit' = g_fit)
-  return(res)
-}
-
-
-
-fit_x <- function(df, sl_x, po = NULL, tau = NULL, outcome = 'po', para = 'tau', ws = NULL){
-  assertthat::assert_that(outcome %in% c('po', 'tau'))
-  assertthat::assert_that(para %in% c('tau', 'tau_s', 'gamma_s', 'tau_sc'))
-  if (outcome == 'po'){
-    assertthat::assert_that(!is.null(po))
-    if (para == 'gamma_s'){
-      po <- po^2
-    }
-    df_train <- cbind(df, po)
-  }else{
-    if (para == 'gamma_s'){
-      tau <- tau^2
-    }
-    df_train <- cbind(df, tau)
+  for (j in length(ws)){
+    df_fit <- data.frame('Y' = df$Y, 
+                         'A' = df$A, 
+                         'pi_hat' = gn, 
+                         'mu0_hat' = Qbar0W,
+                         'mu1_hat' = Qbar1W,
+                         'mua_hat' = QbarAW,
+                         'po' = po,
+                         'tau' = tau,
+                         'tau_s' = tau_s[,j],
+                         'gamma_s' = gamma_s[,j])
+    df_fit_list <- append(df_fit_list, df_fit)
   }
-  
-  # folds <- origami::folds_vfold(nrow(df))
-  folds = origami::make_folds(n = nrow(df), V = 10)
-  
-  # print(setdiff(names(df_train), c('Y', 'A', outcome, ws)))
-  
-  # setup sl3
-  task <- sl3::make_sl3_Task(
-    data = df_train,
-    covariates = setdiff(names(df_train), c('Y', 'A', outcome, ws)),
-    outcome = outcome,
-    folds = folds
-  )
-  
-  fit <- sl_x$train(task)
-  return(fit)
+  return(df_fit_list)
 }
-
-
-bound <- function(x, bounds) {
-  lower <- bounds[[1]]
-  if (length(bounds) > 1) {
-    upper <- bounds[[2]]
-  } else {
-    upper <- 1 - lower
-  }
-  pmin(pmax(x, lower), upper)
-}
-

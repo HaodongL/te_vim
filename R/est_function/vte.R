@@ -28,7 +28,10 @@ print.VTE <- function(object){
   cat("\nEstimate Values:\n")
   
   wald <- (a$coef/a$std.err)^2
-  df <- data.frame(Estimate = a$coef, Std.Error = a$std.err ,
+  df <- data.frame(Estimate = a$coef, 
+                   Std.Error = a$std.err,
+                   CI_L = a$coef - 1.96*a$std.err,
+                   CI_U = a$coef + 1.96*a$std.err,
                    Wald.value = wald,
                    Wald.pval = pchisq(wald,df=1,lower.tail = F) )
   
@@ -49,7 +52,7 @@ print.VTE <- function(object){
 
 TMLE_VTE <- function(data,ab=NULL){
   ## Some params
-  max.it <- 1e4 #maximum number of iterations in targetting step
+  max.it <- 2e4 #maximum number of iterations in targetting step
   eps <- 0.0001 #TMLE target step size
   
   a <- with(data,min(Y,mu1_hat,mu0_hat))
@@ -151,8 +154,8 @@ TMLE_VTE <- function(data,ab=NULL){
 AIPW_VTE <- function(data){
   N <- NROW(data)
   
-  if("CATE" %in% names(data)) {
-    CATE <- data$CATE
+  if("tau" %in% names(data)) {
+    CATE <- data$tau
   } else{
     CATE <- with(data,mu1_hat - mu0_hat)  
   }

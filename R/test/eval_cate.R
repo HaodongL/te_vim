@@ -1,4 +1,5 @@
 # Check CATE estimates
+rm(list = ls())
 repo_path = "~/Repo/te_vim/"
 source(paste0(repo_path, "R/simu/simu_dgd.R")) #Used for the current examples
 source(paste0(repo_path, "R/est_function/sl3_config.R"))
@@ -6,8 +7,8 @@ source(paste0(repo_path, "R/est_function/fit_para.R"))
 source(paste0(repo_path, "R/est_function/vim.R"))
 
 # Q, g
-set.seed(1994)
-N <- 5e2 #size of generated data
+set.seed(123)
+N <- 5e4 #size of generated data
 df <- generate_data_simple(N)
 
 ws = c('X2')
@@ -60,7 +61,7 @@ if (!is.null(Q_bounds)){
 QbarAW <- ifelse(df$A == 1, Qbar1W, Qbar0W)
 gn <- g_fit$predict()
 # bound g
-gn <- bound(gn, g_bounds)
+# gn <- bound(gn, g_bounds)
 
 
 # use true g
@@ -68,7 +69,8 @@ gn <- bound(gn, g_bounds)
 
 
 
-po = (y - QbarAW)*(2*a - 1)/gn + Qbar1W - Qbar0W
+# po = (y - QbarAW)*(2*a - 1)/gn + Qbar1W - Qbar0W
+po = (y - QbarAW)*(a/gn - (1-a)/(1-gn)) + Qbar1W - Qbar0W
 tau_fit <- fit_x(df = df, sl_x = sl_x, po = po, outcome = 'po', para = 'tau')
 
 
@@ -115,11 +117,11 @@ f_cate <- function (x, y) {
 }
 
 
-# png(filename= paste0("~/Repo/te_vim/tnp/cate_", N,".png"),
-#     width = 2048,
-#     height = 1024,
-#     res = 180,
-#     pointsize = 10)
+png(filename= paste0("~/Repo/te_vim/tnp/cate_xgb_", N,".png"),
+    width = 2048,
+    height = 1024,
+    res = 180,
+    pointsize = 10)
 par(mfrow = c(1, 3))
 
 
@@ -155,7 +157,7 @@ persp(w1, w2, tau_n, theta = 30, phi = 25, expand = 0.5, col = "#669bbc",
       main= paste0("CATE estimates with DR-learner ", 
                    "(MSE = ", mse, ")"))
 
-# dev.off()
+dev.off()
 
 
 

@@ -3,6 +3,8 @@ library(sl3)
 library(tictoc)
 library(tmle3)
 library(ggplot2)
+library(table1)
+library(ggpubr)
 
 rm(list = ls())
 repo_path = "~/Repo/te_vim/"
@@ -13,12 +15,30 @@ source(paste0(repo_path, "R/est_function/sl3_config.R"))
 source(paste0(repo_path, "R/est_function/fit_para.R"))
 source(paste0(repo_path, "R/est_function/vim.R"))
 source(paste0(repo_path, "R/est_function/vte.R"))
+source(paste0(repo_path, "R/est_function/tmle_stratified.R"))
 source(paste0(repo_path, "R/analysis/analy_helper.R"))
+source(paste0(repo_path, "R/est_function/fit_paraloop.R"))
 
+### ------------  Part 0. eda ------------ ###
+# df_w <- read_csv(file = "data/supp/df_w.csv")
+# 
+# # Table of Baseline Characteristics 
+# df_w_summary <- df_w %>% 
+#   filter(INSNVFL == FALSE) %>% 
+#   select(-c("USUBJID", "INSNVFL")) %>% 
+#   mutate(A = ifelse(A == 1, "Liraglutide", "Placebo"))
+# 
+# df_w_summary <- labelled::remove_labels(df_w_summary)
+# tbl <- table1(~. | A, data = df_w_summary)
+# tbl
 
 ### ------------  Part 1. import data  ------------ ###
 outcome = 'diab'; t = 24
 df <- get_data(outcome, t)
+
+# df_old <- get_data_old(outcome, t)
+# # df_old$EGFREPI <- df$EGFMDRBC
+# df <- df_old
 
 nodes <- list(W = setdiff(names(df), c("Y", "A")),
               A = 'A',
@@ -26,6 +46,10 @@ nodes <- list(W = setdiff(names(df), c("Y", "A")),
 
 df <- process_missing(df, nodes)$data
 
+
+
+# df_old = df
+# df_fit_old = df_fit
 
 ### ------------  Part 2. Estimation ------------ ###
 set.seed(1)
@@ -48,6 +72,111 @@ df$Y <- scale01(df$Y, y_l, y_u)
 
 # CATE
 ws = c('statin_use')
+cv = T
+dr = T
+max.it = 1e4
+Q_bounds = c(1e-4, 1-1e-4)
+g_bounds = c(0.025, 0.975)
+tau_bounds = c(-1+1e-4, 1-1e-4)
+tau_s_bounds = c(-1+1e-4, 1-1e-4)
+gamma_s_bounds = c(1e-8, 1-1e-8)
+add_tau_sc = F
+
+tic()
+df_fit <- fit_para(df = df,
+                   sl_Q = sl_Q, 
+                   sl_g = sl_g,
+                   sl_x = sl_x,
+                   ws = ws,
+                   dr = dr,
+                   Q_bounds = Q_bounds,
+                   g_bounds = g_bounds,
+                   tau_bounds = tau_bounds,
+                   tau_s_bounds = tau_s_bounds,
+                   gamma_s_bounds = gamma_s_bounds)
+toc()
+
+hist(df_fit$pi_hat)
+
+# saveRDS(df_fit, file = "~/Repo/te_vim/data/df_fit.RDS")
+
+# visualize CATE
+# df_fit <- readRDS("~/Repo/te_vim/data/df_fit.RDS")
+
+cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
+              "vkantag", "caantag", "thiazide", "loopdiur")
+
+p_cate_t <- plot_cate(cm_names, cbind(df, "tau" = df_fit$mu1_hat - df_fit$mu0_hat))
+
+p_cate_dr <- plot_cate(cm_names, cbind(df, "tau" = df_fit$tau))
+
+# ggsave("tnp/plot/p_cate_t.png", p_cate_t, width = 5, height = 5)
+# ggsave("tnp/plot/p_cate_dr.png", p_cate_dr, width = 5, height = 5)
+
+# stratified TMLE
+cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
+              "vkantag", "caantag", "thiazide", "loopdiur")
+df_strat <- tmle_stratified(df, cm_names)
+# saveRDS(df_strat, file = "~/Repo/te_vim/data/df_strat.RDS")
+
+p_cate_strat <- plot_tmle_strat(cm_names, df_strat)
+
+# ggsave("tnp/plot/p_cate_strat_ci.png", p_cate_strat, width = 5, height = 5)
+
+# GRF cate
+library(grf)
+
+df_W <- df %>% select(setdiff(names(df), c("Y", "A")))
+W <- model.matrix(~. , data=df_W)
+Y <- df$Y
+A <- df$A
+
+c_forest <- causal_forest(X = W , Y = Y, W = A)
+c_forest_hat <- predict(c_forest, estimate.variance = TRUE)
+p_cate_grf <- plot_cate(cm_names, 
+                            cbind(df, 
+                                  "tau" = c_forest_hat$predictions,
+                                  "var_tau" = c_forest_hat$variance.estimates))
+# ggsave("tnp/plot/p_cate_grf.png", p_cate_grf, width = 5, height = 5)
+
+p_cate_all <- ggarrange(p_cate_t + ggtitle("SL CATE estimates (T-learner)"), 
+          p_cate_dr + ggtitle("SL CATE estimates (DR-learner)"), 
+          p_cate_grf + ggtitle("GRF CATE estimates"), 
+          p_cate_strat + ggtitle("TMLE Stratified ATE estimates"))
+# ggsave("tnp/plot/p_cate_all.png", p_cate_all, width = 10, height = 10)
+
+
+# VTE
+# df_fit$tau <- df_fit$mu1_hat - df_fit$mu0_hat
+aipw_vte <- VTE(df_fit, method = "AIPW")
+tmle_vte <- VTE(df_fit, method = "TMLE")
+
+
+# VIM
+# tmle vim
+theta_TMLE_a <- VIM(df_fit, method = "TMLE_a", y_l = 0, y_u = 1, max.it = 1e4, lr = 1e-3)
+theta_TMLE_b <- VIM(df_fit, method = "TMLE_b", y_l = 0, y_u = 1, max.it = 1e4, lr = 1e-3)
+
+# ee vim
+# df_fit$Y <- rescale(df_fit$Y, y_l, y_u)
+# df_fit$tau <- df_fit$tau*(y_u - y_l)
+# df_fit$tau_s <- df_fit$tau_s*(y_u - y_l)
+# df_fit$po <- df_fit$po*(y_u - y_l)
+theta_EE <- VIM(df_fit, method = "AIPW")
+
+# vim loop over all covariates
+set.seed(1)
+ws = c("AGE", "SEX", "RACE", "COUNTRY", "SMOKER", "NYHACLAS",
+       "DIABDUR", "ANTDBFL", "AHYPERFL", "INCPASSN", 
+       "BMIBL", "PULSEBL", "SYSBPBL", "DIABPBL", "HBA1CBL", "HDL1BL", "LDL1BL",
+       "CHOL1BL", "RC", "RCoverHDL","TRIG1BL", "CREATBL", "EGFMDRBC", 
+       "RETINSEV", "GERDBLFL", "PPIFL", "H2BLFL", 
+       "MIFL", "STROKEFL", "REVASFL", "STENFL", "CHDFL", "IHDFL", "CHFFL",
+       "KIDFL", "MICFL", "HYPFL", "LVSDFL", "PADFL", "CVRISK", "HBA1CGRN", "DDURGRN", 
+       "statin_use", "antihypertensives", "betab", "minera", "adp",
+       "vkantag", "caantag", "thiazide", "loopdiur")
+
+# ws = c("statin_use", "antihypertensives")
 cv = F
 dr = T
 max.it = 1e4
@@ -56,10 +185,10 @@ g_bounds = c(0.025, 0.975)
 tau_bounds = c(-1+1e-4, 1-1e-4)
 tau_s_bounds = c(-1+1e-4, 1-1e-4)
 gamma_s_bounds = c(1e-8, 1-1e-8)
-add_tau_sc = T
+add_tau_sc = F
 
 tic()
-df_fit <- fit_para(df = df,
+df_fit_list <- fit_paraloop(df = df,
                    sl_Q = sl_Q, 
                    sl_g = sl_g,
                    sl_x = sl_x,
@@ -73,51 +202,68 @@ df_fit <- fit_para(df = df,
                    add_tau_sc = add_tau_sc)
 toc()
 
-# saveRDS(df_fit, file = "~/Repo/te_vim/data/df_fit.RDS")
+# saveRDS(df_fit_list, file = "~/Repo/te_vim/data/df_fit_list.RDS")
 
-# visualize CATE
-cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
-              "vkantag", "caantag", "thiazide", "loopdiur")
+# temp <- df_fit_list[[1]]
+vim_list <- list()
 
-p_cate <- plot_cate(cm_names, cbind(df, "tau" = df_fit$tau))
+for (i in c(1:length(df_fit_list))){
+  theta_TMLE_a <- VIM(df_fit_list[[i]], method = "TMLE_a", y_l = 0, y_u = 1, max.it = 1e4, lr = 1e-3)
+  theta_TMLE_b <- VIM(df_fit_list[[i]], method = "TMLE_b", y_l = 0, y_u = 1, max.it = 1e4, lr = 1e-3)
+  theta_EE <- VIM(df_fit_list[[i]], method = "AIPW")
+  res = list("theta_EE" = theta_EE,
+             "theta_TMLE_a" = theta_TMLE_a,
+             "theta_TMLE_b" = theta_TMLE_b)
+  vim_list[[i]] = res
+}
 
-# ggsave("tnp/plot/p_cate.png", p_cate, width = 5, height = 5)
+df_theta <- data.frame("varname" = NULL, "importance" = NULL, "ci_l" = NULL, "ci_u" = NULL, "method" = NULL)
+for (i in c(1:length(df_fit_list))){
+  theta_EE <- vim_list[[i]]$theta_EE
+  theta_TMLE_a <- vim_list[[i]]$theta_TMLE_a
+  theta_TMLE_b <- vim_list[[i]]$theta_TMLE_b
+  
+  importance <- c(theta_EE$coef, theta_TMLE_a$coef, theta_TMLE_b$coef)
+  ci_l <- c(theta_EE$ci_l, theta_TMLE_a$ci_l, theta_TMLE_b$ci_l)
+  ci_u <- c(theta_EE$ci_u, theta_TMLE_a$ci_u, theta_TMLE_b$ci_u)
+  varname <- rep(ws[i], 3)
+  method <- c(theta_EE$Method, theta_TMLE_a$Method, theta_TMLE_b$Method)
+  
+  df_theta_i <- data.frame("varname" = varname, "importance" = importance, 
+                           "ci_l" = ci_l, "ci_u" = ci_u, "method" = method)
+  df_theta <- rbind(df_theta, df_theta_i)
+}
+# df_theta <- df_theta %>% filter(varname != "INSNVFL")
 
+p_theta_ee <- plot_theta(df_theta, estimator = "AIPW")
+p_theta_tmle_a <- plot_theta(df_theta, estimator = "TMLE_a")
+p_theta_tmle_b <- plot_theta(df_theta, estimator = "TMLE_b")
 
-# VIM
-# tmle vim
-theta_TMLE_a <- VIM(df_fit, method = "TMLE_a", y_l = 0, y_u = 1, max.it)
-theta_TMLE_b <- VIM(df_fit, method = "TMLE_b", y_l = 0, y_u = 1, max.it)
+p_theta_all <-
+  ggarrange(p_theta_ee + ggtitle("EE VIM estimates (DR-learner)"),
+            p_theta_tmle_a + ggtitle("TMLE-a VIM estimates (DR-learner)"),
+            p_theta_tmle_b + ggtitle("TMLE-b VIM estimates (DR-learner)"))
 
-# ee vim
-df_fit$Y <- rescale(df_fit$Y, y_l, y_u)
-df_fit$tau <- df_fit$tau*(y_u - y_l)
-df_fit$tau_s <- df_fit$tau_s*(y_u - y_l)
-df_fit$po <- df_fit$po*(y_u - y_l)
+# ggsave("tnp/plot/p_theta_ee.png", p_theta_ee, width = 7, height = 7)
+# ggsave("tnp/plot/p_theta_tmle_a.png", p_theta_tmle_a, width = 7, height = 7)
+# ggsave("tnp/plot/p_theta_tmle_b.png", p_theta_tmle_b, width = 7, height = 7)
 
-theta_EE <- VIM(df_fit, method = "AIPW")
+# ggsave("tnp/plot/p_theta_all.png", p_theta_all, width = 12, height = 12)
 
-
-# VTE
-aipw_vte <- VTE(df_fit, method = "AIPW")
-tmle_vte <- VTE(df_fit, method = "TMLE")
-
-
-# GRF cate
-library(grf)
-
-df_W <- df %>% select(setdiff(names(df), c("Y", "A")))
-W <- model.matrix(~. , data=df_W)
-Y <- df$Y
-A <- df$A
-
-c_forest <- causal_forest(X = W , Y = Y, W = A)
-
-p_cate_grf <- plot_cate(cm_names, 
-                        cbind(df, "tau" = predict(c_forest)$predictions))
-
-# ggsave("tnp/plot/p_cate_grf.png", p_cate_grf, width = 5, height = 5)
-
+plot_theta <- function(df_theta, estimator = "AIPW"){
+  p <- ggplot(data=df_theta %>% 
+           filter(method == estimator) %>% 
+           arrange(importance) %>% 
+           mutate(varname = factor(varname, levels = varname)),
+         aes(x=varname, y=importance, ymin=ci_l, ymax=ci_u)) +
+    geom_pointrange() + 
+    # geom_hline(yintercept=0, lty=2) +  # add a dotted line at x=0 after flip
+    # geom_hline(yintercept=1, lty=2) +  # add a dotted line at x=1 after flip
+    coord_flip() +  # flip coordinates (puts labels on y axis)
+    xlab("Variable") + ylab("Importance") +
+    theme_bw()  # use a white background
+  return(p)
+}
 # # aggregating up ---------------------------------------------------------------
 # mod = c_forest
 # model_hat <- predict(mod, estimate.variance = TRUE)

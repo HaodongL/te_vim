@@ -1,0 +1,189 @@
+---
+title: "analy_theta"
+author: "Haodong Li"
+date: "2022-11-28"
+output:
+  pdf_document:
+    keep_tex: true
+---
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(kableExtra)
+library(readr)
+library(dplyr)
+library(sl3)
+library(tictoc)
+library(tmle3)
+library(ggplot2)
+library(table1)
+library(ggpubr)
+rm(list = ls())
+repo_path = "~/Repo/te_vim/"
+source(paste0(repo_path, "R/data_process/data_helper.R"))
+source(paste0(repo_path, "R/simu/simu_dgd.R")) 
+source(paste0(repo_path, "R/simu/simu_config.R"))
+source(paste0(repo_path, "R/est_function/sl3_config.R"))
+source(paste0(repo_path, "R/est_function/fit_para.R"))
+source(paste0(repo_path, "R/est_function/vim.R"))
+source(paste0(repo_path, "R/est_function/vte.R"))
+source(paste0(repo_path, "R/analysis/analy_helper.R"))
+source(paste0(repo_path, "R/est_function/fit_paraloop.R"))
+df_w <- read_csv(file = paste0(repo_path, "data/supp/df_w.csv"))
+df_fit <- readRDS("~/Repo/te_vim/data/df_fit.RDS")
+```
+
+## 1. Experiment and question
+
+The LEADER trial is a multi-centre randomised trial to determine Liraglutide (GLP-1) effects on cardiovascular events. So the original treatment variable is Liraglutide/Placebo and outcome consists of several cardiovascular events. It is known that GLP-1 users are also often on statins and other cardiovascular drugs. In this project, we want to explore the heterogeneity of liraglutide treatment effect among concomitant medication (especially statin) users, with diabetes progression as primary outcome, cardiovascular events as second outcome.
+
+## 2. Overview of data
+```{r, message=FALSE, warning=FALSE}
+outcome = 'diab'; t = 24
+df <- get_data(outcome, t)
+
+nodes <- list(W = setdiff(names(df), c("Y", "A")),
+              A = 'A',
+              Y = 'Y')
+
+p_before = ncol(df)-2
+df <- process_missing(df, nodes)$data
+print(paste0("data dimension (before): n=", nrow(df), ", p=", p_before))
+print(paste0("data dimension (after): n=", nrow(df), ", p=", ncol(df)-2))
+```
+
+```{r, message=FALSE, warning=FALSE}
+# Table of Baseline Characteristics 
+df_w_summary <- df_w %>% 
+  filter(INSNVFL == FALSE) %>% 
+  select(-c("USUBJID", "INSNVFL")) %>% 
+  mutate(A = ifelse(A == 1, "Liraglutide", "Placebo"))
+
+df_w_summary <- labelled::remove_labels(df_w_summary)
+tbl <- table1(~. | A, data = df_w_summary, caption = "Baseline characteristics in LEADER")
+# kable(as.data.frame(tbl), longtable=TRUE, booktabs=TRUE) 
+```
+\newpage
+```{r, message=FALSE, warning=FALSE}
+tbl %>% t1kable(longtable=TRUE) %>%
+  kable_styling(., font_size = 9, latex_options = "hold_position", position = "center")
+```
+
+## 3. CATE estimation
+```{r, message=FALSE, warning=FALSE}
+# generate risk table
+# risk and cate est
+# temp = cbind(df, "mua_hat" = df_fit$mua_hat, "tau" = df_fit$tau) %>%
+#   group_by(A, statin_use) %>%
+#   summarise(EY = mean(mua_hat), "cate_d" = mean(tau))
+# 
+# temp$statin_use <- as.logical(temp$statin_use)
+# cate_t1 = temp$EY[which(temp$statin_use & temp$A == 1)] - temp$EY[which(temp$statin_use & temp$A == 0)]
+# cate_t0 = temp$EY[which(!temp$statin_use & temp$A == 1)] - temp$EY[which(!temp$statin_use & temp$A == 0)]
+# temp$cate_t = c(cate_t0,cate_t1,cate_t0,cate_t1)
+# temp$cate_d = rep(c(mean(temp$cate_d[c(1,3)]), mean(temp$cate_d[c(2,4)])), 2)
+# #empirical risk
+# tmp_Y = df %>%
+#   group_by(A, statin_use) %>%
+#   mutate(statin_use  = as.logical(statin_use)) %>%
+#   summarise(count_Y = sum(Y),
+#             group_N = n(),
+#             risk_emp = sum(Y)/n())
+# temp <- left_join(temp, tmp_Y, by = c("A", "statin_use"))
+cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
+              "vkantag", "caantag", "thiazide", "loopdiur")
+
+get_df_risk <- function(df, df_fit, cm_names){
+  df_risk = data.frame()
+  for (cm in cm_names){
+    temp = cbind(df, "mua_hat" = df_fit$mua_hat, "tau" = df_fit$tau) %>%
+    group_by(across(all_of(c("A", cm)))) %>%
+    summarise(EY = mean(mua_hat), "cate_d" = mean(tau)) 
+  
+    cate_t1 = temp$EY[which(temp[,cm] == "TRUE" & temp$A == 1)] - 
+      temp$EY[which(temp[,cm] == "TRUE" & temp$A == 0)]
+    cate_t0 = temp$EY[which(temp[,cm] == "FALSE" & temp$A == 1)] - 
+      temp$EY[which(temp[,cm] == "FALSE" & temp$A == 0)]
+    temp$cate_t = c(cate_t0,cate_t1,cate_t0,cate_t1)
+    temp$cate_d = rep(c(mean(temp$cate_d[c(1,3)]), mean(temp$cate_d[c(2,4)])), 2)
+    #empirical risk
+    tmp_Y = df %>% 
+      group_by(across(all_of(c("A", cm)))) %>% 
+      summarise(count_Y = sum(Y),
+                group_N = n(),
+                risk_emp = sum(Y)/n()) 
+    temp <- left_join(temp, tmp_Y, by = c("A", cm))
+    
+    tmp <- temp %>% rename("risk_n" = "EY") %>% 
+      select(all_of(c("A", cm, "count_Y", "group_N", 
+                      "risk_emp","risk_n", "cate_t", "cate_d")))
+    
+    tmp <- tmp %>% mutate(across(all_of(c(cm)), ~paste0(str_sub(., 1,1),"_", str_sub(cm, 1,6)))) 
+    colnames(tmp) <- c("A", "subgroup", "count_Y", "group_N", 
+                      "risk_emp","risk_n", "cate_t", "cate_d")
+    df_risk <- rbind(df_risk, tmp)
+  }
+  return(df_risk)
+}
+
+tmp <- get_df_risk(df, df_fit, cm_names)
+```
+
+```{r, message=FALSE, warning=FALSE}
+tmp[, -c(7,8)] %>% 
+  mutate(across(where(is.numeric), ~round(., 4))) %>% 
+  kable("latex", booktabs = T, linesep = c("", "", "", "\\addlinespace"),
+        caption = "Subgroup risk estimates in LEADER", align=rep('c', 6)) %>% 
+  # collapse_rows(columns = 1, latex_hline = "major", valign = "middle") %>%
+  column_spec(1:6, width = "0.6in") %>% 
+  kable_styling(font_size = 9)
+```
+
+```{r, echo=FALSE, fig.cap="SL CATE estiamtes (T-learner, no CV)", out.width = '100%', fig.align="center", fig.pos="H"}
+# knitr::include_graphics("~/Repo/te_vim/tnp/plot/p_cate_t.png")
+```
+
+```{r, echo=FALSE, fig.cap="SL CATE estiamtes (DR-learner, no CV)", out.width = '100%', fig.align="center", fig.pos="H"}
+# knitr::include_graphics("~/Repo/te_vim/tnp/plot/p_cate_dr.png")
+```
+
+```{r, echo=FALSE, fig.cap="GRF CATE estiamtes", out.width = '100%', fig.align="center", fig.pos="H"}
+# knitr::include_graphics("~/Repo/te_vim/tnp/plot/p_cate_grf.png")
+```
+
+```{r, echo=FALSE, fig.cap="CATE estiamtes", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/plot/p_cate_all.png")
+```
+
+## 4. VTE estimation
+```{r}
+# VTE 
+# df_fit$tau <- df_fit$mu1_hat - df_fit$mu0_hat
+aipw_vte <- VTE(df_fit, method="AIPW")
+tmle_vte <- VTE(df_fit, method="TMLE")
+```
+
+```{r}
+aipw_vte
+```
+
+```{r}
+tmle_vte
+```
+
+## 5. VIM estimation
+
+```{r, echo=FALSE, fig.cap="EE VIM estiamtes", out.width = '100%', fig.align="center", fig.pos="H"}
+# knitr::include_graphics("~/Repo/te_vim/tnp/plot/p_theta_ee.png")
+```
+
+```{r, echo=FALSE, fig.cap="TMLEa VIM estiamtes", out.width = '100%', fig.align="center", fig.pos="H"}
+# knitr::include_graphics("~/Repo/te_vim/tnp/plot/p_theta_tmle_a.png")
+```
+
+```{r, echo=FALSE, fig.cap="TMLEb VIM estiamtes", out.width = '100%', fig.align="center", fig.pos="H"}
+# knitr::include_graphics("~/Repo/te_vim/tnp/plot/p_theta_tmle_b.png")
+```
+
+```{r, echo=FALSE, fig.cap="VIM estiamtes", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/plot/p_theta_all.png")
+```
