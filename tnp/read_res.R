@@ -91,78 +91,78 @@ proc_df_tbl <- function(res, N_len = 8){
 
 
 # read ss hal res
-# sum_metric <- function(res){
-#   table_results_data <- res %>%
-#     dplyr::mutate(cvtmle_proportion = truth <= cvtmle_upper & truth >= cvtmle_lower,
-#                   cvaiptw_proportion = truth <= cvaiptw_upper & truth >= cvaiptw_lower,
-#                   sshal_proportion = truth <= sshal_upper & truth >= sshal_lower,
-#                   
-#                   
-#                   cvtmle_widthCI = cvtmle_upper-cvtmle_lower,
-#                   cvaiptw_widthCI = cvaiptw_upper-cvaiptw_lower,
-#                   sshal_widthCI = sshal_upper-sshal_lower,
-#     ) %>%
-#     dplyr::group_by(n, truth) %>%
-#     summarize(cvtmle_coverage = mean(cvtmle_proportion),
-#               cvaiptw_coverage = mean(cvaiptw_proportion),
-#               sshal_coverage = mean(sshal_proportion),
-#               
-#               cvtmle_bias = mean(cvtmle) - mean(truth),
-#               cvaiptw_bias = mean(cvaiptw) - mean(truth),
-#               sshal_bias = mean(sshal) - mean(truth),
-#               
-#               cvtmle_var = var(cvtmle),
-#               cvaiptw_var = var(cvaiptw),
-#               sshal_var = var(sshal),
-#               
-#               cvtmle_mse = cvtmle_bias^2 + var(cvtmle),
-#               cvaiptw_mse = cvaiptw_bias^2 + var(cvaiptw),
-#               sshal_mse = sshal_bias^2 + var(sshal),
-#               
-#               # 2020-02-01 coverage of oracle CI
-#               cvtmle_oracle = mean(truth <= cvtmle + 1.96*sd(cvtmle) & truth >= cvtmle - 1.96*sd(cvtmle)),
-#               cvaiptw_oracle = mean(truth <= cvaiptw + 1.96*sd(cvaiptw) & truth >= cvaiptw - 1.96*sd(cvaiptw)),
-#               sshal_oracle = mean(truth <= sshal + 1.96*sd(sshal) & truth >= sshal - 1.96*sd(sshal)),
-#               
-#               cvtmle_meanwidthCI = mean(cvtmle_widthCI),
-#               cvaiptw_meanwidthCI = mean(cvaiptw_widthCI),
-#               sshal_meanwidthCI = mean(sshal_widthCI)
-#               
-#     ) %>%  ungroup()
-#   
-#   return(table_results_data)
-# }
-# 
-# 
-# proc_df_tbl <- function(res, N_len = 8){
-#   
-#   table_results_data <- sum_metric(res)
-#   
-#   #wide to long
-#   data_long_coverage <- gather(table_results_data, method, coverage, cvtmle_coverage:sshal_coverage, factor_key=TRUE) %>%select(c(n, truth, method, coverage))
-#   
-#   data_long_oracle <- gather(table_results_data, method, oracle_coverage, cvtmle_oracle:sshal_oracle, factor_key=TRUE) %>% select(c(oracle_coverage))
-#   
-#   data_long_bias <- gather(table_results_data, method, bias, cvtmle_bias:sshal_bias, factor_key=TRUE) %>% select(c(bias))
-#   
-#   data_long_var<- gather(table_results_data, method, var, cvtmle_var:sshal_var, factor_key=TRUE) %>%select(c(var))
-#   
-#   data_long_mse <- gather(table_results_data, method, mse, cvtmle_mse:sshal_mse, factor_key=TRUE) %>%select(c(mse))
-#   
-#   data_long_CIwidth <- gather(table_results_data, method, CIwidth, cvtmle_meanwidthCI:sshal_meanwidthCI, factor_key=TRUE) %>%select(c(CIwidth))
-#   
-#   data_long = cbind(data_long_coverage,
-#                     data_long_oracle, 
-#                     data_long_bias,
-#                     data_long_var,
-#                     data_long_mse,
-#                     data_long_CIwidth) %>% 
-#     select(c(n, method,truth,var,bias,mse,coverage,oracle_coverage, CIwidth))
-#   
-#   setnames(data_long, old = c('n' ,'method','truth','var','bias','mse','coverage','oracle_coverage','CIwidth'), 
-#            new = c ('n',"Method",'True_Theta','Variance','Bias','MSE','Coverage','Coverage_or','CI_width'))
-#   
-#   data_long$Method = c(rep('TMLE',N_len), rep('EE',N_len), rep('SS-HAL',N_len))
-#   data_long <- data_long %>% arrange(n)
-#   return(data_long)
-# }
+sum_metric <- function(res){
+  table_results_data <- res %>%
+    dplyr::mutate(cvtmle_proportion = truth <= cvtmle_upper & truth >= cvtmle_lower,
+                  cvaiptw_proportion = truth <= cvaiptw_upper & truth >= cvaiptw_lower,
+                  sshal_proportion = truth <= sshal_upper & truth >= sshal_lower,
+
+
+                  cvtmle_widthCI = cvtmle_upper-cvtmle_lower,
+                  cvaiptw_widthCI = cvaiptw_upper-cvaiptw_lower,
+                  sshal_widthCI = sshal_upper-sshal_lower,
+    ) %>%
+    dplyr::group_by(n, truth) %>%
+    summarize(cvtmle_coverage = mean(cvtmle_proportion),
+              cvaiptw_coverage = mean(cvaiptw_proportion),
+              sshal_coverage = mean(sshal_proportion),
+
+              cvtmle_bias = mean(cvtmle) - mean(truth),
+              cvaiptw_bias = mean(cvaiptw) - mean(truth),
+              sshal_bias = mean(sshal) - mean(truth),
+
+              cvtmle_var = var(cvtmle),
+              cvaiptw_var = var(cvaiptw),
+              sshal_var = var(sshal),
+
+              cvtmle_mse = cvtmle_bias^2 + var(cvtmle),
+              cvaiptw_mse = cvaiptw_bias^2 + var(cvaiptw),
+              sshal_mse = sshal_bias^2 + var(sshal),
+
+              # 2020-02-01 coverage of oracle CI
+              cvtmle_oracle = mean(truth <= cvtmle + 1.96*sd(cvtmle) & truth >= cvtmle - 1.96*sd(cvtmle)),
+              cvaiptw_oracle = mean(truth <= cvaiptw + 1.96*sd(cvaiptw) & truth >= cvaiptw - 1.96*sd(cvaiptw)),
+              sshal_oracle = mean(truth <= sshal + 1.96*sd(sshal) & truth >= sshal - 1.96*sd(sshal)),
+
+              cvtmle_meanwidthCI = mean(cvtmle_widthCI),
+              cvaiptw_meanwidthCI = mean(cvaiptw_widthCI),
+              sshal_meanwidthCI = mean(sshal_widthCI)
+
+    ) %>%  ungroup()
+
+  return(table_results_data)
+}
+
+
+proc_df_tbl <- function(res, N_len = 8){
+
+  table_results_data <- sum_metric(res)
+
+  #wide to long
+  data_long_coverage <- gather(table_results_data, method, coverage, cvtmle_coverage:sshal_coverage, factor_key=TRUE) %>%select(c(n, truth, method, coverage))
+
+  data_long_oracle <- gather(table_results_data, method, oracle_coverage, cvtmle_oracle:sshal_oracle, factor_key=TRUE) %>% select(c(oracle_coverage))
+
+  data_long_bias <- gather(table_results_data, method, bias, cvtmle_bias:sshal_bias, factor_key=TRUE) %>% select(c(bias))
+
+  data_long_var<- gather(table_results_data, method, var, cvtmle_var:sshal_var, factor_key=TRUE) %>%select(c(var))
+
+  data_long_mse <- gather(table_results_data, method, mse, cvtmle_mse:sshal_mse, factor_key=TRUE) %>%select(c(mse))
+
+  data_long_CIwidth <- gather(table_results_data, method, CIwidth, cvtmle_meanwidthCI:sshal_meanwidthCI, factor_key=TRUE) %>%select(c(CIwidth))
+
+  data_long = cbind(data_long_coverage,
+                    data_long_oracle,
+                    data_long_bias,
+                    data_long_var,
+                    data_long_mse,
+                    data_long_CIwidth) %>%
+    select(c(n, method,truth,var,bias,mse,coverage,oracle_coverage, CIwidth))
+
+  setnames(data_long, old = c('n' ,'method','truth','var','bias','mse','coverage','oracle_coverage','CIwidth'),
+           new = c ('n',"Method",'True_Theta','Variance','Bias','MSE','Coverage','Coverage_or','CI_width'))
+
+  data_long$Method = c(rep('TMLE',N_len), rep('EE',N_len), rep('SS-HAL',N_len))
+  data_long <- data_long %>% arrange(n)
+  return(data_long)
+}

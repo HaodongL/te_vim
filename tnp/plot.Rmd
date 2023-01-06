@@ -151,9 +151,9 @@ data_long11 <- proc_df_tbl(res, N_len = 8)
 data_long11$Method[which(data_long11$Method == "TMLE")] <-  "TMLE2"
 data_long11 <- data_long11 %>% filter(Method == "TMLE2")
 
-data_long <- rbind(data_long9 %>% mutate(Q_g_model = 'GAM'), 
-                   data_long10 %>% mutate(Q_g_model = 'Earth'),
-                   data_long11 %>% mutate(Q_g_model = 'Earth'))
+data_long <- rbind(data_long9 %>% mutate(Model = 'GAM'), 
+                   data_long10 %>% mutate(Model = 'Earth'),
+                   data_long11 %>% mutate(Model = 'Earth'))
 
 # performance data
 temp_tbl_long <- data_long %>% 
@@ -163,7 +163,7 @@ temp_tbl_long <- data_long %>%
                          med_bias = median(Bias),
                          med_CIwidth = median(CI_width))
 
-temp_tbl_long <- temp_tbl_long %>% arrange(Method, Q_g_model)
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Model)
 temp_tbl_long$n <- as.factor(temp_tbl_long$n)
 
 library(RColorBrewer)
@@ -173,8 +173,8 @@ color.pal <- brewer.pal(n = 8, name = "Dark2")
 plot1 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = MSE, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  geom_point(aes(x= n, y = MSE, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=c(2,1), name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='MSE',
        x="n") +
@@ -184,8 +184,8 @@ temp_tbl_long %>%
 plot2 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=c(2,1), name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='absBias',
        x="n") +
@@ -195,8 +195,8 @@ temp_tbl_long %>%
 plot3 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = Coverage, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  geom_point(aes(x= n, y = Coverage, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=c(2,1), name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   geom_hline(yintercept = 0.95) +
   ylim(0.85, 1) + 
@@ -208,8 +208,8 @@ temp_tbl_long %>%
 plot4 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = CI_width, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=c(2,1), name = "Q_g_model") +
+  geom_point(aes(x= n, y = CI_width, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=c(2,1), name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='CI_width',
        x="n") +
@@ -274,9 +274,9 @@ data_long15 <- data_long15 %>% filter(Method == "TMLE-a")
 
 
 
-data_long <- rbind(data_long12 %>% mutate(Q_g_model = 'Earth'), 
-                   data_long14 %>% mutate(Q_g_model = 'Earth'),
-                   data_long15 %>% mutate(Q_g_model = 'HAL'))
+data_long <- rbind(data_long12 %>% mutate(Model = 'Earth'), 
+                   data_long14 %>% mutate(Model = 'Earth'),
+                   data_long15 %>% mutate(Model = 'HAL'))
 
 # performance data
 temp_tbl_long <- data_long %>% 
@@ -286,7 +286,7 @@ temp_tbl_long <- data_long %>%
                          med_bias = median(Bias),
                          med_CIwidth = median(CI_width))
 
-temp_tbl_long <- temp_tbl_long %>% arrange(Method, Q_g_model)
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Model)
 temp_tbl_long$n <- as.factor(temp_tbl_long$n)
 
 library(RColorBrewer)
@@ -298,8 +298,8 @@ shape_val <- c(2,0) # c(2,1)
 plot1 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = MSE, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = MSE, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='MSE',
        x="n") +
@@ -309,8 +309,8 @@ temp_tbl_long %>%
 plot2 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='absBias',
        x="n") +
@@ -320,8 +320,8 @@ temp_tbl_long %>%
 plot3 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = Coverage, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = Coverage, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   geom_hline(yintercept = 0.95) +
   ylim(0.85, 1) + 
@@ -333,8 +333,8 @@ temp_tbl_long %>%
 plot4 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = CI_width, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = CI_width, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='CI_width',
        x="n") +
@@ -388,8 +388,8 @@ data_long14$Method[which(data_long14$Method == "TMLE")] <-  "TMLE-b-lin"
 data_long14 <- data_long14 %>% filter(Method == "TMLE-b-lin")
 
 
-data_long <- rbind(data_long12 %>% mutate(Q_g_model = 'Earth'), 
-                   data_long14 %>% mutate(Q_g_model = 'Earth'))
+data_long <- rbind(data_long12 %>% mutate(Model = 'Earth'), 
+                   data_long14 %>% mutate(Model = 'Earth'))
 
 # performance data
 temp_tbl_long <- data_long %>% 
@@ -399,7 +399,7 @@ temp_tbl_long <- data_long %>%
                          med_bias = median(Bias),
                          med_CIwidth = median(CI_width))
 
-temp_tbl_long <- temp_tbl_long %>% arrange(Method, Q_g_model)
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Model)
 temp_tbl_long$n <- as.factor(temp_tbl_long$n)
 
 library(RColorBrewer)
@@ -411,8 +411,8 @@ shape_val <- c(2,0) # c(2,1)
 plot1 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = MSE, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = MSE, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='MSE',
        x="n") +
@@ -422,8 +422,8 @@ temp_tbl_long %>%
 plot2 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   ylim(0, 0.065) + 
   labs(y='absBias',
@@ -434,8 +434,8 @@ temp_tbl_long %>%
 plot3 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = Coverage, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = Coverage, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   geom_hline(yintercept = 0.95) +
   ylim(0.85, 1) + 
@@ -447,8 +447,8 @@ temp_tbl_long %>%
 plot4 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = CI_width, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = CI_width, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='CI_width',
        x="n") +
@@ -489,8 +489,8 @@ data_long14$Method[which(data_long14$Method == "TMLE")] <-  "TMLE-b-tg"
 data_long14 <- data_long14 %>% filter(Method == "TMLE-b-tg")
 
 
-data_long <- rbind(data_long12 %>% mutate(Q_g_model = 'Earth'), 
-                   data_long14 %>% mutate(Q_g_model = 'Earth'))
+data_long <- rbind(data_long12 %>% mutate(Model = 'Earth'), 
+                   data_long14 %>% mutate(Model = 'Earth'))
 
 # performance data
 temp_tbl_long <- data_long %>% 
@@ -500,7 +500,7 @@ temp_tbl_long <- data_long %>%
                          med_bias = median(Bias),
                          med_CIwidth = median(CI_width))
 
-temp_tbl_long <- temp_tbl_long %>% arrange(Method, Q_g_model)
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Model)
 temp_tbl_long$n <- as.factor(temp_tbl_long$n)
 
 library(RColorBrewer)
@@ -512,8 +512,8 @@ shape_val <- c(2,0) # c(2,1)
 plot1 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = MSE, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = MSE, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='MSE',
        x="n") +
@@ -523,8 +523,8 @@ temp_tbl_long %>%
 plot2 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   ylim(0, 0.065) + 
   labs(y='absBias',
@@ -535,8 +535,8 @@ temp_tbl_long %>%
 plot3 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = Coverage, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = Coverage, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   geom_hline(yintercept = 0.95) +
   ylim(0.85, 1) + 
@@ -548,8 +548,8 @@ temp_tbl_long %>%
 plot4 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = CI_width, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = CI_width, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='CI_width',
        x="n") +
@@ -592,10 +592,10 @@ data_long14$Method[which(data_long14$Method == "TMLE")] <-  "TMLE-a"
 # data_long14 <- data_long14 %>% filter(Method == "TMLE-a")
 
 
-data_long <- rbind(data_long12 %>% mutate(Q_g_model = 'T, no CV'), 
-                   data_long14 %>% mutate(Q_g_model = 'DR, CV'))
+data_long <- rbind(data_long12 %>% mutate(Model = 'T, no CV'), 
+                   data_long14 %>% mutate(Model = 'DR, CV'))
 
-data_long <- rbind(data_long14 %>% mutate(Q_g_model = 'ranger'))
+data_long <- rbind(data_long14 %>% mutate(Model = 'ranger'))
 
 # performance data
 temp_tbl_long <- data_long %>% 
@@ -605,7 +605,7 @@ temp_tbl_long <- data_long %>%
                          med_bias = median(Bias),
                          med_CIwidth = median(CI_width))
 
-temp_tbl_long <- temp_tbl_long %>% arrange(Method, Q_g_model)
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Model)
 temp_tbl_long$n <- as.factor(temp_tbl_long$n)
 
 library(RColorBrewer)
@@ -617,8 +617,8 @@ shape_val <- c(2,0) # c(2,1)
 plot1 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = MSE, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = MSE, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='MSE',
        x="n") +
@@ -628,8 +628,8 @@ temp_tbl_long %>%
 plot2 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='absBias',
        x="n") +
@@ -639,8 +639,8 @@ temp_tbl_long %>%
 plot3 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = Coverage, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = Coverage, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   geom_hline(yintercept = 0.95) +
   ylim(0.5, 1) + 
@@ -652,8 +652,8 @@ temp_tbl_long %>%
 plot4 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = CI_width, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = CI_width, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='CI_width',
        x="n") +
@@ -690,7 +690,7 @@ data_long12 <- proc_df_tbl(res, N_len = 8)
 data_long12$Method[which(data_long12$Method == "TMLE")] <-  "TMLE-a"
 
 
-data_long <- data_long12 %>% mutate(Q_g_model = case_when(Method == 'SS-HAL' ~ 'HAL',
+data_long <- data_long12 %>% mutate(Model = case_when(Method == 'SS-HAL' ~ 'HAL',
                                                           TRUE ~ 'Earth'))
 
 # performance data
@@ -701,7 +701,7 @@ temp_tbl_long <- data_long %>%
                          med_bias = median(Bias),
                          med_CIwidth = median(CI_width))
 
-temp_tbl_long <- temp_tbl_long %>% arrange(Method, Q_g_model)
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Model)
 temp_tbl_long$n <- as.factor(temp_tbl_long$n)
 
 library(RColorBrewer)
@@ -713,8 +713,8 @@ shape_val <- c(2,0) # c(2,1)
 plot1 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = MSE, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = MSE, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='MSE',
        x="n") +
@@ -724,8 +724,8 @@ temp_tbl_long %>%
 plot2 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='absBias',
        x="n") +
@@ -735,8 +735,8 @@ temp_tbl_long %>%
 plot3 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = Coverage, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = Coverage, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   geom_hline(yintercept = 0.95) +
   ylim(0.85, 1) + 
@@ -748,8 +748,8 @@ temp_tbl_long %>%
 plot4 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = CI_width, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = CI_width, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='CI_width',
        x="n") +
@@ -783,7 +783,7 @@ data_long12 <- proc_df_tbl(res, N_len = 8)
 data_long12$Method[which(data_long12$Method == "TMLE")] <-  "TMLE-a"
 
 
-data_long <- data_long12 %>% mutate(Q_g_model = case_when(Method == 'SS-HAL' ~ 'HAL',
+data_long <- data_long12 %>% mutate(Model = case_when(Method == 'SS-HAL' ~ 'HAL',
                                                           TRUE ~ 'Earth'))
 
 # performance data
@@ -794,7 +794,7 @@ temp_tbl_long <- data_long %>%
                          med_bias = median(Bias),
                          med_CIwidth = median(CI_width))
 
-temp_tbl_long <- temp_tbl_long %>% arrange(Method, Q_g_model)
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Model)
 temp_tbl_long$n <- as.factor(temp_tbl_long$n)
 
 library(RColorBrewer)
@@ -806,8 +806,8 @@ shape_val <- c(2,0) # c(2,1)
 plot1 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = MSE, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = MSE, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='MSE',
        x="n") +
@@ -817,8 +817,8 @@ temp_tbl_long %>%
 plot2 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='absBias',
        x="n") +
@@ -828,8 +828,8 @@ temp_tbl_long %>%
 plot3 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = Coverage, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = Coverage, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   geom_hline(yintercept = 0.95) +
   ylim(0.85, 1) + 
@@ -841,8 +841,8 @@ temp_tbl_long %>%
 plot4 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = CI_width, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = CI_width, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='CI_width',
        x="n") +
@@ -877,7 +877,7 @@ data_long12 <- proc_df_tbl(res, N_len = 7)
 data_long12$Method[which(data_long12$Method == "TMLE")] <-  "TMLE-a"
 
 
-data_long <- data_long12 %>% mutate(Q_g_model = 'HAL')
+data_long <- data_long12 %>% mutate(Model = 'HAL')
 
 # performance data
 temp_tbl_long <- data_long %>% 
@@ -887,7 +887,7 @@ temp_tbl_long <- data_long %>%
                          med_bias = median(Bias),
                          med_CIwidth = median(CI_width))
 
-temp_tbl_long <- temp_tbl_long %>% arrange(Method, Q_g_model)
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Model)
 temp_tbl_long$n <- as.factor(temp_tbl_long$n)
 
 library(RColorBrewer)
@@ -899,8 +899,8 @@ shape_val <- c(2,0) # c(2,1)
 plot1 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = MSE, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = MSE, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='MSE',
        x="n") +
@@ -910,8 +910,8 @@ temp_tbl_long %>%
 plot2 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='absBias',
        x="n") +
@@ -921,8 +921,8 @@ temp_tbl_long %>%
 plot3 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = Coverage, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = Coverage, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   geom_hline(yintercept = 0.95) +
   ylim(0.8, 1) + 
@@ -934,8 +934,8 @@ temp_tbl_long %>%
 plot4 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = CI_width, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = CI_width, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='CI_width',
        x="n") +
@@ -970,7 +970,7 @@ data_long12 <- proc_df_tbl(res, N_len = 7)
 data_long12$Method[which(data_long12$Method == "TMLE")] <-  "TMLE-a"
 
 
-data_long <- data_long12 %>% mutate(Q_g_model = 'HAL')
+data_long <- data_long12 %>% mutate(Model = 'HAL')
 
 # performance data
 temp_tbl_long <- data_long %>% 
@@ -980,7 +980,7 @@ temp_tbl_long <- data_long %>%
                          med_bias = median(Bias),
                          med_CIwidth = median(CI_width))
 
-temp_tbl_long <- temp_tbl_long %>% arrange(Method, Q_g_model)
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Model)
 temp_tbl_long$n <- as.factor(temp_tbl_long$n)
 
 library(RColorBrewer)
@@ -992,8 +992,8 @@ shape_val <- c(2,0) # c(2,1)
 plot1 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = MSE, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = MSE, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='MSE',
        x="n") +
@@ -1003,8 +1003,8 @@ temp_tbl_long %>%
 plot2 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='absBias',
        x="n") +
@@ -1014,8 +1014,8 @@ temp_tbl_long %>%
 plot3 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = Coverage, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = Coverage, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   geom_hline(yintercept = 0.95) +
   ylim(0.8, 1) + 
@@ -1027,8 +1027,101 @@ temp_tbl_long %>%
 plot4 <-
 temp_tbl_long %>%
   ggplot() +
-  geom_point(aes(x= n, y = CI_width, color = Method, shape= Q_g_model), size= 4) +
-  scale_shape_manual(values=shape_val, name = "Q_g_model") +
+  geom_point(aes(x= n, y = CI_width, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='CI_width',
+       x="n") +
+  theme_nice
+
+plot_dots <-
+ggarrange(plot1,
+          plot2,
+          plot3,
+          plot4,
+          legend = "top", common.legend = TRUE)
+
+# plotpath = paste0("~/Repo/te_vim/tnp")
+# ggsave('plot_dots_hal_dr.png', width = 14, height = 8,
+#        plot = plot_dots, path = plotpath)
+
+```
+
+```{r, eval=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+# hal t
+# plot 
+library(ggplot2)
+library(ggpubr)
+theme_nice <- theme(panel.background = element_blank(), 
+                    panel.grid = element_line(size = 0.3, linetype = 'dashed',
+                                              colour = "grey"))
+
+### new dr update in TMLE
+res <- read_hp(filename = 'hal_ss_', savedate = '2023-01-03')
+data_long12 <- proc_df_tbl(res, N_len = 7)
+data_long12$Method[which(data_long12$Method == "TMLE")] <-  "TMLE-a"
+
+
+data_long <- data_long12 %>% mutate(Model = 'HAL')
+
+# performance data
+temp_tbl_long <- data_long %>% 
+                  group_by(Method) %>% 
+                  mutate(med_mse = median(MSE),
+                         med_coverage = median(Coverage),
+                         med_bias = median(Bias),
+                         med_CIwidth = median(CI_width))
+
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Model)
+temp_tbl_long$n <- as.factor(temp_tbl_long$n)
+
+library(RColorBrewer)
+color.pal <- brewer.pal(n = 8, name = "Dark2")
+color.pal <- c(color.pal[1], color.pal[3], color.pal[2])
+
+shape_val <- c(2,0) # c(2,1)
+                
+# MSE
+plot1 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = MSE, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='MSE',
+       x="n") +
+  theme_nice
+
+# Bias
+plot2 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='absBias',
+       x="n") +
+  theme_nice
+
+# Coverage
+plot3 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = Coverage, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  geom_hline(yintercept = 0.95) +
+  ylim(0.8, 1) + 
+  labs(y='Coverage',
+       x="n") +
+  theme_nice
+
+# meanCIwidth
+plot4 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = CI_width, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
   scale_color_manual(values=color.pal, name = "Method") +
   labs(y='CI_width',
        x="n") +
@@ -1042,8 +1135,7 @@ ggarrange(plot1,
           legend = "top", common.legend = TRUE)
 
 plotpath = paste0("~/Repo/te_vim/tnp")
-ggsave('plot_dots_hal_dr.png', width = 14, height = 8,
+ggsave('plot_dots_hal_ss.png', width = 14, height = 8,
        plot = plot_dots, path = plotpath)
 
 ```
-

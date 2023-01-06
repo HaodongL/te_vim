@@ -13,7 +13,7 @@ if(here::here()=="C:/Users/andre/Documents/te_vim"){
   
   df_adsl <- box_read("946034250501")
   df_tte <- box_read("946034258901")
-  df_cm <- box_read("946034255301")
+  df_adcm <- box_read("946034255301")
   df_ttse <- box_read("946034261301")
   df_hypo <-box_read("946034248101")
   df_adae <- box_read("946034244501")
@@ -22,7 +22,7 @@ if(here::here()=="C:/Users/andre/Documents/te_vim"){
   # read in subject level covariate dataset, tte, ttse and cm 
   df_adsl <- haven::read_sas("data/ADaM/adsl.sas7bdat")
   df_tte <- haven::read_sas("data/ADaM/adtte.sas7bdat")
-  df_cm <- haven::read_sas("data/ADaM/adcm.sas7bdat")
+  df_adcm <- haven::read_sas("data/ADaM/adcm.sas7bdat")
   df_ttse <- haven::read_sas("data/ADaM/adttse.sas7bdat")
   df_hypo <- haven::read_sas("data/ADaM/adhypo.sas7bdat")
   df_adae <- haven::read_sas("data/ADaM/adae.sas7bdat")
@@ -35,12 +35,12 @@ if(here::here()=="C:/Users/andre/Documents/te_vim"){
 
 ### ------------  Part 1. Process Covariates  ------------ ###
 
-# remove the subjects who are not in df_tte or df_cm
+# remove the subjects who are not in df_tte or df_adcm
 unique_subid_w = unique(df_adsl$USUBJID)
 # 1 subject in subject level dataset, not in the time-to-event dataset
 out_subid_tte <- unique_subid_w[which(!(unique_subid_w %in% unique(df_tte$USUBJID)))]
 # 2 subjects in subject level dataset, not in the concomitant med dataset
-out_subid_cm <- unique_subid_w[which(!(unique_subid_w %in% unique(df_cm$USUBJID)))]
+out_subid_cm <- unique_subid_w[which(!(unique_subid_w %in% unique(df_adcm$USUBJID)))]
 out_subid <- union(out_subid_tte, out_subid_cm)
 
 
@@ -107,7 +107,7 @@ W <- W %>% mutate(SMOKER = factor(SMOKER, ordered = T,
 
 ## -----  Part 1.2. Concomitant medications  
 # identify statin use and concomitant flag
-df_cm <- df_cm %>%  
+df_cm <- df_adcm %>%  
   filter(ANL01FL == "Y" & CONBLFL == "Y" & FASFL == "Y")
 
 df_statin <- df_cm %>% 
@@ -299,12 +299,12 @@ W <- W %>% mutate(RC = CHOL1BL - LDL1BL - HDL1BL,
 
 
 
-
-
 ## -----  Part 1.4. Final screening, drop/collapse redundant and sparse W
 # summary table W
 # manually drop some redundant W
+
 df_base <- W %>% select(USUBJID, RANDDT)
+# write_csv(df_base, file = "data/supp/df_base.csv")
 
 W <- W %>% 
   select(c("USUBJID", "ARM", "AGE", "SEX", "RACE", "COUNTRY", "SMOKER", "NYHACLAS",
@@ -442,11 +442,17 @@ Y_cv <- df_tte %>%
             ~as.numeric(. == "TIME TO EVENT"))
 
 # check delta
-temp <- Y_cv %>% 
+temp <- df_tte %>%
+  select("USUBJID", 'PARAMCD', "AVAL", "PARCAT1") %>%
+  filter(PARAMCD %in% c("MACEEVTM", "MCECVDTM", "MACEMITM",
+                               "MCENFSTM", "NONCVTM"# , "PRMACETM",
+  )) %>%
+  rename("EVENT" = "PARCAT1") %>% 
   select("USUBJID", "AVAL", "EVENT") %>% 
   filter(EVENT == "LAST CONTACT DATE") 
-
 temp <- temp[!duplicated(temp), ]
+
+# write_csv(temp, file = "data/supp/df_censor.csv")
 
 temp <- temp %>% filter(USUBJID %in% W$USUBJID[W$INSNVFL == FALSE])
 

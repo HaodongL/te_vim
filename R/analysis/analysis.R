@@ -33,7 +33,10 @@ source(paste0(repo_path, "R/est_function/fit_paraloop.R"))
 # tbl
 
 ### ------------  Part 1. import data  ------------ ###
-outcome = 'diab'; t = 24
+# outcome = 'diab'; t = 24
+# df <- get_data(outcome, t, rm_baseIns=T)
+
+outcome = 'diab2'; t = 24
 df <- get_data(outcome, t)
 
 # df_old <- get_data_old(outcome, t)
@@ -66,20 +69,19 @@ if (outcome == "a1c"){
 mean(df$Y[which(df$A == 1)]) - mean(df$Y[which(df$A == 0)])
 
 
-y_l <- min(df$Y)
-y_u <- max(df$Y)
-df$Y <- scale01(df$Y, y_l, y_u)
+y_l <- 0
+y_u <-1
 
 # CATE
 ws = c('statin_use')
-cv = T
-dr = T
+cv = F
+dr = F
 max.it = 1e4
-Q_bounds = c(1e-4, 1-1e-4)
+Q_bounds = NULL
 g_bounds = c(0.025, 0.975)
-tau_bounds = c(-1+1e-4, 1-1e-4)
-tau_s_bounds = c(-1+1e-4, 1-1e-4)
-gamma_s_bounds = c(1e-8, 1-1e-8)
+tau_bounds = NULL
+tau_s_bounds = NULL
+gamma_s_bounds = NULL
 add_tau_sc = F
 
 tic()
@@ -97,6 +99,9 @@ df_fit <- fit_para(df = df,
 toc()
 
 hist(df_fit$pi_hat)
+
+res_tmle = TMLE_VIM_a(df_fit, y_l, y_u, max_it = 1e4, lr = 1e-4)
+res_ee = EE_VIM(df_fit)
 
 # saveRDS(df_fit, file = "~/Repo/te_vim/data/df_fit.RDS")
 
@@ -156,6 +161,18 @@ tmle_vte <- VTE(df_fit, method = "TMLE")
 # tmle vim
 theta_TMLE_a <- VIM(df_fit, method = "TMLE_a", y_l = 0, y_u = 1, max.it = 1e4, lr = 1e-3)
 theta_TMLE_b <- VIM(df_fit, method = "TMLE_b", y_l = 0, y_u = 1, max.it = 1e4, lr = 1e-3)
+
+tic()
+res <- run_VIM_Theta(df = df,
+                     sl_Q = sl_Q, 
+                     sl_g = sl_g,
+                     sl_x = sl_x,
+                     ws = c('statin_use'), 
+                     cv = F,
+                     dr = F,
+                     tmle_b = F, 
+                     max_it = 1e4)
+toc()
 
 # ee vim
 # df_fit$Y <- rescale(df_fit$Y, y_l, y_u)
