@@ -19,6 +19,7 @@ generate_data_simple <- function(N, print_truth = FALSE){
     VIM_Theta_s <- VTE - VTE_s
     print(paste0("VIM_Theta_s: ", VIM_Theta_s))
     print(paste0("VTE: ", VTE))
+    print(paste0("VIM_Psi_s: ", VIM_Theta_s/VTE))
   }
   return(tibble(X1=X1,X2=X2,A=A,Y=Y))
 }

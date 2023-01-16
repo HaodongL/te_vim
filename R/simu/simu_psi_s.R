@@ -15,9 +15,9 @@ run_all_simu <- function(B, N, truth,
   colnames(results_df) <- results_cols
   
   run_bootstrap <- foreach(b = 1:B, .combine = 'rbind') %dopar% {
-
-# for (b in c(208:500)) {
-  
+    
+    # for (b in c(208:500)) {
+    
     print(paste0("may the power be with you! ", b))
     set.seed(123 + b)
     
@@ -29,23 +29,18 @@ run_all_simu <- function(B, N, truth,
     
     df <- generate_data_simple(N)
     # df <- generate_data_v2(N)
-
-    res <- run_VIM_Theta(df = df, 
-                         sl_Q = sl_Q, 
-                         sl_g = sl_g,
-                         sl_x = sl_x,
-                         ws = ws, 
-                         cv = cv,
-                         dr = dr,
-                         max_it = max_it, 
-                         lr = lr,
-                         tmle_b = tmle_b,
-                         Q_bounds = c(1e-4, 1-1e-4), 
-                         g_bounds = c(0.025, 0.975),
-                         tau_bounds = c(-1+1e-4, 1-1e-4),
-                         tau_s_bounds = c(-1+1e-4, 1-1e-4),
-                         gamma_s_bounds = c(1e-8, 1-1e-8)
-                         )
+    
+    res <- run_VIM2(df = df,
+                    sl_Q = sl_Q, 
+                    sl_g = sl_g,
+                    sl_x = sl_x,
+                    ws = ws, 
+                    cv = cv,
+                    dr = dr,
+                    tmle_b = tmle_b, 
+                    max_it = max_it,
+                    lr = lr)
+    
     res_ee <- res$resEE
     res_tmle <- res$resTMLE
     res_ss <- res$resSS
@@ -85,7 +80,7 @@ run_all_simu <- function(B, N, truth,
       results_df_row$sshal_upper <- 0
     }
     
-# }
+    # }
     # print(se_cvaiptw)
     # print(se_aiptw)
     return_list <- c('i' = results_df_row$i, 
@@ -116,3 +111,54 @@ run_all_simu <- function(B, N, truth,
 }
 
 
+
+require(tidyverse)
+repo_path = "~/Repo/te_vim/"
+source(paste0(repo_path, "R/simu/simu_dgd.R")) 
+source(paste0(repo_path, "R/est_function/sl3_config.R"))
+source(paste0(repo_path, "R/est_function/fit_para.R"))
+source(paste0(repo_path, "R/est_function/vim.R"))
+source(paste0(repo_path, "R/est_function/vim2.R"))
+
+library('foreach')
+library('doParallel')
+library('tictoc')
+
+###### set up the number of cores for parallel loop
+# parallel
+uname <- system("uname -a", intern = TRUE)
+os <- sub(" .*", "", uname)
+if(os=="Darwin"){
+  cpus_logical <- as.numeric(system("sysctl -n hw.logicalcpu", intern = TRUE))
+} else if(os=="Linux"){
+  cpus_logical <- system("lscpu | grep '^CPU(s)'", intern = TRUE)
+  cpus_logical <- as.numeric(gsub("^.*:[[:blank:]]*","", cpus_logical))
+} else {
+  stop("unsupported OS")
+}
+ncore <- floor(cpus_logical/2)
+
+
+######  calculate the truth 
+# set.seed(1234)
+# N <- 1e6 #size of generated data
+# df <- generate_data_simple(N, print_truth = TRUE) # VIM_Theta_s: 0.686
+
+###### run simu
+for (N in c(2e2, 5e2, 1e3, 3e3, 5e3, 1e4, 2e4)){
+  print(N)
+  B <- 500 #rounds of simu
+  registerDoParallel(10)
+  tic()
+  bootstrap_results <- run_all_simu(B = B, 
+                                    N = N, 
+                                    cv = F, 
+                                    dr = F, 
+                                    tmle_b = F, 
+                                    truth = 0.68,
+                                    do_sshal = F)
+  toc()
+  
+  output_filename <- paste0('~/Repo/te_vim/simu_res/psi_s/',"hal_t_", N, "_", Sys.Date(),'.csv')
+  write.csv(bootstrap_results, output_filename)
+}
