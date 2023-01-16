@@ -281,6 +281,22 @@ plot_theta <- function(df_theta, estimator = "AIPW"){
     theme_bw()  # use a white background
   return(p)
 }
+
+df_theta <-  readRDS("~/Repo/te_vim/data/df_vim_dr.RDS")
+
+p_theta_ee <- plot_theta(df_theta, estimator = "EE")
+p_theta_tmle_a <- plot_theta(df_theta, estimator = "TMLE-a")
+p_theta_ss_hal <- plot_theta(df_theta, estimator = "SS-HAL")
+
+ggsave("tnp/p_theta_ee.png", p_theta_ee, width = 7, height = 7)
+ggsave("tnp/p_theta_tmle_a.png", p_theta_tmle_a, width = 7, height = 7)
+
+p_theta_all <-
+  ggarrange(p_theta_ee + ggtitle("EE VIM estimates (T-learner)"),
+            p_theta_tmle_a + ggtitle("TMLE-a VIM estimates (T-learner)"))
+
+ggsave("tnp/p_theta_all.png", p_theta_all, width = 14, height = 10)
+
 # # aggregating up ---------------------------------------------------------------
 # mod = c_forest
 # model_hat <- predict(mod, estimate.variance = TRUE)

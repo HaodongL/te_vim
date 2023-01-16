@@ -2,9 +2,11 @@ library(dplyr)
 library(sl3)
 library(tictoc)
 library(tmle3)
-library(ggplot2)
-library(table1)
-library(ggpubr)
+library(foreach)
+library(doParallel)
+# library(ggplot2)
+# library(table1)
+# library(ggpubr)
 
 rm(list = ls())
 repo_path = "~/Repo/te_vim/"
@@ -45,8 +47,11 @@ ws = c("AGE", "SEX", "RACE", "COUNTRY", "SMOKER", "NYHACLAS",
        "vkantag", "caantag", "thiazide", "loopdiur")
 cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
               "vkantag", "caantag", "thiazide", "loopdiur")
+ws = c("AGE", "statin_use")
 n_ws <- length(ws)
-registerDoParallel(10)
+
+tic()
+registerDoParallel(2)
 df_vim <- foreach(i = 1:n_ws, .combine = 'rbind') %dopar% {
   res <- run_VIM_Theta(df = df,
                        sl_Q = sl_Q, 
@@ -80,6 +85,8 @@ df_vim <- foreach(i = 1:n_ws, .combine = 'rbind') %dopar% {
                            "method" = 'SS-HAL')
     df_vim_i <- rbind(df_vim_i, df_vim_i2)
   }
+  return(df_vim_i)
 }
+toc()
 
 saveRDS(df_vim, file = "~/Repo/te_vim/data/df_vim_t.RDS")

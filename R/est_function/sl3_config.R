@@ -99,10 +99,10 @@ sl_x <- Lrnr_sl$new(
   metalearner = ls_metalearner
 )
 
-sl_Q <- lrnr_hal
-sl_g <- lrnr_hal
-sl_x <- lrnr_hal
+sl_Q <- lrnr_earth
+sl_g <- lrnr_earth
+sl_x <- lrnr_earth
 # 
-sl_Q_hal <- lrnr_hal
-sl_g_hal <- lrnr_hal
-sl_ws_hal <- lrnr_hal
+sl_Q_hal <- lrnr_earth
+sl_g_hal <- lrnr_earth
+sl_ws_hal <- lrnr_earth

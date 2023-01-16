@@ -1,7 +1,7 @@
 ---
 title: "Statin Simulation Report"
 author: "Haodong Li"
-date: "2022-10-03"
+date: "Jan, 2023"
 output:
   pdf_document:
     keep_tex: false
@@ -78,3 +78,9 @@ knitr::include_graphics("~/Repo/te_vim/tnp/plot_dots_hal_dr.png")
 ```{r, echo=FALSE, fig.cap="Main performance metrics (Plug-in HAL, no CV)", out.width = '100%', fig.align="center", fig.pos="H"}
 knitr::include_graphics("~/Repo/te_vim/tnp/plot_dots_hal_ss.png")
 ```
+
+
+```{r, echo=FALSE, fig.cap="EE and TMLE estimates of variable importance parameter", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/p_theta_all.png")
+```
+

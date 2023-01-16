@@ -872,7 +872,7 @@ theme_nice <- theme(panel.background = element_blank(),
                                               colour = "grey"))
 
 ### new dr update in TMLE
-res <- read_hp(filename = 'hal_t_', savedate = '2023-01-02')
+res <- read_hp(filename = 'hal_fast_t_', savedate = '2023-01-13')
 data_long12 <- proc_df_tbl(res, N_len = 7)
 data_long12$Method[which(data_long12$Method == "TMLE")] <-  "TMLE-a"
 
@@ -948,9 +948,9 @@ ggarrange(plot1,
           plot4,
           legend = "top", common.legend = TRUE)
 
-plotpath = paste0("~/Repo/te_vim/tnp")
-ggsave('plot_dots_hal_t.png', width = 14, height = 8,
-       plot = plot_dots, path = plotpath)
+# plotpath = paste0("~/Repo/te_vim/tnp")
+# ggsave('plot_dots_hal_t.png', width = 14, height = 8,
+#        plot = plot_dots, path = plotpath)
 
 ```
 
@@ -965,7 +965,7 @@ theme_nice <- theme(panel.background = element_blank(),
                                               colour = "grey"))
 
 ### new dr update in TMLE
-res <- read_hp(filename = 'hal_dr_', savedate = '2023-01-02')
+res <- read_hp(filename = 'hal_fast_dr_', savedate = '2023-01-13')
 data_long12 <- proc_df_tbl(res, N_len = 7)
 data_long12$Method[which(data_long12$Method == "TMLE")] <-  "TMLE-a"
 

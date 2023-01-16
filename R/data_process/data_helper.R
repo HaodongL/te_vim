@@ -13,7 +13,7 @@ get_data <- function(outcome, t = 24, rm_baseIns = FALSE, drop_censor = TRUE){
   df <- read_csv(filepath)
   
   # drop those censored before t
-  df_C <- read_csv("data/supp/df_censor.csv")
+  df_C <- read_csv("~/Repo/te_vim/data/supp/df_censor.csv")
   if (drop_censor){
     n1 = nrow(df)
     df <- df %>% left_join(df_C, by='USUBJID') %>% filter(AVAL > t) %>% select(-AVAL)
