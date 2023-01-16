@@ -90,16 +90,27 @@ SS_VIM <- function(data){
   gamma_s_0 <- data$gamma_s
   
   # theta_s_hat <- mean(gamma_s_0 - tau_s_0^2)
-  theta_s_hat <- mean((tau_0 - tau_s_0)^2)
+  # theta_s_hat <- mean((tau_0 - tau_s_0)^2)
+  # theta_s_0 <- mean(gamma_s_0 - tau_s_0^2)
+  theta_s_0 <- mean((tau_0 - tau_s_0)^2)
+  ic <- 2*(tau_0 - tau_s_0)*(A/gn - (1-A)/(1-gn))*(Y-QA_0) + (tau_0 - tau_s_0)^2 - theta_s_0
+  ss <- sqrt(var(ic)/N)
+  
+  coef <- theta_s_0
+  std_err <- ss
+  names(coef) <- names(std_err) <- c("SS_Theta_s")
   
   out<- list(
-    coef = theta_s_hat
+    coef = coef,
+    std_err = std_err,
+    ci_l = coef - 1.96*std_err,
+    ci_u = coef + 1.96*std_err
   )
+  
   return(out)
 }
 
 # Estimator: HAL
-
 HAL_VIM <- function(data){
   N <- NROW(data)
   A <- data$A
@@ -820,8 +831,6 @@ print.VIM <- function(object){
 # 
 #   return(out)
 # }
-
-
 
 
 # Estimator: TMLE

@@ -27,6 +27,7 @@ res <- run_VIM_Theta(df = df,
 toc()
 res_ee <- res$resEE
 res_tmle <- res$resTMLE
+res_ss <- res$resSS
 
 
 
