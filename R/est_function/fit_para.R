@@ -64,11 +64,11 @@ fit_para <- function(df,
   }
   
   # temp, add tiny values to prevent constant cols
-  tau_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau + runif(n, 1e-11, 1e-10), 
+  tau_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau, #+ runif(n, 1e-11, 1e-10) 
                      outcome = 'tau', para = 'tau_s', ws = ws)
   tau_s <- tau_s_fit$predict()
   
-  gamma_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau + runif(n, 1e-11, 1e-10),  
+  gamma_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau, #+ runif(n, 1e-11, 1e-10)
                        outcome = 'tau', para = 'gamma_s', ws = ws)
   gamma_s <- gamma_s_fit$predict()
   

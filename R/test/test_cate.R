@@ -9,21 +9,20 @@ source(paste0(repo_path, "R/est_function/vim.R"))
 
 
 set.seed(123)
-N <- 5e7 #size of generated data
+N <- 5e2 #size of generated data
 df <- generate_data_simple(N, print_truth = TRUE)
 
 
 # wrapper
 tic()
-res <- run_VIM_Theta(df = df,
-                     sl_Q = sl_Q, 
-                     sl_g = sl_g,
-                     sl_x = sl_x,
-                     ws = c('X2'), 
-                     cv = F,
-                     dr = F,
-                     tmle_b = F, 
-                     max_it = 1e4)
+res <- run_VIM(df = df,
+               sl_Q = sl_Q, 
+               sl_g = sl_g,
+               sl_x = sl_x,
+               ws = c('X2'), 
+               cv = F,
+               dr = F,
+               max_it = 1e4)
 toc()
 res_ee <- res$resEE
 res_tmle <- res$resTMLE

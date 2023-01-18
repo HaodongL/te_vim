@@ -49,7 +49,8 @@ tmle_em <- function(df, cm_names){
     learner_list <- list(A = sl_g_mn, Y = sl_Q)
     
     initial_likelihood <- tsm_spec$make_initial_likelihood(tmle_task, learner_list)
-    targeted_likelihood <- Targeted_Likelihood$new(initial_likelihood)
+    targeted_likelihood <- Targeted_Likelihood$new(initial_likelihood,
+                                                   updater = list(cvtmle = FALSE))
     
     all_tsm_params <- tsm_spec$make_params(tmle_task, targeted_likelihood)
     ate_param_true <- define_param(

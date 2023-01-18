@@ -53,15 +53,15 @@ n_ws <- length(ws)
 tic()
 registerDoParallel(2)
 df_vim <- foreach(i = 1:n_ws, .combine = 'rbind') %dopar% {
-  res <- run_VIM_Theta(df = df,
-                       sl_Q = sl_Q, 
-                       sl_g = sl_g,
-                       sl_x = sl_x,
-                       ws = ws[i], 
-                       cv = F,
-                       dr = F,
-                       tmle_b = F, 
-                       max_it = 1e4)
+  res <- run_VIM(df = df,
+                 sl_Q = sl_Q, 
+                 sl_g = sl_g,
+                 sl_x = sl_x,
+                 ws = ws[i], 
+                 cv = F,
+                 dr = F,
+                 tmle_b = F, 
+                 max_it = 1e4)
   res_ee <- res$resEE
   res_tmle <- res$resTMLE
   

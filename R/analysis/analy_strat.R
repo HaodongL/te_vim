@@ -44,5 +44,6 @@ df_strat <- tmle_stratified(df, cm_names)
 saveRDS(df_strat, file = "~/Repo/te_vim/data/df_strat.RDS")
 
 
+# df_strat <- readRDS("~/Repo/te_vim/data/df_strat.RDS")
 # p_cate_strat <- plot_tmle_strat(cm_names, df_strat)
 # ggsave("tnp/plot/p_cate_strat_ci.png", p_cate_strat, width = 5, height = 5)

@@ -297,6 +297,14 @@ p_theta_all <-
 
 ggsave("tnp/p_theta_all.png", p_theta_all, width = 14, height = 10)
 
+
+p_theta_all <-
+  ggarrange(p_theta_ee + ggtitle("EE VIM estimates (DR-learner)"),
+            p_theta_tmle_a + ggtitle("TMLE-a VIM estimates (DR-learner)"))
+
+ggsave("tnp/p_theta_all_dr.png", p_theta_all, width = 14, height = 10)
+
+
 # # aggregating up ---------------------------------------------------------------
 # mod = c_forest
 # model_hat <- predict(mod, estimate.variance = TRUE)

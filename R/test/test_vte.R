@@ -6,7 +6,6 @@ source(paste0(repo_path, "R/simu/simu_dgd.R")) #Used for the current examples
 source(paste0(repo_path, "R/est_function/sl3_config.R"))
 source(paste0(repo_path, "R/est_function/fit_para.R"))
 source(paste0(repo_path, "R/est_function/vim.R"))
-source(paste0(repo_path, "R/est_function/vim2.R"))
 
 
 set.seed(123)
@@ -23,7 +22,6 @@ res <- run_VIM2(df = df,
                  ws = c('X2'), 
                  cv = F,
                  dr = F,
-                 tmle_b = F, 
                  max_it = 1e4)
 toc()
 res_ee <- res$resEE
