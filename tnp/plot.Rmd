@@ -1157,12 +1157,289 @@ theme_nice <- theme(panel.background = element_blank(),
                                               colour = "grey"))
 
 ### new dr update in TMLE
-res <- read_hp(filename = 'hal_t_', savedate = '2023-01-16')
+res <- read_hp(filename = 'hal_t_', savedate = '2023-01-18', target_para = "theta_s")
 data_long12 <- proc_df_tbl(res, N_len = 7)
-data_long12$Method[which(data_long12$Method == "TMLE")] <-  "TMLE-a"
+data_long <- data_long12 %>% mutate(Model = 'HAL') %>% filter(Method != 'SS-HAL')
+
+# performance data
+temp_tbl_long <- data_long %>% 
+                  group_by(Method) %>% 
+                  mutate(med_mse = median(MSE),
+                         med_coverage = median(Coverage),
+                         med_bias = median(Bias),
+                         med_CIwidth = median(CI_width))
+
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Model)
+temp_tbl_long$n <- as.factor(temp_tbl_long$n)
+
+library(RColorBrewer)
+color.pal <- brewer.pal(n = 8, name = "Dark2")
+
+shape_val <- c(2,0) # c(2,1)
+                
+# MSE
+plot1 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = MSE, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='MSE',
+       x="n") +
+  theme_nice
+
+# Bias
+plot2 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='absBias',
+       x="n") +
+  theme_nice
+
+# Coverage
+plot3 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = Coverage, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  geom_hline(yintercept = 0.95) +
+  ylim(0.8, 1) + 
+  labs(y='Coverage',
+       x="n") +
+  theme_nice
+
+# meanCIwidth
+plot4 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = CI_width, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='CI_width',
+       x="n") +
+  theme_nice
+
+plot_dots <-
+ggarrange(plot1,
+          plot2,
+          plot3,
+          plot4,
+          legend = "top", common.legend = TRUE)
+
+plot_dots
+
+# plotpath = paste0("~/Repo/te_vim/tnp")
+# ggsave('plot_dots_hal_ss.png', width = 14, height = 8,
+#        plot = plot_dots, path = plotpath)
+
+```
 
 
-data_long <- data_long12 %>% mutate(Model = 'HAL')
+
+
+
+```{r, eval=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+# hal t
+# plot 
+library(ggplot2)
+library(ggpubr)
+theme_nice <- theme(panel.background = element_blank(), 
+                    panel.grid = element_line(size = 0.3, linetype = 'dashed',
+                                              colour = "grey"))
+
+### new dr update in TMLE
+res <- read_hp(filename = 'hal_t_', savedate = '2023-01-18', target_para = "psi_s")
+data_long12 <- proc_df_tbl(res, N_len = 7)
+data_long <- data_long12 %>% mutate(Model = 'HAL') %>% filter(Method != 'SS-HAL')
+
+# performance data
+temp_tbl_long <- data_long %>% 
+                  group_by(Method) %>% 
+                  mutate(med_mse = median(MSE),
+                         med_coverage = median(Coverage),
+                         med_bias = median(Bias),
+                         med_CIwidth = median(CI_width))
+
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Model)
+temp_tbl_long$n <- as.factor(temp_tbl_long$n)
+
+library(RColorBrewer)
+color.pal <- brewer.pal(n = 8, name = "Dark2")
+
+shape_val <- c(2,0) # c(2,1)
+                
+# MSE
+plot1 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = MSE, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='MSE',
+       x="n") +
+  theme_nice
+
+# Bias
+plot2 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='absBias',
+       x="n") +
+  theme_nice
+
+# Coverage
+plot3 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = Coverage, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  geom_hline(yintercept = 0.95) +
+  ylim(0.8, 1) + 
+  labs(y='Coverage',
+       x="n") +
+  theme_nice
+
+# meanCIwidth
+plot4 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = CI_width, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='CI_width',
+       x="n") +
+  theme_nice
+
+plot_dots <-
+ggarrange(plot1,
+          plot2,
+          plot3,
+          plot4,
+          legend = "top", common.legend = TRUE)
+
+plot_dots
+
+# plotpath = paste0("~/Repo/te_vim/tnp")
+# ggsave('plot_dots_hal_ss.png', width = 14, height = 8,
+#        plot = plot_dots, path = plotpath)
+
+```
+
+
+
+```{r, eval=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+# hal dr
+# plot 
+library(ggplot2)
+library(ggpubr)
+theme_nice <- theme(panel.background = element_blank(), 
+                    panel.grid = element_line(size = 0.3, linetype = 'dashed',
+                                              colour = "grey"))
+
+### new dr update in TMLE
+res <- read_hp(filename = 'hal_dr_', savedate = '2023-01-20', target_para = "theta_s")
+data_long12 <- proc_df_tbl(res, N_len = 7)
+data_long <- data_long12 %>% mutate(Model = 'HAL') %>% filter(Method != 'SS-HAL')
+
+# performance data
+temp_tbl_long <- data_long %>% 
+                  group_by(Method) %>% 
+                  mutate(med_mse = median(MSE),
+                         med_coverage = median(Coverage),
+                         med_bias = median(Bias),
+                         med_CIwidth = median(CI_width))
+
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Model)
+temp_tbl_long$n <- as.factor(temp_tbl_long$n)
+
+library(RColorBrewer)
+color.pal <- brewer.pal(n = 8, name = "Dark2")
+
+shape_val <- c(2,0) # c(2,1)
+                
+# MSE
+plot1 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = MSE, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='MSE',
+       x="n") +
+  theme_nice
+
+# Bias
+plot2 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = abs(Bias), color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='absBias',
+       x="n") +
+  theme_nice
+
+# Coverage
+plot3 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = Coverage, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  geom_hline(yintercept = 0.95) +
+  ylim(0.8, 1) + 
+  labs(y='Coverage',
+       x="n") +
+  theme_nice
+
+# meanCIwidth
+plot4 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = CI_width, color = Method, shape= Model), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Model") +
+  scale_color_manual(values=color.pal, name = "Method") +
+  labs(y='CI_width',
+       x="n") +
+  theme_nice
+
+plot_dots <-
+ggarrange(plot1,
+          plot2,
+          plot3,
+          plot4,
+          legend = "top", common.legend = TRUE)
+
+plot_dots
+
+# plotpath = paste0("~/Repo/te_vim/tnp")
+# ggsave('plot_dots_hal_ss.png', width = 14, height = 8,
+#        plot = plot_dots, path = plotpath)
+
+```
+
+
+```{r, eval=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+# hal dr
+# plot 
+library(ggplot2)
+library(ggpubr)
+theme_nice <- theme(panel.background = element_blank(), 
+                    panel.grid = element_line(size = 0.3, linetype = 'dashed',
+                                              colour = "grey"))
+
+### new dr update in TMLE
+res <- read_hp(filename = 'hal_dr_', savedate = '2023-01-20', target_para = "psi_s")
+data_long12 <- proc_df_tbl(res, N_len = 7)
+data_long <- data_long12 %>% mutate(Model = 'HAL') %>% filter(Method != 'SS-HAL')
 
 # performance data
 temp_tbl_long <- data_long %>% 

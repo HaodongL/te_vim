@@ -40,7 +40,9 @@ cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
               "vkantag", "caantag", "thiazide", "loopdiur")
 
 registerDoParallel(9)
+tic()
 df_strat <- tmle_stratified(df, cm_names)
+toc()
 saveRDS(df_strat, file = "~/Repo/te_vim/data/df_strat.RDS")
 
 

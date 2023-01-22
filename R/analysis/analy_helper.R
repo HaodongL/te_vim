@@ -1,4 +1,4 @@
-buffer <- 0.07
+buffer <- 0.3
 # helper function, plot cate est by subgroups
 plot_cate <- function(varname, 
                       df_plot){
@@ -66,7 +66,7 @@ plot_tmle_strat <- function(varname,
     geom_point() +
     geom_errorbar(aes(ymin = pmax(tau - 1.96*se, ylim_l), 
                       ymax = pmin(tau + 1.96*se, ylim_u)), width = .2) +
-    geom_hline(yintercept = ate, linetype = 3) +
+    geom_hline(yintercept = 0, linetype = 3) +
     facet_grid(varname ~ ., scales = "free_y") +
     coord_flip() +
     labs(y = "CATE") +
@@ -76,6 +76,37 @@ plot_tmle_strat <- function(varname,
   return(p_cate)
 }
 
+
+plot_tmle_em <- function(varname, 
+                            df_plot){
+  
+  ate <- mean(df_plot$tau)
+  ylim_l <- ate - buffer
+  ylim_u <- ate + buffer
+  
+  df_plot$varname <- rep(varname, each=3)
+  
+  p_cate <- ggplot(df_plot, aes(x = group, y = tau, color = varname)) +
+    theme_light() +
+    theme(
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      strip.text.y = element_text(colour = "black"),
+      strip.background = element_rect(colour = NA, fill = NA),
+      legend.position = "none"
+    ) +
+    geom_point() +
+    geom_errorbar(aes(ymin = pmax(tau - 1.96*se, ylim_l), 
+                      ymax = pmin(tau + 1.96*se, ylim_u)), width = .2) +
+    geom_hline(yintercept = 0, linetype = 3) +
+    facet_grid(varname ~ ., scales = "free_y") +
+    coord_flip() +
+    labs(y = "CATE") +
+    ylim(c(ylim_l, ylim_u)) +
+    theme(text=element_text(size=8))
+  
+  return(p_cate)
+}
 
 # varname <- cm_names
 # df_plot <- cbind(df, 

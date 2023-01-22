@@ -30,12 +30,14 @@ run_all_simu <- function(B, N, truth,
     # df <- generate_data_v2(N)
     
     if (target_para == "Theta"){
-      vim_fun <- run_VIM
-    }else{
-      vim_fun <- run_VIM2
+      run_fun <- run_VIM
+    }else if (target_para == "Psi"){
+      run_fun <- run_VIM2
+    }else if (target_para == "VTE"){
+      run_fun <- run_VTE
     }
 
-    res <- vim_fun(df = df, 
+    res <- run_fun(df = df, 
                    sl_Q = sl_Q, 
                    sl_g = sl_g,
                    sl_x = sl_x,

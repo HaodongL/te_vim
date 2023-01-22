@@ -39,7 +39,20 @@ set.seed(1)
 cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
               "vkantag", "caantag", "thiazide", "loopdiur")
 
-registerDoParallel(9)
+# cm_names <- c("statin_use")
+registerDoParallel(10)
+tic()
 df_em <- tmle_em(df, cm_names)
+toc()
+
 saveRDS(df_em, file = "~/Repo/te_vim/data/df_em.RDS")
+
+
+
+
+# df_em <- readRDS("~/Repo/te_vim/data/df_em.RDS")
+# p_cate_strat <- plot_tmle_em(cm_names, df_em)
+
+
+
 

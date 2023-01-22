@@ -34,7 +34,7 @@ ncore <- floor(cpus_logical/2)
 # df <- generate_data_simple(N, print_truth = TRUE) # VIM_Theta_s: 0.686
 
 ###### run simu
-for (N in c(2e2)){ # , 5e2, 1e3, 3e3, 5e3, 1e4, 2e4
+for (N in c(2e2, 5e2, 1e3, 3e3, 5e3, 1e4, 2e4)){
   print(N)
   B <- 500 #rounds of simu
   registerDoParallel(10)
@@ -43,14 +43,16 @@ for (N in c(2e2)){ # , 5e2, 1e3, 3e3, 5e3, 1e4, 2e4
                                     N = N, 
                                     cv = F, 
                                     dr = T, 
-                                    truth = 0.685,
+                                    truth = 1.00295,
                                     do_sshal = F,
-                                    target_para = "Psi")
+                                    target_para = "VTE")
   toc()
-  
-  output_filename <- paste0('~/Repo/te_vim/simu_res/psi_s/',"hal_dr_", N, "_", Sys.Date(),'.csv')
+  output_filename <- paste0('~/Repo/te_vim/simu_res/vte/',"hal_dr_", N, "_", Sys.Date(),'.csv')
   write.csv(bootstrap_results, output_filename)
 }
 
-# res <- read_hp(filename = 'hal_dr_', savedate = '2023-01-21', target_para = "psi_s")
-# data_long12 <- proc_df_tbl(res, N_len = 1)
+
+# res <- read_hp(filename = 'hal_dr_', savedate = '2023-01-21', target_para = "vte")
+# data_long12 <- proc_df_tbl(res, N_len = 2)
+
+

@@ -15,13 +15,13 @@ df <- generate_data_simple(N, print_truth = TRUE)
 
 # wrapper
 tic()
-res <- run_VIM2(df = df,
+res <- run_VTE(df = df,
                  sl_Q = sl_Q, 
                  sl_g = sl_g,
                  sl_x = sl_x,
                  ws = c('X2'), 
                  cv = F,
-                 dr = F,
+                 dr = T,
                  max_it = 1e4)
 toc()
 res_ee <- res$resEE

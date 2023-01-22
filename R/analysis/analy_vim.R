@@ -47,7 +47,8 @@ ws = c("AGE", "SEX", "RACE", "COUNTRY", "SMOKER", "NYHACLAS",
        "vkantag", "caantag", "thiazide", "loopdiur")
 cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
               "vkantag", "caantag", "thiazide", "loopdiur")
-ws = c("AGE", "statin_use")
+
+ws = c("AGE", "SEX")
 n_ws <- length(ws)
 
 tic()
@@ -59,32 +60,32 @@ df_vim <- foreach(i = 1:n_ws, .combine = 'rbind') %dopar% {
                  sl_x = sl_x,
                  ws = ws[i], 
                  cv = F,
-                 dr = F,
-                 tmle_b = F, 
+                 dr = T,
                  max_it = 1e4)
   res_ee <- res$resEE
   res_tmle <- res$resTMLE
+  res_ss <- res$resSS
   
-  df_vim_i <- data.frame("varname" = c(ws[i], ws[i]), 
-                         "importance" = c(res_ee$coef, res_tmle$coef), 
-                         "ci_l" = c(res_ee$ci_l, res_tmle$ci_l), 
-                         "ci_u" = c(res_ee$ci_u, res_tmle$ci_u), 
-                         "method" = c('EE', 'TMLE-a'))
+  df_vim_i <- data.frame("varname" = c(ws[i], ws[i], ws[i]), 
+                         "importance" = c(res_ee$coef, res_tmle$coef, res_ss$coef), 
+                         "ci_l" = c(res_ee$ci_l, res_tmle$ci_l, res_ss$ci_l), 
+                         "ci_u" = c(res_ee$ci_u, res_tmle$ci_u, res_ss$ci_u), 
+                         "method" = c('EE', 'TMLE', 'SS'))
   
-  if (ws[i] %in% cm_names){
-    df_fit_hal <- fit_para_hal(df = df, 
-                               sl_Q = sl_Q_hal, 
-                               sl_g = sl_g_hal,
-                               sl_ws = sl_ws_hal,
-                               ws = ws[i])
-    res_hal <- HAL_VIM(df_fit_hal)
-    df_vim_i2 <- data.frame("varname" = ws[i], 
-                           "importance" = res_hal$coef, 
-                           "ci_l" = res_hal$ci_l, 
-                           "ci_u" = res_hal$ci_u, 
-                           "method" = 'SS-HAL')
-    df_vim_i <- rbind(df_vim_i, df_vim_i2)
-  }
+  # if (ws[i] %in% cm_names){
+  #   df_fit_hal <- fit_para_hal(df = df, 
+  #                              sl_Q = sl_Q_hal, 
+  #                              sl_g = sl_g_hal,
+  #                              sl_ws = sl_ws_hal,
+  #                              ws = ws[i])
+  #   res_hal <- HAL_VIM(df_fit_hal)
+  #   df_vim_i2 <- data.frame("varname" = ws[i], 
+  #                          "importance" = res_hal$coef, 
+  #                          "ci_l" = res_hal$ci_l, 
+  #                          "ci_u" = res_hal$ci_u, 
+  #                          "method" = 'SS-HAL')
+  #   df_vim_i <- rbind(df_vim_i, df_vim_i2)
+  # }
   return(df_vim_i)
 }
 toc()

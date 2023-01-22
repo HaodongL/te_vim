@@ -1,13 +1,21 @@
 library(data.table)
 read_hp <- function(filename, 
                     savedate, 
-                    Ns = c(2e2, 5e2, 1e3, 3e3, 5e3, 1e4, 2e4),
-                    ss = FALSE,
+                    Ns = c(2e2, 5e2, 1e3, 3e3, 5e3, 1e4, 2e4), #
                     target_para = "theta_s"){
+  
   res <- data.frame()
+  if (target_para == "theta_s"){
+    truth_accu <- 0.6858711
+  }else if(target_para == "psi_s"){
+    truth_accu <- 0.6838537
+  }else if(target_para == "vte"){
+    truth_accu <- 1.00295
+  }
+  
   for (N in Ns){
     output_filename <- paste0('~/Repo/te_vim/simu_res/',target_para,'/',filename, N, "_", savedate,'.csv')
-    res1 <- read_csv(output_filename) %>% mutate(n = N)
+    res1 <- read_csv(output_filename) %>% mutate(n = N) %>% mutate(truth = truth_accu)
     res <- rbind(res, res1)
   }
   return(res)

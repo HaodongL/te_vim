@@ -322,6 +322,72 @@ run_VIM2 <- function(df,
 }
 
 
+# Parameter: VTE
+# Estimator: TMLE, EE and SS
+run_VTE <- function(df, 
+                     sl_Q, 
+                     sl_g,
+                     sl_x,
+                     ws, 
+                     cv = FALSE,
+                     dr = TRUE,
+                     lfm_linear = TRUE, # always true
+                     max_it = 1e4, 
+                     lr = 1e-4,
+                     Q_bounds = c(1e-4, 1-1e-4), 
+                     g_bounds = c(0.025, 0.975),
+                     tau_bounds = c(-1+1e-4, 1-1e-4),
+                     tau_s_bounds = c(-1+1e-4, 1-1e-4),
+                     gamma_s_bounds = c(1e-8, 1-1e-8)){
+  
+  if (lfm_linear){
+    Q_bounds <- NULL
+    tau_bounds <- NULL
+    tau_s_bounds <- NULL
+    gamma_s_bounds <- NULL
+    y_l <- 0
+    y_u <- 1
+  }else{
+    # scale Y between [0,1]
+    y_l <- min(df$Y)
+    y_u <- max(df$Y)
+    df$Y <- scale01(df$Y, y_l, y_u)
+  }
+  
+  # fit Q, g
+  # fit tau, tau_s, gamma_s
+  if (cv){
+    fit_func <- fit_cvpara
+  }else{
+    fit_func <- fit_para
+  }
+  df_fit <- fit_func(df = df,
+                     sl_Q = sl_Q, 
+                     sl_g = sl_g,
+                     sl_x = sl_x,
+                     ws = ws,
+                     dr = dr,
+                     Q_bounds = Q_bounds,
+                     g_bounds = g_bounds,
+                     tau_bounds = tau_bounds,
+                     tau_s_bounds = tau_s_bounds,
+                     gamma_s_bounds = gamma_s_bounds)
+  
+  # tmle_vim
+  resTMLE <- TMLE_VTE(df_fit, max_it, lr)
+  
+  # ee
+  resEE <- EE_VTE(df_fit)
+  
+  # ss
+  resSS <- SS_VTE(df_fit)
+  
+  res <- list('resTMLE' = resTMLE, 
+              'resEE' = resEE,
+              'resSS' = resSS)
+  return(res)
+}
+
 # Estimator: SS
 SS_VTE <- function(data){
   N <- nrow(data)
@@ -452,7 +518,8 @@ TMLE_VTE <- function(data, max_it = 600, lr = 1e-4){
   if(i>=max_it) warning("Max iterations reached in TMLE")
   
   # calculate Theta_s, scale back
-  theta_s_star <- mean(gamma_s_star - ate_star^2)
+  # theta_s_star <- mean(gamma_s_star - ate_star^2)
+  theta_s_star <- mean((tau_star - ate_star)^2)
   ic <- 2*(tau_star - ate_star)*(A/gn - (1-A)/(1-gn))*(Y-QA_star) + (tau_star - ate_star)^2 - theta_s_star
   se <- sqrt(var(ic)/N)
   
