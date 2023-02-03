@@ -90,4 +90,4 @@ df_vim <- foreach(i = 1:n_ws, .combine = 'rbind') %dopar% {
 }
 toc()
 
-saveRDS(df_vim, file = "~/Repo/te_vim/data/df_vim_t.RDS")
+saveRDS(df_vim, file = "~/Repo/te_vim/data/df_vim_dr.RDS")

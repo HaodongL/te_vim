@@ -1,4 +1,4 @@
-buffer <- 0.3
+buffer <- 0.2
 # helper function, plot cate est by subgroups
 plot_cate <- function(varname, 
                       df_plot){

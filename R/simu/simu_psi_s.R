@@ -34,7 +34,7 @@ ncore <- floor(cpus_logical/2)
 # df <- generate_data_simple(N, print_truth = TRUE) # VIM_Theta_s: 0.686
 
 ###### run simu
-for (N in c(2e2)){ # , 5e2, 1e3, 3e3, 5e3, 1e4, 2e4
+for (N in c(2e2, 5e2)){ # , 1e3, 3e3, 5e3, 1e4, 2e4
   print(N)
   B <- 500 #rounds of simu
   registerDoParallel(10)

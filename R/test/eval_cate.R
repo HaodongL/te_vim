@@ -8,7 +8,7 @@ source(paste0(repo_path, "R/est_function/vim.R"))
 
 # Q, g
 set.seed(123)
-N <- 5e4 #size of generated data
+N <- 5e2 #size of generated data
 df <- generate_data_simple(N)
 
 ws = c('X2')
@@ -17,15 +17,15 @@ dr = T
 lfm_linear = FALSE
 max.it = 600
 
-Q_bounds = c(0.001, 0.999)
+Q_bounds = NULL
 g_bounds = c(0.025, 0.975)
-tau_bounds = c(-1+1e-3, 1-1e-3)
-tau_s_bounds = c(-1+1e-3, 1-1e-3)
-gamma_s_bounds = c(1e-6, 1-1e-6)
+tau_bounds = NULL
+tau_s_bounds = NULL
+gamma_s_bounds = NULL
 
-y_l <- min(df$Y)
-y_u <- max(df$Y)
-df$Y <- scale01(df$Y, y_l, y_u)
+y_l <- 0
+y_u <- 1
+# df$Y <- scale01(df$Y, y_l, y_u)
 
 
 # Q_bounds = c(-1e4, 1e4)
@@ -61,7 +61,7 @@ if (!is.null(Q_bounds)){
 QbarAW <- ifelse(df$A == 1, Qbar1W, Qbar0W)
 gn <- g_fit$predict()
 # bound g
-# gn <- bound(gn, g_bounds)
+gn <- bound(gn, g_bounds)
 
 
 # use true g
@@ -117,7 +117,7 @@ f_cate <- function (x, y) {
 }
 
 
-png(filename= paste0("~/Repo/te_vim/tnp/cate_xgb_", N,".png"),
+png(filename= paste0("~/Repo/te_vim/tnp/plot/cate_hal_", N,".png"),
     width = 2048,
     height = 1024,
     res = 180,

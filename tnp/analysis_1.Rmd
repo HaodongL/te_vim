@@ -1,0 +1,75 @@
+---
+title: "analysis_1"
+author: "Haodong Li"
+date: "2023-02-03"
+output: pdf_document
+---
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(kableExtra)
+library(readr)
+library(dplyr)
+library(sl3)
+library(tictoc)
+library(tmle3)
+library(ggplot2)
+library(table1)
+library(ggpubr)
+
+rm(list = ls())
+repo_path = "~/Repo/te_vim/"
+source(paste0(repo_path, "R/data_process/data_helper.R"))
+source(paste0(repo_path, "R/simu/simu_dgd.R")) 
+source(paste0(repo_path, "R/simu/simu_config.R"))
+source(paste0(repo_path, "R/est_function/sl3_config.R"))
+source(paste0(repo_path, "R/est_function/fit_para.R"))
+source(paste0(repo_path, "R/est_function/vim.R"))
+source(paste0(repo_path, "R/analysis/analy_helper.R"))
+source(paste0(repo_path, "R/est_function/fit_paraloop.R"))
+df_w <- read_csv(file = paste0(repo_path, "data/supp/df_w.csv"))
+# df_fit <- readRDS("~/Repo/te_vim/data/df_fit.RDS")
+cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
+              "vkantag", "caantag", "thiazide", "loopdiur")
+```
+
+## 1. Stratified TMLE
+```{r}
+df_strat <- readRDS("~/Repo/te_vim/data/df_strat.RDS")
+p_cate_strat <- plot_tmle_strat(cm_names, df_strat)
+p_cate_strat
+```
+
+
+## 2. TMLE Effect Modification
+```{r}
+df_em <- readRDS("~/Repo/te_vim/data/df_em.RDS")
+p_cate_strat <- plot_tmle_em(cm_names, df_em)
+p_cate_strat
+```
+
+
+## 3. VTE Estimation
+```{r}
+
+```
+
+
+## 4. VIM Estimation
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
