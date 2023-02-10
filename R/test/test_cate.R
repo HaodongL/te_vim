@@ -8,6 +8,7 @@ source(paste0(repo_path, "R/est_function/fit_para.R"))
 source(paste0(repo_path, "R/est_function/vim.R"))
 
 
+
 set.seed(123)
 N <- 5e2 #size of generated data
 df <- generate_data_simple(N, print_truth = TRUE)

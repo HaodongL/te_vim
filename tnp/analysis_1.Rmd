@@ -56,8 +56,19 @@ p_cate_strat
 
 
 ## 4. VIM Estimation
-```{r}
+```{r, echo=FALSE, fig.cap="VIM estiamtes", out.width = '100%', fig.align="center", fig.pos="H"}
+df_theta <-  readRDS("~/Repo/te_vim/data/df_vim_t.RDS")
 
+p_theta_ee <- plot_theta(df_theta, estimator = "EE")
+p_theta_tmle <- plot_theta(df_theta, estimator = "TMLE")
+p_theta_ss <- plot_theta(df_theta, estimator = "SS")
+
+p_theta_all <-
+  ggarrange(p_theta_ee + ggtitle("EE VIM estimates (T-learner)"),
+            p_theta_tmle + ggtitle("TMLE VIM estimates (T-learner)"),
+            p_theta_ss + ggtitle("SS VIM estimates (T-learner)"))
+
+p_theta_all
 ```
 
 

@@ -47,6 +47,11 @@ res_ee <- res$resEE
 res_tmle <- res$resTMLE
 res_ss <- res$resSS
 
+res_vte_t <- list('res_ee' = res_ee,
+                  'res_tmle' = res_tmle,
+                  'res_ss' = res_ss)
+
+saveRDS(res_vte_t, file = "~/Repo/te_vim/data/res_vte_dr.RDS")
 
 # df_fit <- fit_para(df = df,
 #                    sl_Q = sl_Q, 

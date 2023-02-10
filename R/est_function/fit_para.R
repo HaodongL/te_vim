@@ -357,4 +357,3 @@ bound <- function(x, bounds) {
   }
   pmin(pmax(x, lower), upper)
 }
-

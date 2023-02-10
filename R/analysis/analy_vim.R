@@ -48,7 +48,7 @@ ws = c("AGE", "SEX", "RACE", "COUNTRY", "SMOKER", "NYHACLAS",
 cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
               "vkantag", "caantag", "thiazide", "loopdiur")
 
-ws = c("AGE", "SEX")
+# ws = c("AGE", "SEX")
 n_ws <- length(ws)
 
 tic()

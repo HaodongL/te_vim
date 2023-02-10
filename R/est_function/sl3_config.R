@@ -1,4 +1,6 @@
 library(sl3)
+repo_path = "~/Repo/te_vim/"
+source(paste0(repo_path, "/R/est_function/under_hal.R"))
 
 # -- sl setup
 lrnr_lm <- Lrnr_glm$new()
@@ -19,6 +21,7 @@ lrnr_gam_g <- Lrnr_gam$new('A ~ s(X1) + s(X2) + ti(X1,X2)')
 lrnr_hal <- Lrnr_hal9001$new(num_knots = c(50, 25, 15))
 lrnr_hal_fast <- Lrnr_hal9001$new(num_knots = c(40, 15, 10))
 lrnr_hal_xfast <- Lrnr_hal9001$new(num_knots = c(20, 10, 5))
+lrnr_uhal_fast <- Lrnr_uhal9001$new(num_knots = c(50, 25, 15))
 # lrnr_grf <- Lrnr_grf$new()
 # lrnr_lm_inter<- Lrnr_glm$new(formula = "~.^2")
 grid_params <- list(

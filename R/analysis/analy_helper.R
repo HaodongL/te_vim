@@ -159,3 +159,19 @@ plot_cate_grf <- function(varname,
   
   return(p_cate)
 }
+
+
+plot_theta <- function(df_theta, estimator = "AIPW"){
+  p <- ggplot(data=df_theta %>% 
+                filter(method == estimator) %>% 
+                arrange(importance) %>% 
+                mutate(varname = factor(varname, levels = varname)),
+              aes(x=varname, y=importance, ymin=ci_l, ymax=ci_u)) +
+    geom_pointrange() + 
+    # geom_hline(yintercept=0, lty=2) +  # add a dotted line at x=0 after flip
+    # geom_hline(yintercept=1, lty=2) +  # add a dotted line at x=1 after flip
+    coord_flip() +  # flip coordinates (puts labels on y axis)
+    xlab("Variable") + ylab("Importance") +
+    theme_bw()  # use a white background
+  return(p)
+}
