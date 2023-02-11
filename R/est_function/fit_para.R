@@ -17,6 +17,7 @@ fit_para <- function(df,
   all_wsc = setdiff(all_w, ws)
   y <- df[["Y"]]
   a <- df[["A"]]
+  n = nrow(df)
   
   res_Qg <- fitSL(df, sl_Q, sl_g, Q_bounds, g_bounds) # big object rm later
   Q_fit <- res_Qg$Q_fit # big object rm later
@@ -62,10 +63,13 @@ fit_para <- function(df,
     tau <- bound(tau, tau_bounds)
   }
   
-  tau_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau, outcome = 'tau', para = 'tau_s', ws = ws)
+  # temp, add tiny values to prevent constant cols
+  tau_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau + runif(n, 1e-11, 1e-10) , #
+                     outcome = 'tau', para = 'tau_s', ws = ws)
   tau_s <- tau_s_fit$predict()
   
-  gamma_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau, outcome = 'tau', para = 'gamma_s', ws = ws)
+  gamma_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau + runif(n, 1e-11, 1e-10) , #
+                       outcome = 'tau', para = 'gamma_s', ws = ws)
   gamma_s <- gamma_s_fit$predict()
   
   # bound tau_s in [-1,1]
@@ -198,7 +202,8 @@ fit_cvpara <- function(df,
     gn_v <- g_fit$predict(g_task_v)
     # bound g
     gn_v <- bound(gn_v, g_bounds)
-    po_v <- (y_v - QbarAW_v)*(2*a_v - 1)/gn_v + Qbar1W_v - Qbar0W_v
+    # po_v <- (y_v - QbarAW_v)*(2*a_v - 1)/gn_v + Qbar1W_v - Qbar0W_v
+    po_v <- (y_v - QbarAW_v)*(a_v/gn_v - (1-a_v)/(1-gn_v)) + Qbar1W_v - Qbar0W_v
     
     # update Q, g, po
     Qbar0W[index_v] <- Qbar0W_v
@@ -210,14 +215,16 @@ fit_cvpara <- function(df,
     ##================================##
     ##       tau, tau_s, gamma_s      ##
     ##================================##
+    tau_task_t <- make_sl3_Task(covariates = all_w, data = df_t)
     tau_task_v <- make_sl3_Task(covariates = all_w, data = df_v)
     s_task_v <- make_sl3_Task(covariates = all_wsc, data = df_v)
-    tau_t <- Qbar1W_t - Qbar0W_t
+    
     
     if (dr){
       # fit tau, tau_s, gamma_s on training set
       # predict tau, tau_s, gamma_s on validation set
       tau_fit <- fit_x(df = df_t, sl_x = sl_x, po = po_t, outcome = 'po', para = 'tau')
+      tau_t <- tau_fit$predict(tau_task_t)
       tau_v <- tau_fit$predict(tau_task_v)
       
       # tau_s_fit <- fit_x(df = df_t, sl_x = sl_x, po = po_t, outcome = 'po', para = 'tau_s', ws = ws)
@@ -226,12 +233,13 @@ fit_cvpara <- function(df,
       # gamma_s_fit <- fit_x(df = df_t, sl_x = sl_x, po = po_t, outcome = 'po', para = 'gamma_s', ws = ws)
       # gamma_s_v <- gamma_s_fit$predict(s_task_v)
     }else{
-      # fit and pred
+      tau_t <- Qbar1W_t - Qbar0W_t
       tau_v <- Qbar1W_v - Qbar0W_v
     }
     
     # bound tau in [-1,1]
     if (!is.null(tau_bounds)){
+      tau_t <- bound(tau_t, tau_bounds)
       tau_v <- bound(tau_v, tau_bounds)
     }
     
@@ -322,7 +330,8 @@ fit_x <- function(df, sl_x, po = NULL, tau = NULL, outcome = 'po', para = 'tau',
     df_train <- cbind(df, tau)
   }
   
-  folds <- origami::folds_vfold(nrow(df))
+  # folds <- origami::folds_vfold(nrow(df))
+  folds = origami::make_folds(n = nrow(df), V = 10)
   
   # print(setdiff(names(df_train), c('Y', 'A', outcome, ws)))
   
@@ -348,4 +357,3 @@ bound <- function(x, bounds) {
   }
   pmin(pmax(x, lower), upper)
 }
-

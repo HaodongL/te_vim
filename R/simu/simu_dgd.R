@@ -19,8 +19,54 @@ generate_data_simple <- function(N, print_truth = FALSE){
     VIM_Theta_s <- VTE - VTE_s
     print(paste0("VIM_Theta_s: ", VIM_Theta_s))
     print(paste0("VTE: ", VTE))
+    print(paste0("VIM_Psi_s: ", VIM_Theta_s/VTE))
   }
   return(tibble(X1=X1,X2=X2,A=A,Y=Y))
+}
+
+generate_data_v2 <- function(N, print_truth = FALSE){
+  # A simple data generating process
+  X1 <- runif(N,-1,1)
+  X2 <- rbinom(N, 1, 0.5)
+  pi0 <- plogis(0.1*X1*X2-0.4*X1)
+  A <- rbinom(N,1,prob=pi0)
+  muY0 <- X1*X2 + 2*X2^2 -X1
+  CATE <- X1^2*(X1+7/5) + (2*X2/3) #X1^2*(X1+7/5) + (5*X2/3)^2 
+  muY = muY0+A*CATE
+  Y <- rnorm(N,sd=1,mean= muY)
+  
+  if (print_truth){
+    VTE <- var(CATE)
+    tau_s <- X1^2*(X1+7/5) 
+    VTE_s <- var(tau_s)
+    VIM_Theta_s <- VTE - VTE_s
+    print(paste0("VIM_Theta_s: ", VIM_Theta_s))
+    print(paste0("VTE: ", VTE))
+  }
+  return(tibble(X1=X1,X2=X2,A=A,Y=Y))
+}
+
+generate_data_v3 <- function(N, print_truth = FALSE){
+  # A simple data generating process
+  X1 <- runif(N,-1,1)
+  X2 <- runif(N,-1,1)
+  X3 <- rbinom(N, 1, 0.5)
+  pi0 <- plogis(0.1*X1*X2-0.4*X1)
+  A <- rbinom(N,1,prob=pi0)
+  muY0 <- X1*X2 + 2*X2^2 -X1
+  CATE <- X1^2*(X1+7/5) + (5*X2/3)^2 + X3/2
+  muY = muY0+A*CATE
+  Y <- rnorm(N,sd=1,mean= muY)
+  
+  if (print_truth){
+    VTE <- var(CATE)
+    tau_s <- X1^2*(X1+7/5) + (5*X2/3)^2
+    VTE_s <- var(tau_s)
+    VIM_Theta_s <- VTE - VTE_s
+    print(paste0("VIM_Theta_s: ", VIM_Theta_s))
+    print(paste0("VTE: ", VTE))
+  }
+  return(tibble(X1=X1,X2=X2,X3=X3,A=A,Y=Y))
 }
 
 
@@ -49,25 +95,25 @@ fitMods <- function(df,df_train=df,outcome_family = gaussian(), Q_bounds = NULL)
     mua_hat = mua_hat
   )%>% return()
 }
-# 
-# 
-# crossFit <- function(df,foldIDs,Nfolds=max(foldIDs)){
-#   fold_list = lapply(1:Nfolds, function(i,foldIDs){which(foldIDs==i)},foldIDs = foldIDs)
-#   
-#   a <- sapply(fold_list,function(fold,df){
-#     fitMods(df[fold,],df[-1*fold,]) 
-#   },df=df,simplify = FALSE) %>% bind_rows()
-# 
-#   a <- a[order(unlist(fold_list)),] %>%
-#     mutate(FoldID = foldIDs)
-# 
-#   return(a)
-# }
-# 
-# getFoldIDs <- function(N,Nfolds,shuffle=TRUE){
-#   if (shuffle){
-#     return(sample(rep_len(seq_len(Nfolds),length.out=N)))
-#   } else{
-#     return(rep_len(seq_len(Nfolds),length.out=N))
-#   }
-# }
+
+
+crossFit <- function(df,foldIDs,Nfolds=max(foldIDs)){
+  fold_list = lapply(1:Nfolds, function(i,foldIDs){which(foldIDs==i)},foldIDs = foldIDs)
+
+  a <- sapply(fold_list,function(fold,df){
+    fitMods(df[fold,],df[-1*fold,])
+  },df=df,simplify = FALSE) %>% bind_rows()
+
+  a <- a[order(unlist(fold_list)),] %>%
+    mutate(FoldID = foldIDs)
+
+  return(a)
+}
+
+getFoldIDs <- function(N,Nfolds,shuffle=TRUE){
+  if (shuffle){
+    return(sample(rep_len(seq_len(Nfolds),length.out=N)))
+  } else{
+    return(rep_len(seq_len(Nfolds),length.out=N))
+  }
+}

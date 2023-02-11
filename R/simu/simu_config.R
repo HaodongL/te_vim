@@ -1,11 +1,12 @@
 run_all_simu <- function(B, N, truth, 
                          cv = FALSE, 
-                         dr = TRUE, 
-                         lfm_linear = FALSE, 
-                         tmle_dr_update = FALSE,
+                         dr = FALSE, 
                          ws = c('X2'), 
-                         max.it = 1e4,
-                         lr = 1e-4){
+                         max_it = 1e4,
+                         lr = 1e-4,
+                         do_sshal = FALSE,
+                         target_para = "Theta"){
+  
   results_cols <- c('i', 'truth', 'cvtmle', 'cvtmle_se',
                     'cvtmle_lower', 'cvtmle_upper', 
                     'cvaiptw', 'cvaiptw_se', 'cvaiptw_lower', 
@@ -15,9 +16,9 @@ run_all_simu <- function(B, N, truth,
   colnames(results_df) <- results_cols
   
   run_bootstrap <- foreach(b = 1:B, .combine = 'rbind') %dopar% {
-    
+  
     print(paste0("may the power be with you! ", b))
-    set.seed(1234 + b)
+    set.seed(123 + b)
     
     results_df_row <- data.frame(matrix(NA, nrow = 1, ncol = length(results_cols)))
     colnames(results_df_row) <- results_cols
@@ -26,31 +27,40 @@ run_all_simu <- function(B, N, truth,
     results_df_row$truth <- truth
     
     df <- generate_data_simple(N)
-    # res_ee <- run_EE_VIM(df, ws)
-    # res_tmle <- run_TMLE_VIM(df, ws, max.it)
-    res <- run_VIM_Theta(df = df, 
-                         sl_Q = sl_Q, 
-                         sl_g = sl_g,
-                         sl_x = sl_x,
-                         ws = ws, 
-                         cv = cv,
-                         dr = dr,
-                         lfm_linear = lfm_linear,
-                         max.it = max.it, 
-                         lr = lr,
-                         tmle_dr_update = tmle_dr_update,
-                         Q_bounds = c(1e-4, 1-1e-4), 
-                         g_bounds = c(0.025, 0.975),
-                         tau_bounds = c(-1+1e-4, 1-1e-4),
-                         tau_s_bounds = c(-1+1e-4, 1-1e-4),
-                         gamma_s_bounds = c(1e-8, 1-1e-8)
-                         )
+    # df <- generate_data_v2(N)
+    
+    if (target_para == "Theta"){
+      run_fun <- run_VIM
+    }else if (target_para == "Psi"){
+      run_fun <- run_VIM2
+    }else if (target_para == "VTE"){
+      run_fun <- run_VTE
+    }
+
+    res <- run_fun(df = df, 
+                   sl_Q = sl_Q, 
+                   sl_g = sl_g,
+                   sl_x = sl_x,
+                   ws = ws, 
+                   cv = cv,
+                   dr = dr,
+                   max_it = max_it, 
+                   lr = lr,
+                   Q_bounds = c(1e-4, 1-1e-4), 
+                   g_bounds = c(0.025, 0.975),
+                   tau_bounds = c(-1+1e-4, 1-1e-4),
+                   tau_s_bounds = c(-1+1e-4, 1-1e-4),
+                   gamma_s_bounds = c(1e-8, 1-1e-8)
+                   )
     res_ee <- res$resEE
     res_tmle <- res$resTMLE
     res_ss <- res$resSS
     
     # SS
     results_df_row$ss <- res_ss$coef
+    results_df_row$ss_se <- res_ss$std_err
+    results_df_row$ss_lower <- res_ss$ci_l
+    results_df_row$ss_upper <- res_ss$ci_u
     
     # CVTMLE 
     results_df_row$cvtmle <- res_tmle$coef
@@ -64,9 +74,26 @@ run_all_simu <- function(B, N, truth,
     results_df_row$cvaiptw_lower <- res_ee$ci_l
     results_df_row$cvaiptw_upper <- res_ee$ci_u
     
+    # plug-in HAL
+    if (do_sshal) {
+      df_fit_hal <- fit_para_hal(df = df, 
+                                 sl_Q = sl_Q_hal, 
+                                 sl_g = sl_g_hal,
+                                 sl_ws = sl_ws_hal,
+                                 ws = ws)
+      res_hal <- HAL_VIM(df_fit_hal)
+      
+      results_df_row$sshal <- res_hal$coef
+      results_df_row$sshal_se <- res_hal$std_err
+      results_df_row$sshal_lower <- res_hal$ci_l
+      results_df_row$sshal_upper <- res_hal$ci_u
+    }else{
+      results_df_row$sshal <- 0
+      results_df_row$sshal_se <- 0
+      results_df_row$sshal_lower <- 0
+      results_df_row$sshal_upper <- 0
+    }
     
-    # print(se_cvaiptw)
-    # print(se_aiptw)
     return_list <- c('i' = results_df_row$i, 
                      'truth' = results_df_row$truth,
                      'cvtmle' = results_df_row$cvtmle, 
@@ -77,7 +104,14 @@ run_all_simu <- function(B, N, truth,
                      'cvaiptw_se' = results_df_row$cvaiptw_se, 
                      'cvaiptw_lower' = results_df_row$cvaiptw_lower, 
                      'cvaiptw_upper' = results_df_row$cvaiptw_upper,
-                     'ss' = results_df_row$ss)
+                     'ss' = results_df_row$ss,
+                     'ss_se' = results_df_row$ss_se, 
+                     'ss_lower' = results_df_row$ss_lower, 
+                     'ss_upper' = results_df_row$ss_upper,
+                     'sshal' = results_df_row$sshal , 
+                     'sshal_se' = results_df_row$sshal_se, 
+                     'sshal_lower' = results_df_row$sshal_lower, 
+                     'sshal_upper' = results_df_row$sshal_upper)
     
     return(return_list)
   }
@@ -91,38 +125,3 @@ run_all_simu <- function(B, N, truth,
 }
 
 
-
-# 
-sum_metric <- function(res){
-  table_results_data <- res %>%
-    dplyr::mutate(cvtmle_proportion = truth <= cvtmle_upper & truth >= cvtmle_lower,
-                  cvaiptw_proportion = truth <= cvaiptw_upper & truth >= cvaiptw_lower,
-                  
-                  cvtmle_widthCI = cvtmle_upper-cvtmle_lower,
-                  cvaiptw_widthCI = cvaiptw_upper-cvaiptw_lower,
-    ) %>%
-    dplyr::group_by(n, truth) %>%
-    summarize(cvtmle_coverage = mean(cvtmle_proportion),
-              cvaiptw_coverage = mean(cvaiptw_proportion),
-              
-              cvtmle_bias = mean(cvtmle) - mean(truth),
-              cvaiptw_bias = mean(cvaiptw) - mean(truth),
-              
-              cvtmle_var = var(cvtmle),
-              cvaiptw_var = var(cvaiptw),
-              
-              cvtmle_mse = cvtmle_bias^2 + var(cvtmle),
-              cvaiptw_mse = cvaiptw_bias^2 + var(cvaiptw),
-              
-              
-              # 2020-02-01 coverage of oracle CI
-              cvtmle_oracle = mean(truth <= cvtmle + 1.96*sd(cvtmle) & truth >= cvtmle - 1.96*sd(cvtmle)),
-              cvaiptw_oracle = mean(truth <= cvaiptw + 1.96*sd(cvaiptw) & truth >= cvaiptw - 1.96*sd(cvaiptw)),
-              
-              cvtmle_meanwidthCI = mean(cvtmle_widthCI),
-              cvaiptw_meanwidthCI = mean(cvaiptw_widthCI)
-              
-    ) %>%  ungroup()
-  
-  return(table_results_data)
-}

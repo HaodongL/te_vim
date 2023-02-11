@@ -4,13 +4,22 @@
 library(dplyr)
 library(readr)
 
-get_data <- function(outcome, t = 24){
+get_data <- function(outcome, t = 24, rm_baseIns = FALSE, drop_censor = TRUE){
   
-  assertthat::assert_that(outcome %in% c("diab", "cv", 'a1c'))
+  assertthat::assert_that(outcome %in% c("diab", "diab2", "cv", 'a1c'))
   
   # read data based on outcome
   filepath <- paste0("~/Repo/te_vim/data/supp/df_all_", outcome, ".csv")
   df <- read_csv(filepath)
+  
+  # drop those censored before t
+  df_C <- read_csv("~/Repo/te_vim/data/supp/df_censor.csv")
+  if (drop_censor){
+    n1 = nrow(df)
+    df <- df %>% left_join(df_C, by='USUBJID') %>% filter(AVAL > t) %>% select(-AVAL)
+    n2 = nrow(df)
+    cat(paste0(n1-n2, " people censored before ", t, " months are dropped."))
+  }
   
   # convert character/logical to factor
   df <- df %>% 
@@ -18,14 +27,12 @@ get_data <- function(outcome, t = 24){
     mutate(across(where(is.logical), ~ as.factor(.))) 
   
   # remove INSNVFL == TRUE (confirm wtih novo)
-  df <- df %>% filter(INSNVFL == FALSE) %>% select(-INSNVFL)
-  
-  # remove highly correlated cols
-  var_corr <- c("EGFRMDRC", "EGFREPB", "EGFMDRBC", "EGFRMDR")
-  df <- df %>% select(-all_of(var_corr))
+  if (rm_baseIns){
+    df <- df %>% filter(INSNVFL == FALSE) %>% select(-INSNVFL)
+  }
   
   # define Y
-  if (outcome == "diab"){
+  if (outcome %in% c('diab', 'diab2')){
     df <- df %>% mutate(Y = ifelse((AVAL_FRINSLTM <= t & EVENT_FRINSLTM == 1 )|
                                    (AVAL_OADTM <= t & EVENT_OADTM == 1 )|
                                    (AVAL_HYPER <= t & EVENT_HYPER == 1 )|
@@ -64,6 +71,7 @@ get_data <- function(outcome, t = 24){
                       "HBA1C_VISIT_9", "HBA1C_VISIT_10", "HBA1C_VISIT_11",    
                       "HBA1C_VISIT_12", "HBA1C_VISIT_13"))
   }
+  
   return(df)
 }
 
@@ -85,9 +93,9 @@ get_data_tte <- function(outcome){
   # remove INSNVFL == TRUE (confirm wtih novo)
   df <- df %>% filter(INSNVFL == FALSE) %>% select(-INSNVFL)
   
-  # remove highly correlated cols
-  var_corr <- c("EGFRMDRC", "EGFREPB", "EGFMDRBC", "EGFRMDR")
-  df <- df %>% select(-all_of(var_corr))
+  # remove highly correlated cols (already removed from data_clean)
+  # var_corr <- c("EGFRMDRC", "EGFREPB", "EGFMDRBC", "EGFRMDR")
+  # df <- df %>% select(-all_of(var_corr))
   
   # define Y
   if (outcome == "diab"){

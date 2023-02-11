@@ -1,4 +1,5 @@
 # Check CATE estimates
+rm(list = ls())
 repo_path = "~/Repo/te_vim/"
 source(paste0(repo_path, "R/simu/simu_dgd.R")) #Used for the current examples
 source(paste0(repo_path, "R/est_function/sl3_config.R"))
@@ -6,7 +7,7 @@ source(paste0(repo_path, "R/est_function/fit_para.R"))
 source(paste0(repo_path, "R/est_function/vim.R"))
 
 # Q, g
-set.seed(1994)
+set.seed(123)
 N <- 5e2 #size of generated data
 df <- generate_data_simple(N)
 
@@ -16,15 +17,15 @@ dr = T
 lfm_linear = FALSE
 max.it = 600
 
-Q_bounds = c(0.001, 0.999)
+Q_bounds = NULL
 g_bounds = c(0.025, 0.975)
-tau_bounds = c(-1+1e-3, 1-1e-3)
-tau_s_bounds = c(-1+1e-3, 1-1e-3)
-gamma_s_bounds = c(1e-6, 1-1e-6)
+tau_bounds = NULL
+tau_s_bounds = NULL
+gamma_s_bounds = NULL
 
-y_l <- min(df$Y)
-y_u <- max(df$Y)
-df$Y <- scale01(df$Y, y_l, y_u)
+y_l <- 0
+y_u <- 1
+# df$Y <- scale01(df$Y, y_l, y_u)
 
 
 # Q_bounds = c(-1e4, 1e4)
@@ -68,7 +69,8 @@ gn <- bound(gn, g_bounds)
 
 
 
-po = (y - QbarAW)*(2*a - 1)/gn + Qbar1W - Qbar0W
+# po = (y - QbarAW)*(2*a - 1)/gn + Qbar1W - Qbar0W
+po = (y - QbarAW)*(a/gn - (1-a)/(1-gn)) + Qbar1W - Qbar0W
 tau_fit <- fit_x(df = df, sl_x = sl_x, po = po, outcome = 'po', para = 'tau')
 
 
@@ -115,11 +117,11 @@ f_cate <- function (x, y) {
 }
 
 
-# png(filename= paste0("~/Repo/te_vim/tnp/cate_", N,".png"),
-#     width = 2048,
-#     height = 1024,
-#     res = 180,
-#     pointsize = 10)
+png(filename= paste0("~/Repo/te_vim/tnp/plot/cate_hal_", N,".png"),
+    width = 2048,
+    height = 1024,
+    res = 180,
+    pointsize = 10)
 par(mfrow = c(1, 3))
 
 
@@ -155,7 +157,7 @@ persp(w1, w2, tau_n, theta = 30, phi = 25, expand = 0.5, col = "#669bbc",
       main= paste0("CATE estimates with DR-learner ", 
                    "(MSE = ", mse, ")"))
 
-# dev.off()
+dev.off()
 
 
 

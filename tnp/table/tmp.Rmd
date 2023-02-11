@@ -1,0 +1,47 @@
+---
+title: "temp"
+author: "Haodong Li"
+date: "2022-11-22"
+output:
+  pdf_document:
+    keep_tex: true
+---
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(kableExtra)
+library(dplyr)
+library(readr)
+```
+
+
+```{r, echo=FALSE}
+tmp1 <- read_csv("2by2_old_sub.csv")
+tmp2 <- read_csv("2by2_new_sub.csv")
+tmp3 <- read_csv("2by2_new_full.csv")
+
+tmp <- rbind(tmp1 %>% mutate("data" = "old_sub"),
+             tmp2 %>% mutate("data" = "new_sub"),
+             tmp3 %>% mutate("data" = "new_full"))
+
+tmp <- tmp %>% rename("risk" = "EY") %>% 
+  select(all_of(c("data", "A", "statin_use", "count_Y", "group_N", 
+                  "prop_Y","risk", "cate_t", "cate_d")))
+```
+
+
+```{r, echo=FALSE}
+tmp %>% 
+  mutate(across(where(is.numeric), ~round(., 4))) %>% 
+  kable("latex", booktabs = T, linesep = c("", "", "", "\\addlinespace"),
+        caption = "Subgroup risk estimates in LEADER", align=rep('c', 9)) %>% 
+  collapse_rows(columns = 1) %>%
+  column_spec(1:9, width = "0.6in") %>% 
+  kable_styling(font_size = 10)
+```
+
+
+```{r}
+
+```
+
+

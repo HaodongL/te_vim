@@ -1,33 +1,60 @@
+library(here)
+library(tidyverse)
+library(dplyr)
+library(mice)
+library(sl3)
+library(tmle3)
+library(caret)
+
+rm(list = ls())
 
 
-#ADCM 
-library(boxr)
-box_auth()
-#concommitant medication usage
-d <- box_read("946034255301")
-head(d)
-unique(d$CMTRT)
-
-
-#hypoglycemia data
-adhypo <- box_read("946034248101")
-head(adhypo)
+### ------------  Part 0. Import Dataset  ------------ ###
+if(here::here()=="C:/Users/andre/Documents/jici/te_vim"){
+  
+  repo_path = "C:/Users/andre/Documents/jici/te_vim/"
+  source(paste0(repo_path, "R/data_process/data_helper.R"))
+  
+  library(boxr)
+  box_auth()
+  
+  box_auth(client_id = "vjus6n03nen3b0174m2bj1d5zluy8077", client_secret = "DxrqBmo25s30UokjsmrwVWl4fpvFs2vF")
+  
+  BOX_CLIENT_ID=vjus6n03nen3b0174m2bj1d5zluy8077
+  BOX_CLIENT_SECRET=lvwQm6pimqAMQkfybHkQJYUtro5f9nMa
+  
+  
+  #cleaned data
+  df <- box_read("1048393668373")
+  dim(df)
+  colnames(df)
+  
+  head(df)  
+  
+  
+}else{
+  
+  repo_path = "~/Repo/te_vim/"
+  source(paste0(repo_path, "R/data_process/data_helper.R"))
+  # read in analysis data
+  ### ------------  Part 1. import data  ------------ ###
+  # outcome = 'diab'; t = 24
+  # df <- get_data(outcome, t, rm_baseIns=T)
+  df <- read_csv("~/Repo/te_vim/data/supp/df_analy1.csv")
+}
   
 
+# impute missingness
+nodes <- list(W = setdiff(names(df), c("Y", "A")),
+              A = 'A',
+              Y = 'Y')
 
-#cleaned data
-final <- box_read("1048393668373")
-dim(final)
-colnames(final)
-
-head(final)  
-
-library(caret)
+final <- process_missing(df, nodes)$data
 no_variance<-nzv(final)
 colnames(final)[no_variance]
 
 
-final#
+head(final)
 
 library(DataExplorer)
 

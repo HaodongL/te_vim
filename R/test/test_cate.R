@@ -1,65 +1,36 @@
+rm(list = ls())
 require(tidyverse)
+library(tictoc)
 repo_path = "~/Repo/te_vim/"
 source(paste0(repo_path, "R/simu/simu_dgd.R")) #Used for the current examples
 source(paste0(repo_path, "R/est_function/sl3_config.R"))
 source(paste0(repo_path, "R/est_function/fit_para.R"))
 source(paste0(repo_path, "R/est_function/vim.R"))
-# source(paste0(repo_path, "R/est_function/tmle_lin.R"))
 
-# source(paste0(repo_path, "R/sandbox/tmle_vim_linear.R"))
-library(tictoc)
+
 
 set.seed(123)
-N <- 5e3 #size of generated data
+N <- 5e2 #size of generated data
 df <- generate_data_simple(N, print_truth = TRUE)
 
-# y_l <- min(df$Y)
-# y_u <- max(df$Y)
-# df$Y <- scale01(df$Y, y_l, y_u)
-# ws = c('X2')
-# max.it = 1e3
-# 
-# df_fit <- fit_cvpara(df = df,
-#                      sl_Q,
-#                      sl_g,
-#                      sl_x,
-#                      ws = c('X2'),
-#                      dr = TRUE,
-#                      Q_bounds = NULL,
-#                      g_bounds = c(0.025, 0.975),
-#                      tau_bounds = NULL,
-#                      tau_s_bounds = NULL,
-#                      gamma_s_bounds = NULL)
-
-# df_fit_sl <- fitSL(df)
-# df_fit_sl <- fit_tau(df, df_fit_sl, option = "T-Learner")
-# df_fit_sl <- fit_tau_s(df, df_fit_sl, covar = covar)
-# df_fit_sl <- fit_gamma_s(df, df_fit_sl, covar = covar)
-
-# res_ee <- run_EE_VIM(df, covar)
-# res_tmle <- run_TMLE_VIM(df, covar, max.it)
 
 # wrapper
 tic()
-res <- run_VIM_Theta(df = df,
-                     sl_Q = sl_Q, 
-                     sl_g = sl_g,
-                     sl_x = sl_x,
-                     ws = c('X2'), 
-                     cv = F,
-                     dr = T,
-                     lfm_linear = F, 
-                     tmle_dr_update = T, 
-                     max.it = 1e4, 
-                     Q_bounds = c(0.001, 0.999), 
-                     g_bounds = c(0.025, 0.975),
-                     tau_bounds = c(-1+1e-3, 1-1e-3),
-                     tau_s_bounds = c(-1+1e-3, 1-1e-3),
-                     gamma_s_bounds = c(1e-6, 1-1e-6)
-                     )
+res <- run_VIM(df = df,
+               sl_Q = sl_Q, 
+               sl_g = sl_g,
+               sl_x = sl_x,
+               ws = c('X2'), 
+               cv = F,
+               dr = F,
+               max_it = 1e4)
 toc()
 res_ee <- res$resEE
 res_tmle <- res$resTMLE
+res_ss <- res$resSS
+
+
+
 
 
 # test
