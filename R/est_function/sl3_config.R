@@ -1,6 +1,4 @@
-library(sl3)
-repo_path = "~/Repo/te_vim/"
-source(paste0(repo_path, "/R/est_function/under_hal.R"))
+
 
 # -- sl setup
 lrnr_lm <- Lrnr_glm$new()

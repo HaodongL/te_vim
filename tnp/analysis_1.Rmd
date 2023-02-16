@@ -16,6 +16,7 @@ library(tmle3)
 library(ggplot2)
 library(table1)
 library(ggpubr)
+library(R6)
 
 rm(list = ls())
 repo_path = "~/Repo/te_vim/"
@@ -51,12 +52,23 @@ p_cate_strat
 
 ## 3. VTE Estimation
 ```{r}
+res_vte <-  readRDS("~/Repo/te_vim/data/res_vte_t.RDS")
 
+print(paste0("VTE TMLE:"))
+print(paste0("coef:", res_vte$res_tmle$coef))
+print(paste0("ci low:", res_vte$res_tmle$ci_l))
+print(paste0("ci up:", res_vte$res_tmle$ci_u))
+
+
+print(paste0("VTE EE:"))
+print(paste0("coef:", res_vte$res_ee$coef))
+print(paste0("ci low:", res_vte$res_ee$ci_l))
+print(paste0("ci up:", res_vte$res_ee$ci_u))
 ```
 
 
 ## 4. VIM Estimation
-```{r, echo=FALSE, fig.cap="VIM estiamtes", out.width = '100%', fig.align="center", fig.pos="H"}
+```{r, echo=FALSE, fig.cap="VIM estiamtes", out.width = '150%', fig.align="center", fig.pos="H"}
 df_theta <-  readRDS("~/Repo/te_vim/data/df_vim_t.RDS")
 
 p_theta_ee <- plot_theta(df_theta, estimator = "EE")

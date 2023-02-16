@@ -9,11 +9,11 @@ get_data <- function(outcome, t = 24, rm_baseIns = FALSE, drop_censor = TRUE){
   assertthat::assert_that(outcome %in% c("diab", "diab2", "cv", 'a1c'))
   
   # read data based on outcome
-  filepath <- paste0("~/Repo/te_vim/data/supp/df_all_", outcome, ".csv")
+  filepath <- paste0(repo_path,"/data/supp/df_all_", outcome, ".csv")
   df <- read_csv(filepath)
   
   # drop those censored before t
-  df_C <- read_csv("~/Repo/te_vim/data/supp/df_censor.csv")
+  df_C <- read_csv(paste0(repo_path,"/data/supp/df_censor.csv"))
   if (drop_censor){
     n1 = nrow(df)
     df <- df %>% left_join(df_C, by='USUBJID') %>% filter(AVAL > t) %>% select(-AVAL)
@@ -82,7 +82,7 @@ get_data_tte <- function(outcome){
   assertthat::assert_that(outcome %in% c("diab", "cv"))
   
   # read data based on outcome
-  filepath <- paste0("~/Repo/te_vim/data/supp/df_all_", outcome, ".csv")
+  filepath <- paste0(repo_path,"/data/supp/df_all_", outcome, ".csv")
   df <- read_csv(filepath)
   
   # convert character/logical to factor

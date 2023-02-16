@@ -15,17 +15,8 @@ if(here::here()=="C:/Users/andre/Documents/jici/te_vim"){
   repo_path = "C:/Users/andre/Documents/jici/te_vim/"
   source(paste0(repo_path, "R/data_process/data_helper.R"))
   
-  library(boxr)
-  box_auth()
-  
-  box_auth(client_id = "vjus6n03nen3b0174m2bj1d5zluy8077", client_secret = "DxrqBmo25s30UokjsmrwVWl4fpvFs2vF")
-  
-  BOX_CLIENT_ID=vjus6n03nen3b0174m2bj1d5zluy8077
-  BOX_CLIENT_SECRET=lvwQm6pimqAMQkfybHkQJYUtro5f9nMa
-  
-  
   #cleaned data
-  df <- box_read("1048393668373")
+  df <- read_csv(paste0(here(),"/data/supp/df_analy1.csv"))
   dim(df)
   colnames(df)
   
