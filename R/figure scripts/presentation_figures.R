@@ -1,13 +1,4 @@
-library(kableExtra)
-library(readr)
-library(dplyr)
-library(sl3)
-library(tictoc)
-library(tmle3)
-library(ggplot2)
-library(table1)
-library(ggpubr)
-library(R6)
+
 
 
 
@@ -46,7 +37,11 @@ buffer=0.01
   df_plot$group[grepl("T_",df_plot$group)] <- "Yes"
   df_plot$group[grepl("F_",df_plot$group)] <- "No"
   
-  p_cate <- ggplot(df_plot, aes(x = group, y = tau, color = varname)) +
+  df_plot <- df_plot %>% mutate(varname=factor(varname)) 
+  df_plot$varname <- fct_recode(df_plot$varname, !!!subgroup_levels)
+  df_plot$varname <- relevel(df_plot$varname, ref="Statin use")
+  
+  p_cate <- ggplot2::ggplot(df_plot, aes(x = group, y = tau, color = varname)) +
     theme_light() +
     theme(
       text=element_text(size=8),
@@ -70,19 +65,51 @@ buffer=0.01
     coord_flip() +
     labs(y = "CATE", x="Subgroup variable") +
     ylim(c(ylim_l, ylim_u)) 
+  
 
   p_cate
-  
+
+  ggsave(paste0(here(),"/tnp/plot/p_cate_strat.png"), p_cate, width = 5, height = 5)
   #XXXXX TO DO:
-  #Fix angle and labels of strips
+  #Fix labels of strips and order (with statins first)
 
 
 
 
 ## 2. TMLE Effect Modification
 df_em <-readRDS(paste0(repo_path, "analy_res/df_em.RDS"))
-p_cate_strat <- plot_tmle_em(cm_names, df_em)
+
+ varname=cm_names
+         df_plot=df_em
+  
+  ate <- mean(df_plot$tau)
+  ylim_l <- min(df_plot$tau - 1.96*df_plot$se)
+  ylim_u <- max(df_plot$tau + 1.96*df_plot$se)
+  
+  df_plot$varname <- rep(varname, each=3)
+  
+p_cate_strat <- ggplot(df_plot, aes(x = group, y = tau, color = varname)) +
+    theme_light() +
+    theme(
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      strip.text.y = element_text(colour = "black"),
+      strip.background = element_rect(colour = NA, fill = NA),
+      legend.position = "none"
+    ) +
+    geom_point() +
+    geom_errorbar(aes(ymin = pmax(tau - 1.96*se, ylim_l), 
+                      ymax = pmin(tau + 1.96*se, ylim_u)), width = .2) +
+    geom_hline(yintercept = 0, linetype = 3) +
+    facet_grid(varname ~ ., scales = "free_y") +
+    coord_flip() +
+    labs(y = "CATE") +
+    ylim(c(ylim_l, ylim_u)) +
+    theme(text=element_text(size=8))
 p_cate_strat
+
+
+
 
 
 ## 3. VTE Estimation
@@ -97,35 +124,25 @@ print(paste0("ci up:", res_vte$res_tmle$ci_u))
 print(paste0("VTE EE:"))
 print(paste0("coef:", res_vte$res_ee$coef))
 print(paste0("ci low:", res_vte$res_ee$ci_l))
+print(paste0("ci up:", res_vte$res_ee$ci_u))
 
 df_theta <-readRDS(paste0(repo_path, "analy_res/df_vim_t.RDS"))
 
 
-plot_theta <- function(df_theta, estimator = "AIPW"){
-  p <- ggplot(data=df_theta %>% 
-                filter(method == estimator) %>% 
+plot_theta <- ggplot(data=df_theta %>% 
                 arrange(importance) %>% 
-                mutate(varname = factor(varname, levels = varname)),
+                mutate(varname = factor(varname, levels = unique(varname))),
               aes(x=varname, y=importance, ymin=ci_l, ymax=ci_u)) +
     geom_pointrange() + 
-    # geom_hline(yintercept=0, lty=2) +  # add a dotted line at x=0 after flip
+    facet_grid(~method, scales = "free") +
+    geom_hline(yintercept=0, lty=2) +  # add a dotted line at x=0 after flip
     # geom_hline(yintercept=1, lty=2) +  # add a dotted line at x=1 after flip
     coord_flip() +  # flip coordinates (puts labels on y axis)
     xlab("Variable") + ylab("Importance") +
     theme_bw()  # use a white background
-  return(p)
-}
+plot_theta
 
-p_theta_ee <- plot_theta(df_theta, estimator = "EE")
-p_theta_tmle <- plot_theta(df_theta, estimator = "TMLE")
-p_theta_ss <- plot_theta(df_theta, estimator = "SS")
 
-p_theta_all <-
-  ggarrange(p_theta_ee + ggtitle("EE VIM estimates (T-learner)"),
-            p_theta_tmle + ggtitle("TMLE VIM estimates (T-learner)"),
-            p_theta_ss + ggtitle("SS VIM estimates (T-learner)"))
-
-p_theta_all
 
 
 

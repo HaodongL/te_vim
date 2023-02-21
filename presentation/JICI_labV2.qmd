@@ -1,0 +1,208 @@
+---
+title: "Targeted Learning Heterogeneous Treatment Effect Parameters"
+subtitle: "Methods, Simulations results, and Example Analysis with LEADER Trial Data"
+author: "Haodong Li"
+format: pptx
+editor: source
+---
+
+```{r, include=F}
+
+rm(list = ls())
+source(paste0(here::here(),"/R/0_config.R"))
+
+df_w <- read_csv(file = paste0(repo_path, "data/supp/df_w.csv"))
+df_strat <- readRDS(paste0(repo_path, "analy_res/df_strat.RDS"))
+df_theta <-readRDS(paste0(repo_path, "analy_res/df_vim_t.RDS"))
+
+cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
+              "vkantag", "caantag", "thiazide", "loopdiur")
+
+```
+
+## Motivation {.smaller}
+
+-   Recent evidence showed that novel therapies such as glucagon-like peptide 1 (GLP-1) analogues can reduce the rates of major cardiovascular events in patients with type 2 diabetes.
+-   The cardiovascular effect of liraglutide, GLP-1 analogue, was investigated in the LEADER trial.
+-   GLP-1 users are also often on statins and other cardiovascular drugs.
+    -   Statins are a lipid lowering drug class used for primary prevention of cardiovascular diseases.
+    -   A retrospective cohort study found that statin use was associated with diabetes progression.
+-   In this project, we use novel estimating methods to further explore the heterogeneity of liraglutide treatment effect among concomitant medication (especially statin) users, with data from the randomized LEADER trial.
+
+## Approach {.smaller}
+
+-   Methods for the study of treatment effect heterogeneity is an active area of research in causal inference and statistics, and includes the estimation of conditional average treatment effects (CATE).
+
+-   Existing hypothesis tests and estimating approaches on CATE include nearest-neighbor matching, kernel methods, series estimation, and forest-based methods.
+
+-   One recent tranche of literature has recommended variance of treatment effect (VTE) as a global measure of treatment effect heterogeneity given a set of baseline covariates (Levy et al 2019).
+
+-   The previous work on how to utilize these CATE estimates mainly focus on policy learning and optimal dynamic treatment rule (OTR), where people try to make personalized recommendation based on individual-level characteristics.
+
+-   Later in 2022, Oliver Hines emphasized the importance of shifting the attention from policy learning to addressing the question of "what are the key drivers of treatment effect heterogeneity?", and discussed on how to quantify the importance of variable subsets in determining the CATE.
+
+    -   Methods have been proposed to estimate treatment effect variable importance (TE-VIMs) through the contribution of groups of baseline covariates towards the VTE.
+
+    -   These methods require estimation of a mean outcome (binary or continuous) given treatment and covariates, which may be estimated using flexible data-adaptive/ machine learning methods.
+
+## Notation
+
+![](notation.png)
+
+## Simulation
+
+Data generating distribution:
+
+W1 ∼ Unif (−1, 1) W2 ∼ Unif (−1, 1) A ∼ Bernoulli(p) where p = expit(0.1 ∗ W1 ∗ W2 − 0.4 ∗ W1) τ = W 2 ∗ (W1 + 7/5) + (5 ∗ W2/3)2 1 µY = A ∗ τ + W1 ∗ W2 + 2 ∗ W 2 − W1 2 Y ∼ N (µY , 1)
+
+Models used for estimation
+
+Highly adaptive lasso (HAL). CATE estimation 1) DR-learner: regress pseudo outcome estimates φ0 on W . 2) T-learner: just use Q¯0 (1, W ) - Q¯0 (0, W ). n n
+
+Truncation
+
+gn ∈ \[0.025, 0.975\].
+
+Sample sizes and number of iterations
+
+Sample sizes: 200, 500, 1000, 3000, 5000, 10000, 20000. Number of iterations: 500 iterations for each sample size.
+
+## Main performance metrics of the estimators of the VTE parameter (T-learner, no CV)
+
+![](fig1.png)
+
+## Main performance metrics of the estimators of the VTE parameter (DR-learner, no CV)
+
+![](fig2.png)
+
+## Main performance metrics of the estimators of the first VIM parameter (T-learner, no CV)
+
+![](fig3.png)
+
+## Main performance metrics of the estimators of the first VIM parameter (DR-learner, no CV)
+
+![](fig4.png)
+
+## Key take-away from the first four simulation plots (parameters 1+2)
+
+-   For all three estimators, the bias decreases and coverage increases as sample size increases.
+-   TMLE outperforms EE and SS estimators in terms of lower bias and better coverage across almost all sample sizes.
+-   Three estimators have similar MSE and CI width. The results between using direct CATE estimation and double-robust CATE estimation are similar.
+
+## Main performance metrics of the estimators of the second VIM parameter (T-learner, no CV)
+
+![](fig5.png)
+
+## Main performance metrics of the estimators of the second VIM parameter (DR-learner, no CV)
+
+![](fig6.png)
+
+## Key take-away from the last two simulation plots (parameter 3):
+
+-   TMLE still performs the best asymptotically.
+-   When sample size is small/moderate, EE estimates have smaller bias.
+-   But the reduction in bias is negligible given the magnitude of the standard error.
+-   So the coverage will still be dominated by the accuracy of standard error estimates.
+    -   This is reflected in the coverage plot panel (TMLE still got better coverage although it has slightly larger bias than EE)
+
+## LEADER analysis
+
+## Primary outcome: diabetes progression
+
+1.  Binary indicator of whether any of the following occurred within the first t=2 years of follow up.
+    1.  insulin initiation
+    2.  adding glucose-lowering drugs
+    3.  hyperglycemia
+    4.  hypoglycemia
+    5.  acid-base disorders
+
+## Primary outcome: alternative (not run yet)
+
+Note the primary outcome drops all subjects on insulin at baseline. We will also use an alternative composite outcome using insulin intensification
+
+| Baseline             | New initiation         |
+|----------------------|------------------------|
+| No insulin treatment | Any insulin            |
+| Long acting          | Premix or short acting |
+| Intermediate acting  | Premix or short acting |
+
+## Secondary outcomes (not run yet)
+
+-   Secondary outcomes (LEADER endpoint): a time-to-event outcome composed of the first occurrence of death from cardio-vascular causes, nonfatal myocardial infarction, or nonfatal stroke.
+-   Individual outcomes making up the composite outcomes
+
+## Dataset
+
+After initial data cleaning process, the full dataset includes 9339 observations with 54 columns. For the analytic dataset using the primary outcome definition, 5170 observations who were on insulin use at the basedline are dropped from the data. In addition, 181 people who were censored/died before t (2 years) are also dropped. We impute the missing values by median and mode respectively for continuous and discrete covariates, and create missingness indicator columns. The finalized analytic dataset has 3988 rows and 63 columns.
+
+## Estimation of Variance of Treatment Effect (Parameter 1)
+
+-   Insignificant variance of the treatment effect
+-   TMLE:
+    -   0.0010 (95% CI: -0.0005, 0.0026)
+-   EE:
+    -   0.0001 (95% CI: -0.00088, 0.00106)
+
+## Variable importance for treatment heterogeneity
+
+## Stratified CATE
+
+```{r, echo=FALSE}
+varname=cm_names
+df_plot=df_strat
+buffer=0.01
+  
+  ate <- mean(df_plot$tau)
+  ylim_l <- min(df_plot$tau - 1.96*df_plot$se)
+  ylim_u <- max(df_plot$tau + 1.96*df_plot$se)
+  
+  df_plot$varname <- rep(varname, each=2)
+  df_plot$group[grepl("T_",df_plot$group)] <- "Yes"
+  df_plot$group[grepl("F_",df_plot$group)] <- "No"
+  
+  df_plot <- df_plot %>% mutate(varname=factor(varname)) 
+  df_plot$varname <- fct_recode(df_plot$varname, !!!subgroup_levels)
+  df_plot$varname <- relevel(df_plot$varname, ref="Statin use")
+  
+  p_cate <- ggplot(df_plot, aes(x = group, y = tau, color = varname)) +
+    theme_light() +
+    theme(
+      text=element_text(size=8),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      strip.text.y.left = element_text(size=8,angle = 0, face = "bold", colour = "black"),
+      #= element_text(size=10, angle = 15, face = "bold", colour = "black"),
+      strip.background = element_rect(colour = NA, fill = NA),
+      axis.text.y = element_text(size=8, hjust = 1),
+      #strip.text.y = element_text(size=10, angle = 180, face = "bold"),
+      strip.placement = "outside",
+      axis.text.x = element_text(size=10, vjust = 0.5),
+      panel.spacing = unit(0, "lines"),
+      legend.position = "none"
+    ) +
+    geom_point() +
+    geom_errorbar(aes(ymin = pmax(tau - 1.96*se, ylim_l), 
+                      ymax = pmin(tau + 1.96*se, ylim_u)), width = .2) +
+    geom_hline(yintercept = 0, linetype = 3) +
+    facet_grid(varname ~ ., scales = "free_y", switch="both") +
+    coord_flip() +
+    labs(y = "CATE", x="Subgroup variable") +
+    ylim(c(ylim_l, ylim_u)) 
+
+  p_cate
+  
+```
+
+## Questions:
+
+1.  What are other options (outcome definition or subgroup definition) we can consider for LEADER trial data?
+2.  Are there other data we can use to apply this TMLE heterogeneious effect estimation method to, where we might found more significant treatment heterogeneity?
+
+## Next steps:
+
+1.  Investigate why TMLE point estimates of the VIM parameter in LEADER analysis are overall larger than the EE estimates.
+2.  Replicate the analysis workflow for the alternative primary outcome, the secondary outcome, as well as other outcomes of interest: e.g. HBA1C
+3.  Compare the causal forest method for heterogeneity estimation with our TMLE approach.
+4.  Test more simple robust estimating method, for example: the plug-in HAL method. One option is to use undersmoothed HAL or the poisson HAL method (direct estimate the conditional density via conditional hazard) proposed by Helene and Mark.
+5.  Extend methods to time-to-event outcomes
+6.  Others?
