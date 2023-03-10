@@ -293,8 +293,7 @@ ggsave("tnp/p_theta_tmle.png", p_theta_tmle, width = 7, height = 7)
 
 p_theta_all <-
   ggarrange(p_theta_ee + ggtitle("EE VIM estimates (T-learner)"),
-            p_theta_tmle + ggtitle("TMLE VIM estimates (T-learner)"),
-            p_theta_ss + ggtitle("SS VIM estimates (T-learner)"))
+            p_theta_tmle + ggtitle("TMLE VIM estimates (T-learner)"))
 
 ggsave("tnp/p_theta_all.png", p_theta_all, width = 14, height = 10)
 

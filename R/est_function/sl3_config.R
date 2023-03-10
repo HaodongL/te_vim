@@ -100,9 +100,9 @@ sl_x <- Lrnr_sl$new(
   metalearner = ls_metalearner
 )
 
-sl_Q <- lrnr_hal_fast
-sl_g <- lrnr_hal_fast
-sl_x <- lrnr_hal_fast
+sl_Q <- sl_Q
+sl_g <- sl_g
+sl_x <- sl_x
 # 
 sl_Q_hal <- lrnr_hal_fast
 sl_g_hal <- lrnr_hal_fast

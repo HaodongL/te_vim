@@ -39,6 +39,8 @@ cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
 df_strat <- readRDS("~/Repo/te_vim/data/df_strat.RDS")
 p_cate_strat <- plot_tmle_strat(cm_names, df_strat)
 p_cate_strat
+
+ggsave("tnp/p_cate_strat.png", p_cate_strat, width = 7, height = 7)
 ```
 
 
