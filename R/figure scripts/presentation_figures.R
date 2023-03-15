@@ -129,6 +129,9 @@ print(paste0("ci up:", res_vte$res_ee$ci_u))
 df_theta <-readRDS(paste0(repo_path, "analy_res/df_vim_t.RDS"))
 
 
+df_theta$varname <- fct_recode(df_theta$varname, !!!covar_levels)
+
+
 plot_theta <- ggplot(data=df_theta %>% 
                 arrange(importance) %>% 
                 mutate(varname = factor(varname, levels = unique(varname))),
