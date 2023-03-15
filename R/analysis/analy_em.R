@@ -25,6 +25,15 @@ df <- get_data(outcome, t, rm_baseIns=T)
 # outcome = 'diab2'; t = 24
 # df <- get_data(outcome, t)
 
+
+
+# df <- get_data(outcome = 'diab', t = 24, rm_baseIns = FALSE, drop_censor = FALSE)
+# df2 <- get_data(outcome = 'diab', t = 24, rm_baseIns = TRUE, drop_censor = FALSE)
+# df3 <- get_data(outcome = 'diab', t = 24, rm_baseIns = TRUE, drop_censor = TRUE)
+
+
+
+
 nodes <- list(W = setdiff(names(df), c("Y", "A")),
               A = 'A',
               Y = 'Y')
@@ -47,6 +56,11 @@ toc()
 
 saveRDS(df_em, file = "~/Repo/te_vim/data/df_em.RDS")
 
+
+
+fit_em <- tmle_em_one(df, c("statin_use"))
+
+fit_em$summary
 
 
 

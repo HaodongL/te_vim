@@ -20,11 +20,11 @@ source(paste0(repo_path, "R/analysis/analy_helper.R"))
 source(paste0(repo_path, "R/est_function/vim.R"))
 
 ### ------------  Part 1. import data  ------------ ###
-outcome = 'diab'; t = 24
-df <- get_data(outcome, t, rm_baseIns=T)
+# outcome = 'diab'; t = 24
+# df <- get_data(outcome, t, rm_baseIns=T)
 
-# outcome = 'diab2'; t = 24
-# df <- get_data(outcome, t)
+outcome = 'diab2'; t = 24
+df <- get_data(outcome, t, rm_baseIns=F)
 
 nodes <- list(W = setdiff(names(df), c("Y", "A")),
               A = 'A',
@@ -52,7 +52,7 @@ cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
 n_ws <- length(ws)
 
 tic()
-registerDoParallel(2)
+registerDoParallel(9)
 df_vim <- foreach(i = 1:n_ws, .combine = 'rbind') %dopar% {
   res <- run_VIM(df = df,
                  sl_Q = sl_Q, 
@@ -60,7 +60,7 @@ df_vim <- foreach(i = 1:n_ws, .combine = 'rbind') %dopar% {
                  sl_x = sl_x,
                  ws = ws[i], 
                  cv = F,
-                 dr = T,
+                 dr = F,
                  max_it = 1e4)
   res_ee <- res$resEE
   res_tmle <- res$resTMLE
@@ -90,4 +90,4 @@ df_vim <- foreach(i = 1:n_ws, .combine = 'rbind') %dopar% {
 }
 toc()
 
-saveRDS(df_vim, file = "~/Repo/te_vim/data/df_vim_dr.RDS")
+saveRDS(df_vim, file = "~/Repo/te_vim/data/df_vim_dr_diab2.RDS")

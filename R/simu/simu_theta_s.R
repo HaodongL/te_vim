@@ -33,6 +33,10 @@ ncore <- floor(cpus_logical/2)
 # N <- 1e6 #size of generated data
 # df <- generate_data_simple(N, print_truth = TRUE) # VIM_Theta_s: 0.686
 
+sl_Q <- lrnr_earth
+sl_g <- lrnr_earth
+sl_x <- lrnr_earth
+
 ###### run simu
 for (N in c(2e2, 5e2, 1e3, 3e3, 5e3, 1e4, 2e4)){
   print(N)
@@ -48,7 +52,7 @@ for (N in c(2e2, 5e2, 1e3, 3e3, 5e3, 1e4, 2e4)){
                                     target_para = "Theta")
   toc()
 
-  output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"hal_t_", N, "_", Sys.Date(),'.csv')
+  output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/',"earth_t_", N, "_", Sys.Date(),'.csv')
   write.csv(bootstrap_results, output_filename)
 }
 
