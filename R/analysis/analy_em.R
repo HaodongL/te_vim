@@ -22,7 +22,7 @@ source(paste0(repo_path, "R/est_function/tmle_em.R"))
 outcome = 'diab'; t = 24
 df <- get_data(outcome, t, rm_baseIns=T)
 
-# outcome = 'diab2'; t = 24
+# outcome = 'a1c'; t = 24
 # df <- get_data(outcome, t)
 
 
@@ -63,10 +63,14 @@ fit_em <- tmle_em_one(df, c("statin_use"))
 fit_em$summary
 
 
+saveRDS(fit_em, file = "~/Repo/te_vim/data/fit_em_diab.RDS")
 
 # df_em <- readRDS("~/Repo/te_vim/data/df_em.RDS")
 # p_cate_strat <- plot_tmle_em(cm_names, df_em)
 
+fit_em <- readRDS("~/Repo/te_vim/data/fit_em_diab2.RDS")
+fit_em_su <- fit_em$summary
+saveRDS(fit_em_su, file = "~/Repo/te_vim/data/fit_em_su_diab2.RDS")
 
 
 

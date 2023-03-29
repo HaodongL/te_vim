@@ -53,7 +53,8 @@ n_ws <- length(ws)
 
 tic()
 registerDoParallel(9)
-df_vim <- foreach(i = 1:n_ws, .combine = 'rbind') %dopar% {
+df_vim <- foreach(i = 1:n_ws, .combine = 'rbind') %do% {
+  print(paste0("Covar name: ", ws[i]))
   res <- run_VIM(df = df,
                  sl_Q = sl_Q, 
                  sl_g = sl_g,

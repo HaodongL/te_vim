@@ -19,7 +19,7 @@ lrnr_gam_g <- Lrnr_gam$new('A ~ s(X1) + s(X2) + ti(X1,X2)')
 lrnr_hal <- Lrnr_hal9001$new(num_knots = c(50, 25, 15))
 lrnr_hal_fast <- Lrnr_hal9001$new(num_knots = c(40, 15, 10))
 lrnr_hal_xfast <- Lrnr_hal9001$new(num_knots = c(20, 10, 5))
-lrnr_uhal_fast <- Lrnr_uhal9001$new(num_knots = c(50, 25, 15))
+# lrnr_uhal_fast <- Lrnr_uhal9001$new(num_knots = c(50, 25, 15))
 # lrnr_grf <- Lrnr_grf$new()
 # lrnr_lm_inter<- Lrnr_glm$new(formula = "~.^2")
 grid_params <- list(
@@ -100,9 +100,9 @@ sl_x <- Lrnr_sl$new(
   metalearner = ls_metalearner
 )
 
-sl_Q <- sl_Q
-sl_g <- sl_g
-sl_x <- sl_x
+sl_Q <- lrnr_hal_fast
+sl_g <- lrnr_hal_fast
+sl_x <- lrnr_hal_fast
 # 
 sl_Q_hal <- lrnr_hal_fast
 sl_g_hal <- lrnr_hal_fast
