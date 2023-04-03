@@ -1,7 +1,4 @@
 ---
-title: "analysis_1"
-author: "Haodong Li"
-date: "2023-02-03"
 output: pdf_document
 ---
 
@@ -34,61 +31,269 @@ cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
               "vkantag", "caantag", "thiazide", "loopdiur")
 ```
 
-## 1. Stratified TMLE
-```{r}
-df_strat <- readRDS("~/Repo/te_vim/data/df_strat.RDS")
-p_cate_strat <- plot_tmle_strat(cm_names, df_strat)
-p_cate_strat
-
-ggsave("tnp/p_cate_strat.png", p_cate_strat, width = 7, height = 7)
+# 1. Primary outcome: insulin initiation + other diab outcomes 
+```{r, echo=FALSE}
+outcome = 'diab'
 ```
 
 
-## 2. TMLE Effect Modification
-```{r}
-df_em <- readRDS("~/Repo/te_vim/data/df_em.RDS")
-p_cate_strat <- plot_tmle_em(cm_names, df_em)
-p_cate_strat
+## 1.1. VTE Estimation
+```{r, echo=FALSE}
+res_vte <-  readRDS(paste0("~/Repo/te_vim/analy_res/res_vte_t_", outcome, ".RDS"))
+
+# cat(paste0(" VTE TMLE:", "\n", 
+#            "  coef:", res_vte$res_tmle$coef,"\n", 
+#            "  ci low:", res_vte$res_tmle$ci_l,"\n", 
+#            "  ci up:", res_vte$res_tmle$ci_u, "\n"),
+#     paste0("VTE EE:", "\n", 
+#            "  coef:", res_vte$res_ee$coef,"\n", 
+#            "  ci low:", res_vte$res_ee$ci_l,"\n", 
+#            "  ci up:", res_vte$res_ee$ci_u, "\n"))
+
+df_vte <- data.frame("estimator" = c("TMLE", "EE"),
+                     "est" = c(res_vte$res_tmle$coef, 
+                               res_vte$res_ee$coef),
+                     "lower" = c(res_vte$res_tmle$ci_l, 
+                                 res_vte$res_ee$ci_l),
+                     "upper" = c(res_vte$res_tmle$ci_u, 
+                                 res_vte$res_ee$ci_u))
+
+df_vte <- df_vte %>% mutate(across(where(is.numeric), round, 4))
+kable(df_vte, "latex", booktabs = T, linesep = "", caption = "VTE Estiamtes") %>% 
+  kable_styling(font_size = 9,latex_options = "HOLD_position")
 ```
 
 
-## 3. VTE Estimation
-```{r}
-res_vte <-  readRDS("~/Repo/te_vim/data/res_vte_t.RDS")
-
-print(paste0("VTE TMLE:"))
-print(paste0("coef:", res_vte$res_tmle$coef))
-print(paste0("ci low:", res_vte$res_tmle$ci_l))
-print(paste0("ci up:", res_vte$res_tmle$ci_u))
-
-
-print(paste0("VTE EE:"))
-print(paste0("coef:", res_vte$res_ee$coef))
-print(paste0("ci low:", res_vte$res_ee$ci_l))
-print(paste0("ci up:", res_vte$res_ee$ci_u))
-```
-
-
-## 4. VIM Estimation
-```{r, echo=FALSE, fig.cap="VIM estiamtes", out.width = '150%', fig.align="center", fig.pos="H"}
-df_theta <-  readRDS("~/Repo/te_vim/data/df_vim_t.RDS")
+## 1.2. VIM Estimation
+```{r, echo=FALSE, fig.width = 10, fig.height = 8, dpi = 720, fig.cap="VIM Estiamtes", fig.align="center", fig.pos="H"}
+df_theta <-  readRDS(paste0("~/Repo/te_vim/analy_res/df_vim_t_", outcome, ".RDS"))
 
 p_theta_ee <- plot_theta(df_theta, estimator = "EE")
 p_theta_tmle <- plot_theta(df_theta, estimator = "TMLE")
-p_theta_ss <- plot_theta(df_theta, estimator = "SS")
 
 p_theta_all <-
   ggarrange(p_theta_ee + ggtitle("EE VIM estimates (T-learner)"),
-            p_theta_tmle + ggtitle("TMLE VIM estimates (T-learner)"),
-            p_theta_ss + ggtitle("SS VIM estimates (T-learner)"))
+            p_theta_tmle + ggtitle("TMLE VIM estimates (T-learner)"))
 
 p_theta_all
 ```
 
+## 1.3 Stratified TMLE
+```{r, echo=FALSE, fig.width = 3, fig.height = 6, fig.cap="Stratified TMLE ATE Estiamtes", fig.align="center", fig.pos="H"}
+df_strat <- readRDS(paste0("~/Repo/te_vim/analy_res/df_strat_", outcome, ".RDS"))
+p_cate_strat <- plot_tmle_strat(cm_names, df_strat)
+p_cate_strat
+```
 
 
+## 1.4. TMLE Effect Modification
+```{r, echo=FALSE}
+fit_em_summary <- readRDS(paste0("~/Repo/te_vim/analy_res/fit_em_su_", outcome, ".RDS"))
+df_em <- fit_em_summary %>% mutate(across(where(is.numeric), round, 4))
+df_em <- df_em[,2:7]
+
+kable(df_em, "latex", booktabs = T, linesep = "", caption = "TMLE Effect Modification Estiamtes") %>% kable_styling(font_size = 9,latex_options = "HOLD_position")
+```
+
+\newpage
+# 2. Alternative Primary outcome: insulin intesnfication + other diab outcomes
+
+```{r, echo=FALSE}
+outcome = 'diab2'
+```
 
 
+## 2.1. VTE Estimation
+```{r, echo=FALSE}
+res_vte <-  readRDS(paste0("~/Repo/te_vim/analy_res/res_vte_t_", outcome, ".RDS"))
+
+# cat(paste0(" VTE TMLE:", "\n",
+#            "  coef:", res_vte$res_tmle$coef,"\n",
+#            "  ci low:", res_vte$res_tmle$ci_l,"\n",
+#            "  ci up:", res_vte$res_tmle$ci_u, "\n"),
+#     paste0("VTE EE:", "\n",
+#            "  coef:", res_vte$res_ee$coef,"\n",
+#            "  ci low:", res_vte$res_ee$ci_l,"\n",
+#            "  ci up:", res_vte$res_ee$ci_u, "\n"))
+
+df_vte <- data.frame("estimator" = c("TMLE", "EE"),
+                     "est" = c(res_vte$res_tmle$coef,
+                               res_vte$res_ee$coef),
+                     "lower" = c(res_vte$res_tmle$ci_l,
+                                 res_vte$res_ee$ci_l),
+                     "upper" = c(res_vte$res_tmle$ci_u,
+                                 res_vte$res_ee$ci_u))
+
+df_vte <- df_vte %>% mutate(across(where(is.numeric), round, 4))
+kable(df_vte, "latex", booktabs = T, linesep = "", caption = "VTE Estiamtes") %>%
+  kable_styling(font_size = 9,latex_options = "HOLD_position")
+```
+
+
+## 2.2. VIM Estimation
+```{r, echo=FALSE, fig.width = 10, fig.height = 8, dpi = 720, fig.cap="VIM Estiamtes", fig.align="center", fig.pos="H"}
+df_theta <-  readRDS(paste0("~/Repo/te_vim/analy_res/df_vim_t_", outcome, ".RDS"))
+
+p_theta_ee <- plot_theta(df_theta, estimator = "EE")
+p_theta_tmle <- plot_theta(df_theta, estimator = "TMLE")
+
+p_theta_all <-
+  ggarrange(p_theta_ee + ggtitle("EE VIM estimates (T-learner)"),
+            p_theta_tmle + ggtitle("TMLE VIM estimates (T-learner)"))
+
+p_theta_all
+```
+
+## 2.3 Stratified TMLE
+```{r, echo=FALSE, fig.width = 3, fig.height = 6, fig.cap="Stratified TMLE ATE Estiamtes", fig.align="center", fig.pos="H"}
+df_strat <- readRDS(paste0("~/Repo/te_vim/analy_res/df_strat_", outcome, ".RDS"))
+p_cate_strat <- plot_tmle_strat(cm_names, df_strat)
+p_cate_strat
+```
+
+
+## 2.4. TMLE Effect Modification
+```{r, echo=FALSE}
+fit_em_summary <- readRDS(paste0("~/Repo/te_vim/analy_res/fit_em_su_", outcome, ".RDS"))
+df_em <- fit_em_summary %>% mutate(across(where(is.numeric), round, 4))
+df_em <- df_em[,2:7]
+
+kable(df_em, "latex", booktabs = T, linesep = "", caption = "TMLE Effect Modification Estiamtes") %>% kable_styling(font_size = 9,latex_options = "HOLD_position")
+```
+
+
+\newpage
+# 3. Secondary outcome: cv outcomes
+
+```{r, echo=FALSE}
+outcome = 'cv'
+```
+
+
+## 3.1. VTE Estimation
+```{r, echo=FALSE}
+res_vte <-  readRDS(paste0("~/Repo/te_vim/analy_res/res_vte_t_", outcome, ".RDS"))
+
+# cat(paste0(" VTE TMLE:", "\n",
+#            "  coef:", res_vte$res_tmle$coef,"\n",
+#            "  ci low:", res_vte$res_tmle$ci_l,"\n",
+#            "  ci up:", res_vte$res_tmle$ci_u, "\n"),
+#     paste0("VTE EE:", "\n",
+#            "  coef:", res_vte$res_ee$coef,"\n",
+#            "  ci low:", res_vte$res_ee$ci_l,"\n",
+#            "  ci up:", res_vte$res_ee$ci_u, "\n"))
+
+df_vte <- data.frame("estimator" = c("TMLE", "EE"),
+                     "est" = c(res_vte$res_tmle$coef,
+                               res_vte$res_ee$coef),
+                     "lower" = c(res_vte$res_tmle$ci_l,
+                                 res_vte$res_ee$ci_l),
+                     "upper" = c(res_vte$res_tmle$ci_u,
+                                 res_vte$res_ee$ci_u))
+
+df_vte <- df_vte %>% mutate(across(where(is.numeric), round, 4))
+kable(df_vte, "latex", booktabs = T, linesep = "", caption = "VTE Estiamtes") %>%
+  kable_styling(font_size = 9,latex_options = "HOLD_position")
+```
+
+
+## 3.2. VIM Estimation
+```{r, echo=FALSE, fig.width = 10, fig.height = 8, dpi = 720, fig.cap="VIM Estiamtes", fig.align="center", fig.pos="H"}
+df_theta <-  readRDS(paste0("~/Repo/te_vim/analy_res/df_vim_t_", outcome, ".RDS"))
+
+p_theta_ee <- plot_theta(df_theta, estimator = "EE")
+p_theta_tmle <- plot_theta(df_theta, estimator = "TMLE")
+
+p_theta_all <-
+  ggarrange(p_theta_ee + ggtitle("EE VIM estimates (T-learner)"),
+            p_theta_tmle + ggtitle("TMLE VIM estimates (T-learner)"))
+
+p_theta_all
+```
+
+## 3.3 Stratified TMLE
+```{r, echo=FALSE, fig.width = 3, fig.height = 6, fig.cap="Stratified TMLE ATE Estiamtes", fig.align="center", fig.pos="H"}
+df_strat <- readRDS(paste0("~/Repo/te_vim/analy_res/df_strat_", outcome, ".RDS"))
+p_cate_strat <- plot_tmle_strat(cm_names, df_strat)
+p_cate_strat
+```
+
+
+## 3.4. TMLE Effect Modification
+```{r, echo=FALSE}
+fit_em_summary <- readRDS(paste0("~/Repo/te_vim/analy_res/fit_em_su_", outcome, ".RDS"))
+df_em <- fit_em_summary %>% mutate(across(where(is.numeric), round, 4))
+df_em <- df_em[,2:7]
+
+kable(df_em, "latex", booktabs = T, linesep = "", caption = "TMLE Effect Modification Estiamtes") %>% kable_styling(font_size = 9,latex_options = "HOLD_position")
+```
+
+
+\newpage
+# 4. Secondary outcome: HBA1C
+
+```{r, echo=FALSE}
+outcome = 'a1c'
+```
+
+
+## 4.1. VTE Estimation
+```{r, echo=FALSE}
+res_vte <-  readRDS(paste0("~/Repo/te_vim/analy_res/res_vte_t_", outcome, ".RDS"))
+
+# cat(paste0(" VTE TMLE:", "\n",
+#            "  coef:", res_vte$res_tmle$coef,"\n",
+#            "  ci low:", res_vte$res_tmle$ci_l,"\n",
+#            "  ci up:", res_vte$res_tmle$ci_u, "\n"),
+#     paste0("VTE EE:", "\n",
+#            "  coef:", res_vte$res_ee$coef,"\n",
+#            "  ci low:", res_vte$res_ee$ci_l,"\n",
+#            "  ci up:", res_vte$res_ee$ci_u, "\n"))
+
+df_vte <- data.frame("estimator" = c("TMLE", "EE"),
+                     "est" = c(res_vte$res_tmle$coef,
+                               res_vte$res_ee$coef),
+                     "lower" = c(res_vte$res_tmle$ci_l,
+                                 res_vte$res_ee$ci_l),
+                     "upper" = c(res_vte$res_tmle$ci_u,
+                                 res_vte$res_ee$ci_u))
+
+df_vte <- df_vte %>% mutate(across(where(is.numeric), round, 4))
+kable(df_vte, "latex", booktabs = T, linesep = "", caption = "VTE Estiamtes") %>%
+  kable_styling(font_size = 9,latex_options = "HOLD_position")
+```
+
+
+## 4.2. VIM Estimation
+```{r, echo=FALSE, fig.width = 10, fig.height = 8, dpi = 720, fig.cap="VIM Estiamtes", fig.align="center", fig.pos="H"}
+df_theta <-  readRDS(paste0("~/Repo/te_vim/analy_res/df_vim_t_", outcome, ".RDS"))
+
+p_theta_ee <- plot_theta(df_theta, estimator = "EE")
+p_theta_tmle <- plot_theta(df_theta, estimator = "TMLE")
+
+p_theta_all <-
+  ggarrange(p_theta_ee + ggtitle("EE VIM estimates (T-learner)"),
+            p_theta_tmle + ggtitle("TMLE VIM estimates (T-learner)"))
+
+p_theta_all
+```
+
+## 4.3 Stratified TMLE
+```{r, echo=FALSE, fig.width = 3, fig.height = 6, fig.cap="Stratified TMLE ATE Estiamtes", fig.align="center", fig.pos="H"}
+df_strat <- readRDS(paste0("~/Repo/te_vim/analy_res/df_strat_", outcome, ".RDS"))
+p_cate_strat <- plot_tmle_strat(cm_names, df_strat)
+p_cate_strat
+```
+
+
+## 4.4. TMLE Effect Modification
+```{r, echo=FALSE}
+fit_em_summary <- readRDS(paste0("~/Repo/te_vim/analy_res/fit_em_su_", outcome, ".RDS"))
+df_em <- fit_em_summary %>% mutate(across(where(is.numeric), round, 4))
+df_em <- df_em[,2:7]
+
+kable(df_em, "latex", booktabs = T, linesep = "", caption = "TMLE Effect Modification Estiamtes") %>% kable_styling(font_size = 9,latex_options = "HOLD_position")
+```
 
 
 

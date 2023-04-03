@@ -19,11 +19,11 @@ source(paste0(repo_path, "R/est_function/tmle_stratified.R"))
 source(paste0(repo_path, "R/analysis/analy_helper.R"))
 
 ### ------------  Part 1. import data  ------------ ###
-outcome = 'diab'; t = 24
-df <- get_data(outcome, t, rm_baseIns=T)
+# outcome = 'diab'; t = 24
+# df <- get_data(outcome, t, rm_baseIns=T)
 
-# outcome = 'diab2'; t = 24
-# df <- get_data(outcome, t)
+outcome = 'a1c'; t = 24
+df <- get_data(outcome, t)
 
 nodes <- list(W = setdiff(names(df), c("Y", "A")),
               A = 'A',
@@ -43,7 +43,7 @@ registerDoParallel(9)
 tic()
 df_strat <- tmle_stratified(df, cm_names)
 toc()
-saveRDS(df_strat, file = "~/Repo/te_vim/data/df_strat.RDS")
+saveRDS(df_strat, file = "~/Repo/te_vim/data/df_strat_a1c.RDS")
 
 
 # df_strat <- readRDS("~/Repo/te_vim/data/df_strat.RDS")

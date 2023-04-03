@@ -33,6 +33,7 @@ run_tmle3 <- function(df){
 tmle_stratified <- function(df, cm_names){
   n_cm <- length(cm_names)
   df_res <- foreach(i = 1:n_cm, .combine = 'rbind') %dopar% {
+    # print(paste0("CM name: ", cm_names[i]))
     cm <- cm_names[i]
     df_true <- df %>% 
       filter(if_any(all_of(cm), ~ .x == "TRUE")) %>% 
