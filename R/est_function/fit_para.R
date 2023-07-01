@@ -22,6 +22,7 @@ fit_para <- function(df,
   res_Qg <- fitSL(df, sl_Q, sl_g, Q_bounds, g_bounds) # big object rm later
   Q_fit <- res_Qg$Q_fit # big object rm later
   g_fit <- res_Qg$g_fit # big object rm later
+  # Q_fit$print()
   
   Q0_task <- make_sl3_Task(data = df %>% mutate(A=0), covariates = all_covar)
   Q1_task <- make_sl3_Task(data = df %>% mutate(A=1), covariates = all_covar)
@@ -64,13 +65,15 @@ fit_para <- function(df,
   }
   
   # temp, add tiny values to prevent constant cols
-  tau_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau + runif(n, 1e-11, 1e-10) , #
+  tau_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau + runif(n, 1e-11, 1e-10), #
                      outcome = 'tau', para = 'tau_s', ws = ws)
   tau_s <- tau_s_fit$predict()
+  # tau_s_fit$print()
   
-  gamma_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau + runif(n, 1e-11, 1e-10) , #
+  gamma_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau + runif(n, 1e-11, 1e-10), #
                        outcome = 'tau', para = 'gamma_s', ws = ws)
   gamma_s <- gamma_s_fit$predict()
+  # gamma_s_fit$print()
   
   # bound tau_s in [-1,1]
   if (!is.null(tau_s_bounds)){
@@ -217,7 +220,8 @@ fit_cvpara <- function(df,
     ##================================##
     tau_task_t <- make_sl3_Task(covariates = all_w, data = df_t)
     tau_task_v <- make_sl3_Task(covariates = all_w, data = df_v)
-    s_task_v <- make_sl3_Task(covariates = all_wsc, data = df_v)
+    tau_s_task_v <- make_sl3_Task(covariates = all_wsc, data = df_v)
+    gamma_s_task_v <- make_sl3_Task(covariates = all_wsc, data = df_v)
     
     
     if (dr){
@@ -244,12 +248,14 @@ fit_cvpara <- function(df,
     }
     
     # fit and pred
-    tau_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t, outcome = 'tau', para = 'tau_s', ws = ws)
-    tau_s_v <- tau_s_fit$predict(s_task_v)
+    tau_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t + runif(nrow(df_t), 1e-11, 1e-10), 
+                       outcome = 'tau', para = 'tau_s', ws = ws)
+    tau_s_v <- tau_s_fit$predict(tau_s_task_v)
     
     # fit and pred
-    gamma_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t, outcome = 'tau', para = 'gamma_s', ws = ws)
-    gamma_s_v <- gamma_s_fit$predict(s_task_v)
+    gamma_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t + runif(nrow(df_t), 1e-11, 1e-10), 
+                         outcome = 'tau', para = 'gamma_s', ws = ws)
+    gamma_s_v <- gamma_s_fit$predict(gamma_s_task_v)
     
     # bound tau_s in [-1,1]
     if (!is.null(tau_s_bounds)){
@@ -330,9 +336,6 @@ fit_x <- function(df, sl_x, po = NULL, tau = NULL, outcome = 'po', para = 'tau',
     df_train <- cbind(df, tau)
   }
   
-  # folds <- origami::folds_vfold(nrow(df))
-  folds = origami::make_folds(n = nrow(df), V = 10)
-  
   # print(setdiff(names(df_train), c('Y', 'A', outcome, ws)))
   
   # setup sl3
@@ -340,7 +343,6 @@ fit_x <- function(df, sl_x, po = NULL, tau = NULL, outcome = 'po', para = 'tau',
     data = df_train,
     covariates = setdiff(names(df_train), c('Y', 'A', outcome, ws)),
     outcome = outcome,
-    folds = folds
   )
   
   fit <- sl_x$train(task)

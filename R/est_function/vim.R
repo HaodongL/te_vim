@@ -123,6 +123,12 @@ EE_VIM <- function(data){
   
   VIM <- mean((po - tau_s)^2 - (po - tau)^2)
   ic <- (po - tau_s)^2 - (po - tau)^2 - VIM
+  # A <- data$A
+  # Y <- data$Y
+  # # Q, g, tau, tau_s, gamma_s
+  # QA <- data$mua_hat
+  # gn <- data$pi_hat
+  # ic <- 2*(tau - tau_s)*(A/gn - (1-A)/(1-gn))*(Y-QA) + (tau - tau_s)^2 - VIM
   ss <- sqrt(var(ic)/N)
   
   coef <- VIM
@@ -238,7 +244,9 @@ TMLE_VIM <- function(data, max_it = 600, lr = 1e-4){
   
   # calculate Theta_s, scale back
   theta_s_star <- mean(gamma_s_star - tau_s_star^2)
-  ic <- 2*(tau_star - tau_s_star)*(A/gn - (1-A)/(1-gn))*(Y-QA_star) + (tau_star - tau_s_star)^2 - theta_s_star
+  # ic <- 2*(tau_star - tau_s_star)*(A/gn - (1-A)/(1-gn))*(Y-QA_star) + (tau_star - tau_s_star)^2 - theta_s_star
+  # use initial est for ic
+  ic <- 2*(tau_0 - tau_s_0)*(A/gn - (1-A)/(1-gn))*(Y-QA_0) + (tau_0 - tau_s_0)^2
   se <- sqrt(var(ic)/N)
   
   out<- list(
@@ -246,8 +254,16 @@ TMLE_VIM <- function(data, max_it = 600, lr = 1e-4){
     std_err = se,
     ci_l = theta_s_star - 1.96*se,
     ci_u = theta_s_star + 1.96*se,
-    ic = ic
+    ic = ic,
+    df_fit_star = data %>% mutate(mua_hat_star = QA_star,
+                                    tau_star = tau_star,
+                                    tau_s_star = tau_s_star,
+                                    gamma_s_star = gamma_s_star)
   )
+  
+  # print(out$coef)
+  # print(out$ci_l)
+  # print(out$ci_u)
   
   return(out)
 }
@@ -560,8 +576,8 @@ TMLE_VIM2 <- function(data, max_it = 600, lr = 1e-4){
     ci_u = exp(ci_u),
     ic = ic
   )
-  print(psi1)
-  print(psi2)
+  # print(psi1)
+  # print(psi2)
   return(out)
 }
 
