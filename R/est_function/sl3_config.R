@@ -66,6 +66,7 @@ lrnr_stack_Q <- make_learner("Stack",
                              lrnr_ranger,
                              lrnr_lm,
                              lrnr_earth,
+                             lrnr_gam,
                              lrnr_hal_fast)
 
 lrnr_stack_x <- make_learner("Stack",
@@ -73,6 +74,7 @@ lrnr_stack_x <- make_learner("Stack",
                              lrnr_ranger,
                              lrnr_lm,
                              lrnr_earth,
+                             lrnr_gam,
                              lrnr_hal_fast)
 
 ls_metalearner <- make_learner(Lrnr_nnls)

@@ -1,6 +1,5 @@
 library(speff2trial)
 library(dplyr)
-library(dplyr)
 library(sl3)
 library(tmle3)
 library(foreach)
@@ -57,4 +56,4 @@ df_vim <- foreach(i = 1:n_ws, .combine = 'rbind') %dopar% {
   return(df_vim_i)
 }
 
-saveRDS(df_vim, file = "~/Repo/te_vim/demo/demo_res_t.RDS")
+saveRDS(df_vim, file = "~/Repo/te_vim/demo/demo_res_cvt.RDS")

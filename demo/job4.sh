@@ -9,4 +9,4 @@
 #SBATCH --mail-user=haodong_li@berkeley.edu
 #SBATCH --mail-type=ALL
 module swap r/4.2.1
-Rscript demo_run2.R
+Rscript demo_run4.R

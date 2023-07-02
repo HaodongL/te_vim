@@ -151,6 +151,7 @@ TMLE_VIM <- function(data, max_it = 600, lr = 1e-4){
   N <- nrow(data)
   A <- data$A
   Y <- data$Y
+  po <- data$po
   
   # Q, g, tau, tau_s, gamma_s
   QA_0 <- data$mua_hat
@@ -246,7 +247,8 @@ TMLE_VIM <- function(data, max_it = 600, lr = 1e-4){
   theta_s_star <- mean(gamma_s_star - tau_s_star^2)
   # ic <- 2*(tau_star - tau_s_star)*(A/gn - (1-A)/(1-gn))*(Y-QA_star) + (tau_star - tau_s_star)^2 - theta_s_star
   # use initial est for ic
-  ic <- 2*(tau_0 - tau_s_0)*(A/gn - (1-A)/(1-gn))*(Y-QA_0) + (tau_0 - tau_s_0)^2
+  # ic <- 2*(tau_0 - tau_s_0)*(A/gn - (1-A)/(1-gn))*(Y-QA_0) + (tau_0 - tau_s_0)^2
+  ic <- (po - tau_s_0)^2 - (po - tau_0)^2
   se <- sqrt(var(ic)/N)
   
   out<- list(
@@ -254,11 +256,11 @@ TMLE_VIM <- function(data, max_it = 600, lr = 1e-4){
     std_err = se,
     ci_l = theta_s_star - 1.96*se,
     ci_u = theta_s_star + 1.96*se,
-    ic = ic,
-    df_fit_star = data %>% mutate(mua_hat_star = QA_star,
-                                    tau_star = tau_star,
-                                    tau_s_star = tau_s_star,
-                                    gamma_s_star = gamma_s_star)
+    ic = ic
+    # df_fit_star = data %>% mutate(mua_hat_star = QA_star,
+    #                                 tau_star = tau_star,
+    #                                 tau_s_star = tau_s_star,
+    #                                 gamma_s_star = gamma_s_star)
   )
   
   # print(out$coef)

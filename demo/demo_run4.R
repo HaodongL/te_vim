@@ -11,12 +11,10 @@ repo_path = "~/Repo/te_vim/"
 source(paste0(repo_path, "R/est_function/sl3_config.R"))
 source(paste0(repo_path, "R/est_function/fit_para.R"))
 source(paste0(repo_path, "R/est_function/vim.R"))
-source(paste0(repo_path, "R/analysis/analy_helper.R"))
 
 ### ------------  Part 1. Data ------------ ###
 data(ACTG175)
 df <- ACTG175
-# df$cd420 <- df$cd420/100
 
 df <- df %>% 
   filter(arms == 1 | arms == 3) %>% 
@@ -43,7 +41,7 @@ df_vim <- foreach(i = 1:n_ws, .combine = 'rbind') %dopar% {
                  sl_g = sl_g,
                  sl_x = sl_x,
                  ws = ws[i], 
-                 cv = T,
+                 cv = F,
                  dr = T,
                  max_it = 1e4)
   res_ee <- res$resEE
@@ -58,4 +56,4 @@ df_vim <- foreach(i = 1:n_ws, .combine = 'rbind') %dopar% {
   return(df_vim_i)
 }
 
-saveRDS(df_vim, file = "~/Repo/te_vim/demo/demo_res_cvdr.RDS")
+saveRDS(df_vim, file = "~/Repo/te_vim/demo/demo_res_nocvdr.RDS")

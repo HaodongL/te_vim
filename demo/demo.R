@@ -20,7 +20,7 @@ source(paste0(repo_path, "R/est_function/vim.R"))
 
 data(ACTG175)
 df <- ACTG175
-# df$cd420 <- df$cd420 - mean(df$cd420)
+# df$cd420 <- df$cd420/100
 
 df_sub <- df %>% 
   filter(arms == 1 | arms == 3) %>% 
@@ -50,7 +50,7 @@ df_vim <- foreach(i = 1:n_ws, .combine = 'rbind') %do% {
                  sl_g = sl_g,
                  sl_x = sl_x,
                  ws = ws[i], 
-                 cv = F,
+                 cv = T,
                  dr = T,
                  max_it = 1e4)
   res_ee <- res$resEE
@@ -103,7 +103,7 @@ saveRDS(df_vim, file = "~/Repo/te_vim/data/df_vim_t_demo_sl.RDS")
 df_theta <-  readRDS("~/Repo/te_vim/data/df_vim_t_demo_sl.RDS")
 
 
-
+df_theta <-  readRDS("~/Repo/te_vim/data/demo_res_t.RDS")
 
 df_theta <- df_vim
 
