@@ -57,12 +57,12 @@ n_ws <- length(ws)
 # res_tmle <- res$resTMLE
 
 
-df_fit <- fit_para(df = df_sub,
+df_fit <- fit_cvpara(df = df_sub,
                    sl_Q = sl_Q, 
                    sl_g = sl_g,
                    sl_x = sl_x,
                    ws = ws[2],
-                   dr = F,
+                   dr = T,
                    Q_bounds = NULL,
                    g_bounds = c(0.025, 0.975),
                    tau_bounds = NULL,

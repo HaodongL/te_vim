@@ -100,21 +100,29 @@ resSS <- SS_VIM(df_fit)
 saveRDS(df_vim, file = "~/Repo/te_vim/data/df_vim_t_demo_sl.RDS")
 
 
-df_theta <-  readRDS("~/Repo/te_vim/data/df_vim_t_demo_sl.RDS")
+df_theta <- readRDS("~/Repo/te_vim/data/df_vim_t_demo_sl.RDS")
 
 
-df_theta <-  readRDS("~/Repo/te_vim/data/demo_res_t.RDS")
-
-df_theta <- df_vim
+df_theta <- readRDS("~/Repo/te_vim/data/demo_res_cvdr_ense.RDS")
+# df_theta <- df_vim
 
 p_theta_ee <- plot_theta(df_theta, estimator = "EE")
 p_theta_tmle <- plot_theta(df_theta, estimator = "TMLE")
 
 p_theta_all <-
-  ggarrange(p_theta_ee + ggtitle("EE VIM estimates (T-learner)"),
-            p_theta_tmle + ggtitle("TMLE VIM estimates (T-learner)"))
+  ggarrange(p_theta_ee + ggtitle("EE (Discrete SL)"),
+            p_theta_tmle + ggtitle("TMLE (Discrete SL)"))
 
 p_theta_all
+
+
+ggsave(paste0(repo_path, "tnp/demo_theta_dr_disc.png"), p_theta_all)
+
+ggsave("estimates (DR-learner, Ensemble SL)", p_theta_all)
+
+ggsave("estimates (T-learner, Discrete SL)", p_theta_all)
+
+ggsave("estimates (DR-learner, Discrete SL)", p_theta_all)
 
 
 p_theta_ss <- plot_theta(df_theta, estimator = "SS")

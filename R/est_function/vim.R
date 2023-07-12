@@ -52,6 +52,9 @@ run_VIM <- function(df,
   # tmle_vim
   resTMLE <- TMLE_VIM(df_fit, max_it, lr)
   
+  # TEMP
+  resSS <- TMLE_VIM(df_fit, max_it, lr, logtrans = T)
+  
   if (y_l != 0 | y_u != 1){
     df_fit$Y <- rescale(df_fit$Y, y_l, y_u)
     df_fit$tau <- df_fit$tau*(y_u - y_l)
@@ -63,7 +66,8 @@ run_VIM <- function(df,
   # ee_vim
   resEE <- EE_VIM(df_fit)
   # ss_vim
-  resSS <- SS_VIM(df_fit)
+  # resSS <- SS_VIM(df_fit)
+  
   
   res <- list('resTMLE' = resTMLE, 
               'resEE' = resEE,
@@ -122,32 +126,30 @@ EE_VIM <- function(data){
   Sig1 <- sum(po^2)/N - ATE^2
   
   VIM <- mean((po - tau_s)^2 - (po - tau)^2)
-  ic <- (po - tau_s)^2 - (po - tau)^2 - VIM
-  # A <- data$A
-  # Y <- data$Y
-  # # Q, g, tau, tau_s, gamma_s
-  # QA <- data$mua_hat
-  # gn <- data$pi_hat
-  # ic <- 2*(tau - tau_s)*(A/gn - (1-A)/(1-gn))*(Y-QA) + (tau - tau_s)^2 - VIM
+  # ic <- (po - tau_s)^2 - (po - tau)^2 - VIM
+  A <- data$A
+  Y <- data$Y
+  QA <- data$mua_hat
+  gn <- data$pi_hat
+  ic <- 2*(tau - tau_s)*(A/gn - (1-A)/(1-gn))*(Y-QA) + (tau - tau_s)^2 - VIM
   ss <- sqrt(var(ic)/N)
   
   coef <- VIM
   std_err <- ss
   names(coef) <- names(std_err) <- c("VIM_Theta_s")
   
-  out<- list(
+  out <- list(
     coef = coef,
     std_err = std_err,
     ci_l = coef - 1.96*std_err,
     ci_u = coef + 1.96*std_err,
     ic = ic
   )
-  
   return(out)
 }
 
 # Estimator: TMLE
-TMLE_VIM <- function(data, max_it = 600, lr = 1e-4){
+TMLE_VIM <- function(data, max_it = 600, lr = 1e-4, logtrans = FALSE){
   N <- nrow(data)
   A <- data$A
   Y <- data$Y
@@ -247,20 +249,30 @@ TMLE_VIM <- function(data, max_it = 600, lr = 1e-4){
   theta_s_star <- mean(gamma_s_star - tau_s_star^2)
   # ic <- 2*(tau_star - tau_s_star)*(A/gn - (1-A)/(1-gn))*(Y-QA_star) + (tau_star - tau_s_star)^2 - theta_s_star
   # use initial est for ic
-  # ic <- 2*(tau_0 - tau_s_0)*(A/gn - (1-A)/(1-gn))*(Y-QA_0) + (tau_0 - tau_s_0)^2
-  ic <- (po - tau_s_0)^2 - (po - tau_0)^2
-  se <- sqrt(var(ic)/N)
+  theta_s_0 <- mean(gamma_s_0 - tau_s_0^2)
+  ic <- 2*(tau_0 - tau_s_0)*(A/gn - (1-A)/(1-gn))*(Y-QA_0) + (tau_0 - tau_s_0)^2 - theta_s_0
+  
+  if (logtrans == TRUE){
+    ic <- ic/theta_s_star
+    se <- sqrt(var(ic)/N)
+    ci_l <- exp(log(theta_s_star) - 1.96*se)
+    ci_u <- exp(log(theta_s_star) + 1.96*se)
+  }else{
+    se <- sqrt(var(ic)/N)
+    ci_l = theta_s_star - 1.96*se
+    ci_u = theta_s_star + 1.96*se
+  }
   
   out<- list(
     coef = theta_s_star,
     std_err = se,
-    ci_l = theta_s_star - 1.96*se,
-    ci_u = theta_s_star + 1.96*se,
-    ic = ic
-    # df_fit_star = data %>% mutate(mua_hat_star = QA_star,
-    #                                 tau_star = tau_star,
-    #                                 tau_s_star = tau_s_star,
-    #                                 gamma_s_star = gamma_s_star)
+    ci_l = ci_l,
+    ci_u = ci_u,
+    ic = ic,
+    df_fit_star = data %>% mutate(mua_hat_star = QA_star,
+                                    tau_star = tau_star,
+                                    tau_s_star = tau_s_star,
+                                    gamma_s_star = gamma_s_star)
   )
   
   # print(out$coef)
