@@ -21,7 +21,7 @@ res <- run_VTE(df = df,
                  sl_x = sl_x,
                  ws = c('X2'), 
                  cv = F,
-                 dr = T,
+                 dr = F,
                  max_it = 1e4)
 toc()
 res_ee <- res$resEE

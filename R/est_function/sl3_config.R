@@ -77,6 +77,18 @@ lrnr_stack_x <- make_learner("Stack",
                              lrnr_gam,
                              lrnr_hal_fast)
 
+lrnr_stack_Q <- make_learner("Stack",
+                             lrnr_xgb,
+                             lrnr_ranger,
+                             lrnr_lm,
+                             lrnr_earth)
+
+lrnr_stack_x <- make_learner("Stack",
+                             lrnr_xgb,
+                             lrnr_ranger,
+                             lrnr_lm,
+                             lrnr_earth)
+
 ls_metalearner <- make_learner(Lrnr_nnls)
 lb_metalearner <- make_learner(Lrnr_solnp,
                                learner_function = metalearner_logistic_binomial,
@@ -118,9 +130,9 @@ sl_x <- Lrnr_sl$new(
   metalearner = ls_metalearner
 )
 
-# sl_Q <- lrnr_earth
-# sl_g <- lrnr_earth
-# sl_x <- lrnr_earth
+sl_Q <- lrnr_earth
+sl_g <- lrnr_earth
+sl_x <- lrnr_earth
 
 sl_Q_hal <- lrnr_hal_fast
 sl_g_hal <- lrnr_hal_fast

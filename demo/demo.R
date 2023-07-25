@@ -25,7 +25,7 @@ df <- ACTG175
 df_sub <- df %>% 
   filter(arms == 1 | arms == 3) %>% 
   select(c("arms", "cd420", "age", "wtkg", "karnof", "cd40", "cd80",
-           "homo", "gender", "race", "symptom", "drugs", "hemo", "oprior")) %>% 
+           "homo", "gender", "race", "symptom", "drugs", "hemo", "str2")) %>% 
   rename(A = "arms",
          Y = "cd420") %>% 
   mutate(A = as.numeric(A == 3))
@@ -34,7 +34,7 @@ df_sub <- df %>%
 # vim loop over all covariates
 set.seed(1)
 ws = c("age", "wtkg", "karnof", "cd40", "cd80", "homo", 
-       "gender", "race", "symptom", "drugs", "hemo", "oprior")
+       "gender", "race", "symptom", "drugs", "hemo", "str2")
 
 # ws = c("gender")
 
@@ -103,20 +103,27 @@ saveRDS(df_vim, file = "~/Repo/te_vim/data/df_vim_t_demo_sl.RDS")
 df_theta <- readRDS("~/Repo/te_vim/data/df_vim_t_demo_sl.RDS")
 
 
-df_theta <- readRDS("~/Repo/te_vim/data/demo_res_cvdr_ense.RDS")
+df_theta <- readRDS("~/Repo/te_vim/data/demo_res_cvt_ense.RDS")
 # df_theta <- df_vim
+
+new_names = c("Age", "Weight", "Karnofsky score", "CD4", "CD8", "Homosexual activity", 
+              "Gender", "Race", "Symptomatic", "IV drug use", "Hemophilia", "Antiretroviral history")
+new_names = sapply(new_names, function(x) rep(x,3))
+df_theta$varname <- as.vector(new_names) 
 
 p_theta_ee <- plot_theta(df_theta, estimator = "EE")
 p_theta_tmle <- plot_theta(df_theta, estimator = "TMLE")
 
 p_theta_all <-
-  ggarrange(p_theta_ee + ggtitle("EE (Discrete SL)"),
-            p_theta_tmle + ggtitle("TMLE (Discrete SL)"))
+  ggarrange(p_theta_ee + ggtitle("EE"),
+            p_theta_tmle + ggtitle("TMLE"))
 
 p_theta_all
 
 
-ggsave(paste0(repo_path, "tnp/demo_theta_dr_disc.png"), p_theta_all)
+
+ggsave(paste0(repo_path, "tnp/demo_theta_t_ense.png"), p_theta_all, 
+       width = 3000, height=2000, units = "px")
 
 ggsave("estimates (DR-learner, Ensemble SL)", p_theta_all)
 

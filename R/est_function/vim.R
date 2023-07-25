@@ -268,11 +268,11 @@ TMLE_VIM <- function(data, max_it = 600, lr = 1e-4, logtrans = FALSE){
     std_err = se,
     ci_l = ci_l,
     ci_u = ci_u,
-    ic = ic,
-    df_fit_star = data %>% mutate(mua_hat_star = QA_star,
-                                    tau_star = tau_star,
-                                    tau_s_star = tau_s_star,
-                                    gamma_s_star = gamma_s_star)
+    ic = ic
+    # df_fit_star = data %>% mutate(mua_hat_star = QA_star,
+    #                                 tau_star = tau_star,
+    #                                 tau_s_star = tau_s_star,
+    #                                 gamma_s_star = gamma_s_star)
   )
   
   # print(out$coef)
@@ -459,7 +459,12 @@ EE_VTE <- function(data){
   Sig1 <- sum(po^2)/N - ate^2
   
   VTE <- mean((po - ate)^2 - (po - tau)^2)
-  ic <- (po - ate)^2 - (po - tau)^2 - VTE
+  # ic <- (po - ate)^2 - (po - tau)^2 - VTE
+  A <- data$A
+  Y <- data$Y
+  QA <- data$mua_hat
+  gn <- data$pi_hat
+  ic <- 2*(tau - ate)*(A/gn - (1-A)/(1-gn))*(Y-QA) + (tau - ate)^2 - VTE
   se <- sqrt(var(ic)/N)
   
   out<- list(
@@ -550,7 +555,10 @@ TMLE_VTE <- function(data, max_it = 600, lr = 1e-4){
   # calculate Theta_s, scale back
   # theta_s_star <- mean(gamma_s_star - ate_star^2)
   theta_s_star <- mean((tau_star - ate_star)^2)
-  ic <- 2*(tau_star - ate_star)*(A/gn - (1-A)/(1-gn))*(Y-QA_star) + (tau_star - ate_star)^2 - theta_s_star
+  # ic <- 2*(tau_star - ate_star)*(A/gn - (1-A)/(1-gn))*(Y-QA_star) + (tau_star - ate_star)^2 - theta_s_star
+  # use initial est for ic
+  theta_s_0 <- mean((tau_0 - ate_0)^2)
+  ic <- 2*(tau_0 - ate_0)*(A/gn - (1-A)/(1-gn))*(Y-QA_0) + (tau_0 - ate_0)^2 - theta_s_0
   se <- sqrt(var(ic)/N)
   
   out<- list(

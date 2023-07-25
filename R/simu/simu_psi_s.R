@@ -42,13 +42,13 @@ for (N in c(2e2, 5e2)){ # , 1e3, 3e3, 5e3, 1e4, 2e4
   bootstrap_results <- run_all_simu(B = B, 
                                     N = N, 
                                     cv = F, 
-                                    dr = T, 
+                                    dr = F, 
                                     truth = 0.685,
                                     do_sshal = F,
                                     target_para = "Psi")
   toc()
   
-  output_filename <- paste0('~/Repo/te_vim/simu_res/psi_s/',"hal_dr_", N, "_", Sys.Date(),'.csv')
+  output_filename <- paste0('~/Repo/te_vim/simu_res/psi_s/',"hal_t_", N, "_", Sys.Date(),'.csv')
   write.csv(bootstrap_results, output_filename)
 }
 

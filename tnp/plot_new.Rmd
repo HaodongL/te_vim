@@ -1,0 +1,663 @@
+---
+title: "Statin Simulation Report"
+author: "Haodong Li"
+date: "2022-10-03"
+output:
+  pdf_document:
+    keep_tex: true
+---
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(formattable)
+library(tables)
+library(stargazer)
+library(kableExtra)
+library(tidyr)
+library(dplyr)
+library(data.table)
+library(readr)
+source('~/Repo/te_vim/tnp/read_res.R')
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# res <- read_hp(filename = 'local_earth_nocv_', savedate = '2022-10-06')
+# res <- read_hp(filename = 'temp/local_earth_nocv_', savedate = '2022-10-07')
+# res <- read_hp(filename = 'local_earth_nocv_t_', savedate = '2022-10-25')
+# res_tbl <- proc_df_tbl(res)
+# output_filename <- paste0('~/Repo/te_vim/simu_res/theta_s/','local_gam_', 2e4, "_", '2022-10-07','.csv')
+# res <- read_csv(output_filename) %>% mutate(n = 2e4)
+
+# res <- read_hp(filename = 'local_hal_nocv_', savedate = '2022-10-21')
+# res_tbl <- sum_metric(res)
+```
+
+
+## Simulation 
+
+\underline{DGD:}
+\begin{eqnarray*}
+W_{1} &\sim& Unif(-1, 1)\\[1pt]
+W_{2} &\sim& Unif(-1, 1)\\[1pt]
+A &\sim& Bernoulli(p) \mbox{~~where~~} p = \mbox{expit}(0.1*W_1*W_2-0.4*W_1) \\[1pt]
+\tau &=& W_1^2*(W_1+7/5) + (5*W_2/3)^2\\[1pt]
+\mu_{Y} &=& A*\tau + W_1*W_2 + 2*W_2^2 - W_1 \\[1pt]
+Y &\sim& N(\mu_{Y}, 1)
+\end{eqnarray*}
+
+\underline{Initial estimating models for Q and g:} 
+
+1) GAM: General Additive Models (Correctly specified based on true DGD of Q and g)
+
+2) Earth: Multivariate Adaptive Regression Splines
+
+Note this is not SL, just individual algorithms. For estimations of other terms ($\tau,\tau_s,\gamma_s$), all use Earth.
+
+
+\underline{CATE estimation} 
+
+1) DR-learner: regress pseudo outcome estimates $\varphi_n^0$ on $W$.
+
+2) T-learner: just use $\bar{Q}_n^0(1,W)$ - $\bar{Q}_n^0(0,W)$
+
+\underline{Truncation:} 
+
+For TMLE, $\bar{Q}_n^{_{(0)}}$ $\in$ $[0.001, 0.999]$, $g_n$ $\in$ $[0.025, 0.975]$. 
+
+For EE, $g_n$ $\in$ $[0.025, 0.975]$
+
+
+\clearpage
+
+```{r, echo=FALSE, fig.cap="Main performance metrics (T-learner, no CV)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/plot_dots_t_nocv_v.png")
+```
+
+```{r, echo=FALSE, fig.cap="Main performance metrics (DR-learner, no CV)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/plot_dots_dr_nocv_v.png")
+```
+
+
+```{r, echo=FALSE, fig.cap="Main performance metrics (T-learner, CV)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/plot_dots_t_cv_v.png")
+```
+
+```{r, echo=FALSE, fig.cap="Main performance metrics (DR-learner, CV)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/plot_dots_dr_cv_v.png")
+```
+
+
+```{r, echo=FALSE, fig.cap="Main performance metrics (DR-learner, no CV)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/plot_dots_dr_nocv_v.png")
+```
+
+```{r, echo=FALSE, fig.cap="Main performance metrics (DR-learner, no CV)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/plot_dots_dr_nocv_all.png")
+```
+
+
+```{r, echo=FALSE, fig.cap="CATE estimation with Earth (n = 500)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/cate_500.png")
+```
+
+```{r, echo=FALSE, fig.cap="CATE estimation with Earth (n = 5000)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/cate_5000.png")
+```
+
+```{r, echo=FALSE, fig.cap="CATE estimation with HAL (n = 500)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/cate_500_hal.png")
+```
+
+```{r, echo=FALSE, fig.cap="CATE estimation with HAL (n = 5000)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/cate_5000_hal.png")
+```
+
+
+```{r, echo=FALSE, fig.cap="CATE estimation with Earth (n = 500, seed 2)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/cate_500_2.png")
+```
+
+```{r, echo=FALSE, fig.cap="CATE estimation with Earth (n = 5000, seed 2)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/cate_5000_2.png")
+```
+
+```{r, echo=FALSE, fig.cap="CATE estimation with HAL (n = 500, seed 2)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/cate_500_hal_2.png")
+```
+
+```{r, echo=FALSE, fig.cap="CATE estimation with HAL (n = 5000, seed 2)", out.width = '100%', fig.align="center", fig.pos="H"}
+knitr::include_graphics("~/Repo/te_vim/tnp/cate_5000_hal_2.png")
+```
+
+
+```{r, eval=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+# theta_s hal t
+# plot 
+library(ggplot2)
+library(ggpubr)
+theme_nice <- theme(panel.background = element_blank(), 
+                    panel.grid = element_line(size = 0.3, linetype = 'dashed',
+                                              colour = "grey"))
+
+### new dr update in TMLE
+res <- read_hp(filename = 'hal_t_', savedate = '2023-01-18', target_para = "theta_s")
+data_long12 <- proc_df_tbl(res, N_len = 7)
+data_long <- data_long12 %>% mutate(Model = 'HAL') %>% filter(Method != 'SS-HAL')
+
+# performance data
+temp_tbl_long <- data_long %>% 
+                  group_by(Method) %>% 
+                  mutate(med_mse = median(MSE),
+                         med_coverage = median(Coverage_or),
+                         med_bias = median(Bias),
+                         med_CIwidth = median(Variance))
+
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Model)
+temp_tbl_long$n <- as.factor(temp_tbl_long$n)
+
+library(RColorBrewer)
+color.pal <- brewer.pal(n = 8, name = "Dark2")
+
+shape_val <- c(0,1,4) # c(2,1)
+                
+# MSE
+plot1 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = MSE, shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  labs(y='MSE',
+       x="n") +
+  theme_nice
+
+# Bias
+plot2 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = abs(Bias), shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  labs(y='AbsBias',
+       x="n") +
+  theme_nice
+
+# Variance
+plot3 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = Variance, shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  labs(y='Variance',
+       x="n") +
+  theme_nice
+
+# Coverage_or
+plot4 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = Coverage_or, shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  geom_hline(yintercept = 0.95) +
+  ylim(0.8, 1) + 
+  labs(y='Coverage',
+       x="n") +
+  theme_nice
+
+plot_dots <-
+ggarrange(plot1,
+          plot2,
+          plot3,
+          plot4,
+          legend = "top", common.legend = TRUE)
+
+plot_dots
+
+# plotpath = paste0("~/Repo/te_vim/tnp/plot_simu")
+# ggsave('plot_dots_theta_hal_t.png', width = 14, height = 8,
+#        plot = plot_dots, path = plotpath)
+
+```
+
+
+
+```{r, eval=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+# hal dr
+# plot 
+library(ggplot2)
+library(ggpubr)
+theme_nice <- theme(panel.background = element_blank(), 
+                    panel.grid = element_line(size = 0.3, linetype = 'dashed',
+                                              colour = "grey"))
+
+### new dr update in TMLE
+res <- read_hp(filename = 'hal_dr_', savedate = '2023-01-20', target_para = "theta_s")
+data_long12 <- proc_df_tbl(res, N_len = 7)
+data_long <- data_long12 %>% mutate(Model = 'HAL') %>% filter(Method != 'SS-HAL')
+
+# performance data
+temp_tbl_long <- data_long %>% 
+                  group_by(Method) %>% 
+                  mutate(med_mse = median(MSE),
+                         med_coverage = median(Coverage_or),
+                         med_bias = median(Bias),
+                         med_CIwidth = median(Variance))
+
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Model)
+temp_tbl_long$n <- as.factor(temp_tbl_long$n)
+
+library(RColorBrewer)
+color.pal <- brewer.pal(n = 8, name = "Dark2")
+
+shape_val <- c(0,1,4) # c(2,1)
+                
+# MSE
+plot1 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = MSE, shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  labs(y='MSE',
+       x="n") +
+  theme_nice
+
+# Bias
+plot2 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = abs(Bias), shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  labs(y='AbsBias',
+       x="n") +
+  theme_nice
+
+# Variance
+plot3 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = Variance, shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  labs(y='Variance',
+       x="n") +
+  theme_nice
+
+# Coverage_or
+plot4 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = Coverage_or, shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  geom_hline(yintercept = 0.95) +
+  ylim(0.8, 1) + 
+  labs(y='Coverage',
+       x="n") +
+  theme_nice
+
+plot_dots <-
+ggarrange(plot1,
+          plot2,
+          plot3,
+          plot4,
+          legend = "top", common.legend = TRUE)
+
+plot_dots
+
+# plotpath = paste0("~/Repo/te_vim/tnp/plot_simu")
+# ggsave('plot_dots_theta_hal_dr.png', width = 14, height = 8,
+#        plot = plot_dots, path = plotpath)
+
+```
+
+
+```{r, eval=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+# psi_s hal t
+# plot 
+library(ggplot2)
+library(ggpubr)
+theme_nice <- theme(panel.background = element_blank(), 
+                    panel.grid = element_line(size = 0.3, linetype = 'dashed',
+                                              colour = "grey"))
+
+### new dr update in TMLE
+res <- read_hp(filename = 'hal_t_', savedate = '2023-01-22', target_para = "psi_s")
+data_long12 <- proc_df_tbl(res, N_len = 7)
+data_long <- data_long12 %>% mutate(Model = 'HAL') %>% filter(Method != 'SS-HAL')
+
+# performance data
+temp_tbl_long <- data_long %>% 
+                  group_by(Method) %>% 
+                  mutate(med_mse = median(MSE),
+                         med_coverage = median(Coverage_or),
+                         med_bias = median(Bias),
+                         med_CIwidth = median(Variance))
+
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Model)
+temp_tbl_long$n <- as.factor(temp_tbl_long$n)
+
+library(RColorBrewer)
+color.pal <- brewer.pal(n = 8, name = "Dark2")
+
+shape_val <- c(0,1,4) # c(2,1)
+                
+# MSE
+plot1 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = MSE, shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  labs(y='MSE',
+       x="n") +
+  theme_nice
+
+# Bias
+plot2 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = abs(Bias), shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  labs(y='AbsBias',
+       x="n") +
+  theme_nice
+
+# Variance
+plot3 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = Variance, shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  labs(y='Variance',
+       x="n") +
+  theme_nice
+
+# Coverage_or
+plot4 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = Coverage_or, shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  geom_hline(yintercept = 0.95) +
+  ylim(0.8, 1) + 
+  labs(y='Coverage',
+       x="n") +
+  theme_nice
+
+plot_dots <-
+ggarrange(plot1,
+          plot2,
+          plot3,
+          plot4,
+          legend = "top", common.legend = TRUE)
+
+plot_dots
+
+# plotpath = paste0("~/Repo/te_vim/tnp/plot_simu")
+# ggsave('plot_dots_psi_hal_t.png', width = 14, height = 8,
+#        plot = plot_dots, path = plotpath)
+
+
+```
+
+```{r, eval=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+# hal dr
+# plot 
+library(ggplot2)
+library(ggpubr)
+theme_nice <- theme(panel.background = element_blank(), 
+                    panel.grid = element_line(size = 0.3, linetype = 'dashed',
+                                              colour = "grey"))
+
+### new dr update in TMLE
+res <- read_hp(filename = 'hal_dr_', savedate = '2023-01-22', target_para = "psi_s")
+data_long12 <- proc_df_tbl(res, N_len = 7)
+data_long <- data_long12 %>% mutate(Model = 'HAL') %>% filter(Method != 'SS-HAL')
+
+# performance data
+temp_tbl_long <- data_long %>% 
+                  group_by(Method) %>% 
+                  mutate(med_mse = median(MSE),
+                         med_coverage = median(Coverage_or),
+                         med_bias = median(Bias),
+                         med_CIwidth = median(Variance))
+
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Model)
+temp_tbl_long$n <- as.factor(temp_tbl_long$n)
+
+library(RColorBrewer)
+color.pal <- brewer.pal(n = 8, name = "Dark2")
+
+shape_val <- c(0,1,4) # c(2,1)
+                
+# MSE
+plot1 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = MSE, shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  labs(y='MSE',
+       x="n") +
+  theme_nice
+
+# Bias
+plot2 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = abs(Bias), shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  labs(y='AbsBias',
+       x="n") +
+  theme_nice
+
+# Variance
+plot3 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = Variance, shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  labs(y='Variance',
+       x="n") +
+  theme_nice
+
+# Coverage_or
+plot4 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = Coverage_or, shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  geom_hline(yintercept = 0.95) +
+  ylim(0.8, 1) + 
+  labs(y='Coverage',
+       x="n") +
+  theme_nice
+
+plot_dots <-
+ggarrange(plot1,
+          plot2,
+          plot3,
+          plot4,
+          legend = "top", common.legend = TRUE)
+
+plot_dots
+
+# plotpath = paste0("~/Repo/te_vim/tnp/plot_simu")
+# ggsave('plot_dots_psi_hal_dr.png', width = 14, height = 8,
+#        plot = plot_dots, path = plotpath)
+
+
+```
+
+
+
+```{r, eval=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+# hal dr
+# plot 
+library(ggplot2)
+library(ggpubr)
+theme_nice <- theme(panel.background = element_blank(), 
+                    panel.grid = element_line(size = 0.3, linetype = 'dashed',
+                                              colour = "grey"))
+
+### new dr update in TMLE
+res <- read_hp(filename = 'hal_t_', savedate = '2023-01-22', target_para = "vte")
+data_long12 <- proc_df_tbl(res, N_len = 7)
+data_long <- data_long12 %>% mutate(Model = 'HAL') %>% filter(Method != 'SS-HAL')
+
+# performance data
+temp_tbl_long <- data_long %>% 
+                  group_by(Method) %>% 
+                  mutate(med_mse = median(MSE),
+                         med_coverage = median(Coverage_or),
+                         med_bias = median(Bias),
+                         med_CIwidth = median(Variance))
+
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Model)
+temp_tbl_long$n <- as.factor(temp_tbl_long$n)
+
+library(RColorBrewer)
+color.pal <- brewer.pal(n = 8, name = "Dark2")
+
+shape_val <- c(0,1,4) # c(2,1)
+                
+# MSE
+plot1 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = MSE, shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  labs(y='MSE',
+       x="n") +
+  theme_nice
+
+# Bias
+plot2 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = abs(Bias), shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  labs(y='AbsBias',
+       x="n") +
+  theme_nice
+
+# Variance
+plot3 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = Variance, shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  labs(y='Variance',
+       x="n") +
+  theme_nice
+
+# Coverage_or
+plot4 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = Coverage_or, shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  geom_hline(yintercept = 0.95) +
+  ylim(0.8, 1) + 
+  labs(y='Coverage',
+       x="n") +
+  theme_nice
+
+plot_dots <-
+ggarrange(plot1,
+          plot2,
+          plot3,
+          plot4,
+          legend = "top", common.legend = TRUE)
+
+plot_dots
+
+# plotpath = paste0("~/Repo/te_vim/tnp/plot_simu")
+# ggsave('plot_dots_vte_hal_t.png', width = 14, height = 8,
+#        plot = plot_dots, path = plotpath)
+
+
+```
+
+
+
+
+```{r, eval=FALSE, echo=FALSE, message=FALSE, warning=FALSE}
+# hal dr
+# plot 
+library(ggplot2)
+library(ggpubr)
+theme_nice <- theme(panel.background = element_blank(), 
+                    panel.grid = element_line(size = 0.3, linetype = 'dashed',
+                                              colour = "grey"))
+
+### new dr update in TMLE
+res <- read_hp(filename = 'hal_dr_', savedate = '2023-01-22', target_para = "vte")
+data_long12 <- proc_df_tbl(res, N_len = 7)
+data_long <- data_long12 %>% mutate(Model = 'HAL') %>% filter(Method != 'SS-HAL')
+
+# performance data
+temp_tbl_long <- data_long %>% 
+                  group_by(Method) %>% 
+                  mutate(med_mse = median(MSE),
+                         med_coverage = median(Coverage_or),
+                         med_bias = median(Bias),
+                         med_CIwidth = median(Variance))
+
+temp_tbl_long <- temp_tbl_long %>% arrange(Method, Model)
+temp_tbl_long$n <- as.factor(temp_tbl_long$n)
+
+library(RColorBrewer)
+color.pal <- brewer.pal(n = 8, name = "Dark2")
+
+shape_val <- c(0,1,4) # c(2,1)
+                
+# MSE
+plot1 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = MSE, shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  labs(y='MSE',
+       x="n") +
+  theme_nice
+
+# Bias
+plot2 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = abs(Bias), shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  labs(y='AbsBias',
+       x="n") +
+  theme_nice
+
+# Variance
+plot3 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = Variance, shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  labs(y='Variance',
+       x="n") +
+  theme_nice
+
+# Coverage_or
+plot4 <-
+temp_tbl_long %>%
+  ggplot() +
+  geom_point(aes(x= n, y = Coverage_or, shape = Method), size= 4) +
+  scale_shape_manual(values=shape_val, name = "Method") +
+  geom_hline(yintercept = 0.95) +
+  ylim(0.8, 1) + 
+  labs(y='Coverage',
+       x="n") +
+  theme_nice
+
+plot_dots <-
+ggarrange(plot1,
+          plot2,
+          plot3,
+          plot4,
+          legend = "top", common.legend = TRUE)
+
+plot_dots
+
+# plotpath = paste0("~/Repo/te_vim/tnp/plot_simu")
+# ggsave('plot_dots_vte_hal_dr.png', width = 14, height = 8,
+#        plot = plot_dots, path = plotpath)
+
+```

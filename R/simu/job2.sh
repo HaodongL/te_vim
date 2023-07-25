@@ -8,5 +8,5 @@
 
 #SBATCH --mail-user=haodong_li@berkeley.edu
 #SBATCH --mail-type=ALL
-module load r
+module swap r/4.2.1
 Rscript simu_psi_s.R
