@@ -13,9 +13,9 @@ df <- generate_data_simple(N)
 
 ws = c('X2')
 cv = F
-dr = T
+dr = F
 lfm_linear = FALSE
-max.it = 600
+max.it = 1e4
 
 Q_bounds = NULL
 g_bounds = c(0.025, 0.975)
@@ -84,7 +84,7 @@ f_cate_t <- function(w1, w2){
   Qbar1W <- Q_fit$predict(Q1_task)
   
   tau <- Qbar1W - Qbar0W
-  tau <- bound(tau, tau_bounds)
+  # tau <- bound(tau, tau_bounds)
   tau_t <- tau*(y_u - y_l)
   return(tau_t)
 }
@@ -101,7 +101,7 @@ f_cate_dr <- function(w1, w2){
   
   tau_task <- make_sl3_Task(data = df, covariates = all_w)
   tau <- tau_fit$predict(tau_task)
-  tau <- bound(tau, tau_bounds)
+  # tau <- bound(tau, tau_bounds)
   tau_dr <- tau*(y_u - y_l)
   return(tau_dr)
 }
@@ -117,7 +117,7 @@ f_cate <- function (x, y) {
 }
 
 
-png(filename= paste0("~/Repo/te_vim/tnp/plot/cate_hal_", N,".png"),
+png(filename= paste0("~/Repo/te_vim/tnp/plot/cate_xgb_", N,".png"),
     width = 2048,
     height = 1024,
     res = 180,

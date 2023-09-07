@@ -52,8 +52,8 @@ run_VIM <- function(df,
   # tmle_vim
   resTMLE <- TMLE_VIM(df_fit, max_it, lr)
   
-  # TEMP
-  resSS <- TMLE_VIM(df_fit, max_it, lr, logtrans = T)
+  # # TEMP
+  # resSS <- TMLE_VIM(df_fit, max_it, lr, logtrans = T)
   
   if (y_l != 0 | y_u != 1){
     df_fit$Y <- rescale(df_fit$Y, y_l, y_u)
@@ -66,7 +66,7 @@ run_VIM <- function(df,
   # ee_vim
   resEE <- EE_VIM(df_fit)
   # ss_vim
-  # resSS <- SS_VIM(df_fit)
+  resSS <- SS_VIM(df_fit)
   
   
   res <- list('resTMLE' = resTMLE, 
@@ -235,6 +235,7 @@ TMLE_VIM <- function(data, max_it = 600, lr = 1e-4, logtrans = FALSE){
   tau_s_star <- tau_s_i
   
   if(i>=max_it) warning("Max iterations reached in TMLE")
+  print(paste0("tmle steps:", i))
   
   # update gamma_s
   suppressWarnings({

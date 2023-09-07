@@ -21,15 +21,10 @@ res <- run_VIM(df = df,
                sl_x = sl_x,
                ws = c('X2'), 
                cv = F,
-               dr = F,
-               lfm_linear = F, 
-               Q_bounds = c(0.001, 0.999), 
-               g_bounds = c(0.025, 0.975),
-               tau_bounds = c(-1+1e-3, 1-1e-3),
-               tau_s_bounds = c(-1+1e-3, 1-1e-3),
-               gamma_s_bounds = c(1e-6, 1-1e-6)
+               dr = F
 )
 toc()
+res_ss <- res$resSS
 res_ee <- res$resEE
 res_tmle <- res$resTMLE
 

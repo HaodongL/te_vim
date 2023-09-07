@@ -1,3 +1,8 @@
+library(dplyr)
+library(sl3)
+library(tmle3)
+library(foreach)
+library(doParallel)
 
 
 # -- sl setup
@@ -130,9 +135,9 @@ sl_x <- Lrnr_sl$new(
   metalearner = ls_metalearner
 )
 
-sl_Q <- lrnr_earth
-sl_g <- lrnr_earth
-sl_x <- lrnr_earth
+sl_Q <- lrnr_xgb
+sl_g <- lrnr_xgb
+sl_x <- lrnr_xgb
 
 sl_Q_hal <- lrnr_hal_fast
 sl_g_hal <- lrnr_hal_fast
