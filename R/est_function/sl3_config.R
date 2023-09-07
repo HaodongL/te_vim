@@ -135,9 +135,9 @@ sl_x <- Lrnr_sl$new(
   metalearner = ls_metalearner
 )
 
-sl_Q <- lrnr_xgb
-sl_g <- lrnr_xgb
-sl_x <- lrnr_xgb
+# sl_Q <- lrnr_xgb
+# sl_g <- lrnr_xgb
+# sl_x <- lrnr_xgb
 
 sl_Q_hal <- lrnr_hal_fast
 sl_g_hal <- lrnr_hal_fast

@@ -60,7 +60,7 @@ df_vim <- foreach(i = 1:n_ws, .combine = 'rbind') %do% {
                  sl_g = sl_g,
                  sl_x = sl_x,
                  ws = ws[i], 
-                 cv = F,
+                 cv = T,
                  dr = F,
                  max_it = 1e4)
   res_ee <- res$resEE
