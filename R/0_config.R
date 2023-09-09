@@ -22,10 +22,11 @@ if(here::here()=="C:/Users/andre/Documents/jici/te_vim"){
 
 
 #Variable labels
-subgroup_levels <- c(`Statin use` = "statin_use", 
+subgroup_levels <- c(`Overall` = "overall", 
+                     `Statin use` = "statin_use", 
                      Antihypertensives = "antihypertensives",
                      `Beta blockers` = "betab",
-                     `Mineralocorticoid receptor	antagonists` = "minera", 
+                     `Mineralocorticoid receptor antagonists` = "minera", 
                      ADP = "adp",
                      `Vitamin K antagonists` = "vkantag",
                      `Ca antagonists` = "caantag", 
@@ -66,6 +67,19 @@ subgroup_levels <- c(`Statin use` = "statin_use",
 # dput(var_labs)
 
 
+
+drug_levels = c(
+                `Statin use` = "statin", 
+                 `Anti-hypertensives` = "antihy",
+                 `Beta blockers` = "betab",
+                 `Mineralocorticoid receptor antagonists` = "minera", 
+                 `ADP receptor inhibitors`= "adp",
+                 `Vitamin K antagonists` = "vkanta",
+                 `Ca antagonists` = "caanta", 
+                 Thiazide = "thiazi",
+                 `Loop diuretic` = "loopdi")
+
+
 covar_levels = c(Country = "COUNTRY", Age = "AGE", Sex = "SEX", Race = "RACE", 
   `Smoker status` = "SMOKER", `Diabetes Duration` = "DIABDUR", 
   `Antidiabetic therapy at Baseline` = "ANTDBFL", `NYHA CLASS (I - IV)` = "NYHACLAS", 
@@ -89,8 +103,9 @@ covar_levels = c(Country = "COUNTRY", Age = "AGE", Sex = "SEX", Race = "RACE",
   `Statin use` = "statin_use", 
   Antihypertensives = "antihypertensives",
   `Beta blockers` = "betab",
-  `Mineralocorticoid receptor	antagonists` = "minera", 
-  ADP = "adp",
+  `Remant cholesterol` ="RC",
+  `Mineralocorticoid\nreceptor antagonists` = "minera", 
+  `ADP receptor inhibitors`= "adp",
   `Vitamin K antagonists` = "vkantag",
   `Ca antagonists` = "caantag", 
   Thiazide = "thiazide",

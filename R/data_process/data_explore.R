@@ -16,7 +16,7 @@ if(here::here()=="C:/Users/andre/Documents/jici/te_vim"){
   source(paste0(repo_path, "R/data_process/data_helper.R"))
   
   #cleaned data
-  df <- read_csv(paste0(here(),"/data/supp/df_analy1.csv"))
+  df <- read_csv(paste0(here(),"/data/supp/df_all_diab2.csv"))
   dim(df)
   colnames(df)
   
@@ -47,16 +47,17 @@ colnames(final)[no_variance]
 
 head(final)
 
-library(DataExplorer)
-
-
-final %>%
-  create_report(
-    output_format = html_document(toc = F,  theme = "yeti"),
-    output_file = paste("analysis_data_EDA", format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"), sep=" - "),
-    report_title = "EDA Report"
-    #y = "CVS"
-  )
+# library(DataExplorer)
+# library(rmarkdown)
+# 
+# 
+# final %>%
+#   DataExplorer::create_report(
+#     output_format = html_document(toc = F,  theme = "yeti"),
+#     output_file = here::here("reports",paste("analysis_data_EDA", format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"), sep="-")),
+#     report_title = "EDA Report"
+#     #y = "CVS"
+#   )
 
 
 
@@ -67,6 +68,6 @@ ExpReport(
   final,
   #Target="cardio",
   label=NULL,
-  op_file="Report.html",
-  op_dir=getwd())
+  op_file="EDA_report.html",
+  op_dir=here::here("reports"))
 

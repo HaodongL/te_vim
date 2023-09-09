@@ -18,7 +18,7 @@ df_w <- read_csv(file = paste0(repo_path, "data/supp/df_w.csv"))
 cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
               "vkantag", "caantag", "thiazide", "loopdiur")
 
-df_strat <- readRDS(paste0(repo_path, "analy_res/df_strat.RDS"))
+df_strat <- readRDS(paste0(repo_path, "analy_res/df_strat_diab.RDS"))
 
 
 
@@ -77,7 +77,7 @@ buffer=0.01
 
 
 ## 2. TMLE Effect Modification
-df_em <-readRDS(paste0(repo_path, "analy_res/df_em.RDS"))
+df_em <-readRDS(paste0(repo_path, "analy_res/fit_em_su_diab.RDS"))
 
  varname=cm_names
          df_plot=df_em
@@ -110,10 +110,44 @@ p_cate_strat
 
 
 
+#df_em <-readRDS(paste0(repo_path, "analy_res/df_em.RDS"))
+df_em <- readRDS(paste0(here::here(),"/analy_res/df_strat_diab.RDS"))
+
+varname=cm_names
+df_plot=df_em
+
+ate <- mean(df_plot$tau)
+ylim_l <- min(df_plot$tau - 1.96*df_plot$se)
+ylim_u <- max(df_plot$tau + 1.96*df_plot$se)
+
+df_plot$varname <- rep(varname, each=3)
+
+p_cate_strat <- ggplot(df_plot, aes(x = group, y = tau, color = varname)) +
+  theme_light() +
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    strip.text.y = element_text(colour = "black"),
+    strip.background = element_rect(colour = NA, fill = NA),
+    legend.position = "none"
+  ) +
+  geom_point() +
+  geom_errorbar(aes(ymin = pmax(tau - 1.96*se, ylim_l), 
+                    ymax = pmin(tau + 1.96*se, ylim_u)), width = .2) +
+  geom_hline(yintercept = 0, linetype = 3) +
+  facet_grid(varname ~ ., scales = "free_y") +
+  coord_flip() +
+  labs(y = "CATE") +
+  ylim(c(ylim_l, ylim_u)) +
+  theme(text=element_text(size=8))
+p_cate_strat
+
+
+
 
 
 ## 3. VTE Estimation
-res_vte <-readRDS(paste0(repo_path, "analy_res/res_vte_t.RDS"))
+res_vte <-readRDS(paste0(repo_path, "analy_res/res_vte_t_diab.RDS"))
 
 print(paste0("VTE TMLE:"))
 print(paste0("coef:", res_vte$res_tmle$coef))
@@ -126,13 +160,13 @@ print(paste0("coef:", res_vte$res_ee$coef))
 print(paste0("ci low:", res_vte$res_ee$ci_l))
 print(paste0("ci up:", res_vte$res_ee$ci_u))
 
-df_theta <-readRDS(paste0(repo_path, "analy_res/df_vim_t.RDS"))
+df_theta <-readRDS(paste0(repo_path, "analy_res/df_vim_t_diab.RDS"))
 
 
 df_theta$varname <- fct_recode(df_theta$varname, !!!covar_levels)
 
 
-plot_theta <- ggplot(data=df_theta %>% 
+plot_theta <- ggplot(data=df_theta %>% filter(method!="SS") %>%
                 arrange(importance) %>% 
                 mutate(varname = factor(varname, levels = unique(varname))),
               aes(x=varname, y=importance, ymin=ci_l, ymax=ci_u)) +
@@ -153,7 +187,30 @@ plot_theta
 
 
 
+df_theta2 <-readRDS(paste0(repo_path, "analy_res/df_vim_t_diab2.RDS"))
 
+
+df_theta2$varname <- fct_recode(df_theta2$varname, !!!covar_levels)
+
+
+plot_theta2 <- ggplot(data=df_theta2 %>% filter(method!="SS") %>%
+                       arrange(importance) %>% 
+                       mutate(varname = factor(varname, levels = unique(varname))),
+                     aes(x=varname, y=importance, ymin=ci_l, ymax=ci_u)) +
+  geom_pointrange() + 
+  facet_grid(~method, scales = "free") +
+  geom_hline(yintercept=0, lty=2) +  # add a dotted line at x=0 after flip
+  # geom_hline(yintercept=1, lty=2) +  # add a dotted line at x=1 after flip
+  coord_flip() +  # flip coordinates (puts labels on y axis)
+  xlab("Variable") + ylab("Importance") +
+  theme_bw()  # use a white background
+plot_theta2
+
+
+summary(df_theta$importance[df_theta$method=="EE"])
+summary(df_theta2$importance[df_theta2$method=="EE"])
+summary(df_theta$importance[df_theta$method=="TMLE"])
+summary(df_theta2$importance[df_theta2$method=="TMLE"])
 
 
 

@@ -175,4 +175,4 @@ df_w <- read_csv(file = "data/supp/df_w.csv")
 # 3.1 diabetes progression
 df_all_diab2 <- left_join(df_w, Y_diab, by = 'USUBJID')
 
-# write_csv(df_all_diab2, file = "data/supp/df_all_diab2.csv")
+write_csv(df_all_diab2, file = "data/supp/df_all_diab2.csv")

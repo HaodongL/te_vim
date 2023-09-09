@@ -1,15 +1,8 @@
-library(dplyr)
-library(sl3)
-library(tictoc)
-library(tmle3)
-library(foreach)
-library(doParallel)
-# library(ggplot2)
-# library(table1)
-# library(ggpubr)
+
 
 rm(list = ls())
-repo_path = "~/Repo/te_vim/"
+source(paste0(here::here(),"/R/0_config.R"))
+#repo_path = "~/Repo/te_vim/"
 source(paste0(repo_path, "R/data_process/data_helper.R"))
 source(paste0(repo_path, "R/simu/simu_dgd.R")) 
 source(paste0(repo_path, "R/simu/simu_config.R"))

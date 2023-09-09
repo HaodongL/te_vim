@@ -35,6 +35,11 @@ if(here::here()=="C:/Users/andre/Documents/jici/te_vim"){
 }
 
 
+#Tabulate outcome
+#Tabulate treatment
+table(df$A)
+
+
 #Examine missingness
 library("VIM") 
 (colSums(is.na(df)) / nrow(df))[colSums(is.na(df)) / nrow(df) != 0] *100
@@ -49,32 +54,34 @@ nodes <- list(W = setdiff(names(df), c("Y", "A")),
 final <- process_missing(df, nodes)$data
 no_variance<-nzv(final)
 
-#variables with no missingness
+#variables with no variance
 colnames(final)[no_variance]
 
 
 head(final)
 
-library(DataExplorer)
 
-
-final %>%
-  create_report(
-    output_format = html_document(toc = F,  theme = "yeti"),
-    output_file = paste("analysis_data_EDA", format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"), sep=" - "),
-    report_title = "EDA Report"
-    #y = "CVS"
-  )
-
-
-
-library(SmartEDA)
-
-# similarly, with dplyr syntax: df %>% ExpReport(...)
-ExpReport(
-  final,
-  #Target="cardio",
-  label=NULL,
-  op_file="Report.html",
-  op_dir=getwd())
+#Run once to make EDA reports:
+# library(DataExplorer)
+# 
+# 
+# final %>%
+#   DataExplorer::create_report(
+#     output_format = html_document(toc = F,  theme = "yeti"),
+#     output_file = paste("analysis_data_EDA", format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"), sep=" - "),
+#     report_title = "EDA Report"
+#     #y = "CVS"
+#   )
+# 
+# 
+# 
+# library(SmartEDA)
+# 
+# # similarly, with dplyr syntax: df %>% ExpReport(...)
+# ExpReport(
+#   final,
+#   #Target="cardio",
+#   label=NULL,
+#   op_file="Report.html",
+#   op_dir=getwd())
 
