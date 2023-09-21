@@ -500,16 +500,16 @@ df_w <- read_csv(file = "data/supp/df_w.csv")
 Y_diab <- read_csv(file = "data/supp/Y_diab.csv")
 df_all_diab <- left_join(df_w, Y_diab, by = 'USUBJID')
 
-# write_csv(df_all_diab, file = "data/supp/df_all_diab.csv")
+write_csv(df_all_diab, file = "data/supp/df_all_diab.csv")
 
 # 3.2 cv outcomes
 Y_cv <- read_csv(file = "data/supp/Y_cv.csv")
 df_all_cv <- left_join(df_w, Y_cv, by = 'USUBJID')
 
-# write_csv(df_all_cv, file = "data/supp/df_all_cv.csv")
+write_csv(df_all_cv, file = "data/supp/df_all_cv.csv")
 
 # 3.2 HBA1C
 Y_a1c <- read_csv(file = "data/supp/Y_a1c.csv")
 df_all_a1c <- left_join(df_w, Y_a1c, by = 'USUBJID')
 
-# write_csv(df_all_a1c, file = "data/supp/df_all_a1c.csv")
+write_csv(df_all_a1c, file = "data/supp/df_all_a1c.csv")

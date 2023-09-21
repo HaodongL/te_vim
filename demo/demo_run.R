@@ -4,10 +4,12 @@ library(sl3)
 library(tmle3)
 library(foreach)
 library(doParallel)
+library(tidyverse)
 
 
 rm(list = ls())
 repo_path = "~/Repo/te_vim/"
+repo_path = paste0("C:/Users/andre/Documents/jici/te_vim/")
 source(paste0(repo_path, "R/est_function/sl3_config.R"))
 source(paste0(repo_path, "R/est_function/fit_para.R"))
 source(paste0(repo_path, "R/est_function/vim.R"))
@@ -36,6 +38,7 @@ n_ws <- length(ws)
 registerDoParallel(3)
 df_vim <- foreach(i = 1:n_ws, .combine = 'rbind') %dopar% {
   print(paste0("Covar name: ", ws[i]))
+ 
   res <- run_VIM(df = df,
                  sl_Q = sl_Q, 
                  sl_g = sl_g,

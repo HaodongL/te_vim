@@ -1,0 +1,374 @@
+---
+title: "Targeted Learning Heterogeneous Treatment Effect Parameters"
+subtitle: "Methods, Simulations results, and Example Analysis with LEADER Trial Data"
+author: "Haodong Li and Andrew Mertens"
+format: html
+editor: source
+---
+
+
+
+
+
+
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+```{r, include=F}
+
+rm(list = ls())
+source(paste0(here::here(),"/R/0_config.R"))
+
+source(paste0(repo_path, "R/data_process/data_helper.R"))
+source(paste0(repo_path, "R/simu/simu_dgd.R")) 
+source(paste0(repo_path, "R/simu/simu_config.R"))
+source(paste0(repo_path, "R/est_function/sl3_config.R"))
+source(paste0(repo_path, "R/est_function/fit_para.R"))
+source(paste0(repo_path, "R/analysis/analy_helper.R"))
+source(paste0(repo_path, "R/est_function/tmle_em.R"))
+
+df_w <- read_csv(file = paste0(repo_path, "data/supp/df_w.csv"))
+# df_strat <- readRDS(paste0(repo_path, "analy_res/df_strat.RDS"))
+# df_theta <-readRDS(paste0(repo_path, "analy_res/df_vim_t.RDS"))
+
+res_vte_t_a1c <- readRDS(paste0(here::here(),"/analy_res/res_vte_t_a1c.RDS"))
+res_vte_t_cv <- readRDS(paste0(here::here(),"/analy_res/res_vte_t_cv.RDS"))
+res_vte_t_diab <- readRDS(paste0(here::here(),"/analy_res/res_vte_t_diab.RDS"))
+res_vte_t_diab2 <- readRDS(paste0(here::here(),"/analy_res/res_vte_t_diab2.RDS"))
+
+res_grf_cate_diab2 <- readRDS(paste0(here::here(),"/analy_res/res_grf_cate_diab2.rds"))
+
+
+cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
+              "vkantag", "caantag", "thiazide", "loopdiur")
+
+
+load(here::here("figures","em_figures.Rdata"))
+load(here::here("figures","vim_figures.Rdata"))
+load(here::here("figures","strat_figures.Rdata"))
+
+ggsave(paste0(here(),"/tnp/plot/p_grf_cate.png"), grf_plot, width = 5, height = 5)
+
+
+```
+
+```{r, include=false}
+
+
+print_est_ci <- function(res, outcome="binomial"){
+    est = format(round(res$Estimate, 2), nsmall = 2)
+    ci.lb = format(round(res$ci.lb, 2), nsmall = 2) 
+    ci.ub = format(round(res$ci.ub, 2), nsmall = 2)
+    est.ci = paste0(est," (95% CI: ",ci.lb,", ",ci.ub,")")
+  return(est.ci)
+}
+
+
+```
+
+
+## Overview
+
+  *  (objective)
+  *  (methods)
+  *  (simulation results)
+  *  (LEADER outcome)
+  *  descripte stats on aggregate and other outcomes
+      * look at EDA reports
+  *  Average treatment effect (ATE) was 
+  *  The conditional average treatment effect (CATE) among statin users was XXX 
+  *  (comparison to GRF) The conditional average treatment effect (CATE) among statin users as estimated by GRF was `r print_est_ci(res_grf_cate_diab2)` 
+  *  (open questions)
+
+## Abstract
+
+## Introduction
+
+Recent evidence has emphasized the potential cardiovascular benefits of novel therapies such as glucagon-like peptide 1 (GLP-1) analogues for patients with type 2 diabetes. Glucagon-like peptide 1 plays a pivotal role in glucose homeostasis, and when used as an analogue, such as liraglutide, it boosts insulin secretion, reduces inappropriate glucagon release, and delays gastric emptying, thus enhancing overall glycemic control.
+
+The Liraglutide Effect and Action in Diabetes: Evaluation of Cardiovascular Outcome Results (LEADER) trial was at the forefront of assessing the cardiovascular outcomes of liraglutide. The primary findings of the LEADER trial indicated that liraglutide, when compared to placebo, significantly reduced the risk of major adverse cardiovascular events (MACE) in individuals with type 2 diabetes at high risk for cardiovascular diseases. Specifically, patients receiving liraglutide experienced fewer instances of non-fatal myocardial infarction, non-fatal stroke, and cardiovascular death.
+
+Given that type 2 diabetes patients often grapple with multiple risk factors predisposing them to cardiovascular diseases, many liraglutide users are concurrently prescribed statins and other cardiovascular drugs. Statins, a renowned class of lipid-lowering medications, work by inhibiting HMG-CoA reductase, reducing LDL-cholesterol levels in the bloodstream and thus aiding in the primary prevention of cardiovascular diseases. However, statins have potential diabetogenic effects.
+
+With the co-administration of GLP-1 analogues like liraglutide and statins in a sizable patient demographic, understanding the interplay, combined effects, and potential synergies or antagonisms between these drugs is paramount for refined patient care. In this project, we utilize sophisticated estimating methods to uncover the heterogeneity of liraglutide treatment effects, especially in the backdrop of concomitant medication users such as those on statins. Our exploration draws from the data-rich, randomized LEADER trial.
+
+### OLD
+
+Cardiovascular disease (CVD) remains the leading cause of morbidity and mortality worldwide, accounting for over 17 million deaths each year according to the World Health Organization. Dyslipidemia is a major risk factor for CVD, and statins are among the most commonly prescribed medications for treating it. Statins have been shown to reduce the incidence of CVD events and improve patient outcomes. However, despite their benefits, statins have been associated with an increased risk of developing type 2 diabetes (T2D).
+
+While the mechanisms underlying the increased risk of T2D associated with statin use remain unclear, recent evidence suggests that glucagon-like peptide-1 receptor agonists (GLP-1RAs), a class of medications used in the treatment of T2D, may mitigate the risk of T2D associated with statin use. GLP-1RAs exert their effects through the incretin system, which plays a role in regulating glucose metabolism and insulin secretion. The incretin system is also involved in the regulation of lipid metabolism, and GLP-1RAs have been shown to improve lipid profiles in patients with T2D. However, the effect of GLP-1RA initiation on statin-associated CVD risk remains unclear.
+
+In this study, we aim to investigate the treatment effect heterogeneity of statin use on CVD risk, with a focus on the effect modification of GLP-1RA initiation. We will use data from the Liraglutide Effect and Action in Diabetes: Evaluation of Cardiovascular Outcome Results (LEADER) trial, a large randomized controlled trial of patients with T2D and high cardiovascular risk, to address this question. We will apply targeted maximum likelihood estimation to estimate the variable importance measure (VIM) of statin use on CVD risk. The VIM provides a measure of the importance of a variable in predicting the outcome of interest, and can be used to identify subgroups of patients who may benefit from a particular treatment.
+
+
+We will also investigate whether GLP-1RA initiation modifies the effect of statin use on CVD risk. This is important because if GLP-1RAs can reduce the risk of CVD associated with statin use, it would have important implications for the clinical management of dyslipidemia and CVD prevention. Our findings may also help to inform personalized treatment strategies for patients with T2D and high cardiovascular risk.
+
+## Methods
+
+## Motivation 
+
+-   Recent evidence showed that novel therapies such as glucagon-like peptide 1 (GLP-1) analogues can reduce the rates of major cardiovascular events in patients with type 2 diabetes.
+-   The cardiovascular effect of liraglutide, GLP-1 analogue, was investigated in the LEADER trial.
+-   GLP-1 users are also often on statins and other cardiovascular drugs.
+    -   Statins are a lipid lowering drug class used for primary prevention of cardiovascular diseases.
+    -   A retrospective cohort study found that statin use was associated with diabetes progression.
+-   In this project, we use novel estimating methods to further explore the heterogeneity of liraglutide treatment effect among concomitant medication (especially statin) users, with data from the randomized LEADER trial.
+
+
+## ABSTRACT FROM METHODS PAPER:
+
+"Heterogeneous treatment effect is an important measure for understanding how a commercial
+product or medical treatment affects different subgroups in a population. Beyond
+the overall impact reflected by the average treatment effect, the analysis of treatment effect
+heterogeneity further reveals details on the importance of different covariates and their
+relations to the outcome. A fundamental parameter on heterogeneity is the variance of
+treatment effect. Based on that, people defined the treatment effect variable importance parameters,
+which measures the heterogeneity explained by a subset of covariates of interest.
+In this article, we propose a new targeted maximum likelihood estimator for a treatment
+effect variable importance measure. This estimator is a pure plug-in estimator that consists
+of two steps: 1) the initial estimation of relevant components to plug in and 2) an iterative
+updating step to optimize the bias-variance tradeoff. The simulation results show that this
+TMLE estimator has competative performance in terms of lower bias and higher coverage
+compared to the simple substitution estimator and the estimating equation estimator."
+
+## Approach 
+
+-   Methods for the study of treatment effect heterogeneity is an active area of research in causal inference and statistics, and includes the estimation of conditional average treatment effects (CATE).
+
+-   Existing hypothesis tests and estimating approaches on CATE include nearest-neighbor matching, kernel methods, series estimation, and forest-based methods.
+
+-   One recent tranche of literature has recommended variance of treatment effect (VTE) as a global measure of treatment effect heterogeneity given a set of baseline covariates (Levy et al 2019).
+
+-   The previous work on how to utilize these CATE estimates mainly focus on policy learning and optimal dynamic treatment rule (OTR), where people try to make personalized recommendation based on individual-level characteristics.
+
+-   Later in 2022, Oliver Hines emphasized the importance of shifting the attention from policy learning to addressing the question of "what are the key drivers of treatment effect heterogeneity?", and discussed on how to quantify the importance of variable subsets in determining the CATE.
+
+    -   Methods have been proposed to estimate treatment effect variable importance (TE-VIMs) through the contribution of groups of baseline covariates towards the VTE.
+
+    -   These methods require estimation of a mean outcome (binary or continuous) given treatment and covariates, which may be estimated using flexible data-adaptive/ machine learning methods.
+
+
+
+## Estimation
+
+
+
+Highly adaptive lasso (HAL).
+
+
+# ADD SHORT SECTION ON SIMULATION RESULTS AND THE APPROACH TAKEN IN THE MAIN ANALYSIS
+
+-   TMLE still performs the best asymptotically.
+-   When sample size is small/moderate, EE estimates have smaller bias.
+-   But the reduction in bias is negligible given the magnitude of the standard error.
+-   So the coverage will still be dominated by the accuracy of standard error estimates.
+    -   This is reflected in the coverage plot panel (TMLE still got better coverage although it has slightly larger bias than EE)
+
+## LEADER analysis
+
+
+## Primary outcome: diabetes progression
+
+1.  Binary indicator of whether any of the following occurred within the first t=2 years of follow up.
+    1.  insulin initiation
+    2.  adding glucose-lowering drugs
+    3.  hyperglycemia
+    4.  hypoglycemia
+    5.  acid-base disorders
+
+## Primary outcome: alternative 
+
+Note the primary outcome drops all subjects on insulin at baseline. We will also use an alternative composite outcome using insulin intensification
+
+| Baseline             | New initiation         |
+|----------------------|------------------------|
+| No insulin treatment | Any insulin            |
+| Long acting          | Premix or short acting |
+| Intermediate acting  | Premix or short acting |
+
+## Secondary outcomes (not run yet)
+
+-   Secondary outcomes (LEADER endpoint): a time-to-event outcome composed of the first occurrence of death from cardio-vascular causes, nonfatal myocardial infarction, or nonfatal stroke.
+-   Individual outcomes making up the composite outcomes
+
+**COMMENT:** these haven't been run yet, right? What is CV and A1C?
+
+
+
+## Dataset
+
+After initial data cleaning process, the full dataset includes 9339 observations with 54 columns. For the analytic dataset using the primary outcome definition, 5170 observations who were on insulin use at the baseline are dropped from the data. In addition, 181 people who were censored/died before t (2 years) are also dropped. We impute the missing values by median and mode respectively for continuous and discrete covariates, and create missingness indicator columns. The finalized analytic dataset has 3988 rows and 63 columns.
+
+
+**COMMENT:** Get N's for all outcomes. Edit paragraph so that the alternative diabetes progression with all observations is the main outcome
+
+```{r, echo=FALSE, warning = FALSE, message = FALSE}
+
+df_diab <- get_data("diab", 24, rm_baseIns = TRUE)
+df_diab2 <- get_data("diab2", 24)
+df_cv <- get_data("cv", 24)
+df_a1c <- get_data("a1c", 24)
+
+```
+
+## Descriptive stats
+
+-tabulate outcome
+-both components and number of diabetes intensification outcomes
+
+-tabulate number of people dropped in different analyses
+
+-tabulate statins and other medication usages
+
+
+```{r, echo=FALSE}
+
+paste0("Diabetes intensification: ", as.numeric(table(df_diab2$Y)[2]), "/", length(df_diab2$Y[!is.na(df_diab2$Y)])," (", round(prop.table(as.numeric(table(df_diab2$Y)))[2]*100,2),"%)")
+
+paste0("Diabetes intensification (insulin initiation definition): ", as.numeric(table(df_diab$Y)[2]), "/", length(df_diab$Y[!is.na(df_diab$Y)])," (", round(prop.table(as.numeric(table(df_diab$Y)))[2]*100,2),"%)")
+
+paste0("Cardiovascular event: ", as.numeric(table(df_cv$Y)[2]), "/", length(df_cv$Y[!is.na(df_cv$Y)])," (", round(prop.table(as.numeric(table(df_cv$Y)))[2]*100,2),"%)")
+
+paste0("HbA1c: ", as.numeric(table(df_a1c$Y)[2]), "/", length(df_a1c$Y[!is.na(df_a1c$Y)])," (", round(prop.table(as.numeric(table(df_a1c$Y)))[2]*100,2),"%)")
+
+
+```
+
+## Estimation of Variance of Treatment Effect (Parameter 1)
+
+
+
+```{r, echo=FALSE}
+print_VTE <- function(res){
+  print(paste0(format(round(res$coef,5), scientific = FALSE), " (95%CI: ",round(res$ci_l,5),", ",round(res$ci_u,5),")"))
+}
+```
+
+Insignificant variance of the treatment effect on diabetes intensification:  `r print_VTE(res_vte_t_diab2$res_tmle)`
+
+
+Variance of the treatment effect of secondary outcomes:
+
+  -  Cardiovascular disease: `r print_VTE(res_vte_t_cv$res_tmle)`
+  -  HbA1c: `r print_VTE(res_vte_t_a1c$res_tmle)`
+  -  Diabetes progression (insulin initiation definition): `r print_VTE(res_vte_t_diab$res_tmle)`
+
+
+
+**COMMENT:** Why is the CV VTE 0?
+
+
+## Variable importance for treatment heterogeneity
+
+## Stratified CATE
+
+```{r, echo=FALSE}
+
+p_strat_diab2
+p_strat_diab
+p_strat_cv
+p_strat_a1c
+  
+```
+
+**COMMENT:** Format plot sizes, split/discuss by outcomes
+
+## Effect modification
+
+```{r, echo=FALSE}
+
+p_em
+  
+```
+
+## Variable importance
+
+```{r, echo=FALSE}
+
+p_vim_diab2
+
+p_vim_diab
+p_vim_cv
+p_vim_a1c
+  
+```
+
+## Questions:
+
+1.  What are other options (outcome definition or subgroup definition) we can consider for LEADER trial data?
+2.  Are there other data we can use to apply this TMLE heterogeneious effect estimation method to, where we might found more significant treatment heterogeneity?
+
+## Next steps:
+
+1.  Investigate why TMLE point estimates of the VIM parameter in LEADER analysis are overall larger than the EE estimates.
+2.  Compare the causal forest method for heterogeneity estimation with our TMLE approach.
+3.  Test more simple robust estimating method, for example: the plug-in HAL method. One option is to use undersmoothed HAL or the poisson HAL method (direct estimate the conditional density via conditional hazard) proposed by Helene and Mark.
+4.  Extend methods to time-to-event outcomes
+5.  Others?
+
+
+
+
+
+## Supplementary materials
+
+https://www.overleaf.com/project/63e061cf03b08e985e4d9d1f
+
+
+## Supplementary table 1: Descriptive statistics
+
+```{r, echo=FALSE}
+
+library(tidyverse)
+library(stargazer)
+library(mlr)
+
+outcome = 'diab2'; t = 24
+df <- get_data(outcome, t, rm_baseIns=T)
+
+
+#Convert factors to dummies
+X <- mlr::createDummyFeatures(obj = df)
+X.df <- data.frame(X)  # stargazer only does summary tables of data.frame objects
+#names(X) <- colnames(X)
+stargazer(X.df, type = "text")
+
+```
+
+
+#### Variance of the treatment effect (EE estimator alternative):
+
+Insignificant variance of the treatment effect on diabetes intensification:  `r print_VTE(res_vte_t_diab2$res_ee)`
+
+
+Variance of the treatment effect of secondary outcomes:
+
+  -  Cardiovascular disease: `r print_VTE(res_vte_t_cv$res_ee)`
+  -  HbA1c: `r print_VTE(res_vte_t_a1c$res_ee)`
+  -  Diabetes progression (insulin initiation definition): `r print_VTE(res_vte_t_diab$res_ee)`
+
+
+
+### Comparison to causal forests
+
+Causal Forests are a common method for the estimation of CATEs in randomized trials. Causal Forests, an extension of the random forests algorithm tailored for causal inference, operate by leveraging binary decision trees to estimate the conditional average treatment effect (CATE) for each observation in the dataset. Initiated by bootstrapping samples from the original dataset, each tree in the forest is grown by recursively splitting on covariates to maximize the heterogeneity of treatment effects within the resulting partitions. Utilizing the honesty principle, each tree's construction is bifurcated into two steps: the selection of covariate splits is informed by one half of the bootstrapped sample (the "splitting" sample), while the estimation of the localized treatment effects is computed from the other half (the "estimation" sample). This approach mitigates overfitting and bias, ensuring that the same data aren't employed for both model selection and effect estimation. The ensemble prediction is produced by averaging the CATE estimates across all trees in the forest for each observation, to yield treatment effects as a function of the observed covariates.
+
+
+```{r, echo=FALSE}
+
+
+grf_plot <- ggplot(res_grf_cate_diab2, aes(x=cate, y=Estimate)) + geom_point() + coord_flip() +
+  geom_linerange(aes(ymin=ci.lb, ymax=ci.ub)) + theme_bw() + geom_hline(yintercept=0) +
+  xlab("Drug usage") + ylab("CATE")
+grf_plot
+
+```
+
+
+
+#NOTE: need to rerun causal forest for all outcomes and compare
+
+
+
