@@ -20,11 +20,11 @@ source(paste0(repo_path, "R/analysis/analy_helper.R"))
 source(paste0(repo_path, "R/est_function/vim.R"))
 
 ### ------------  Part 1. import data  ------------ ###
-# outcome = 'diab'; t = 24
-# df <- get_data(outcome, t, rm_baseIns=T)
+outcome = 'diab'; t = 24
+df <- get_data(outcome, t, rm_baseIns=T)
 
-outcome = 'a1c'; t = 24
-df <- get_data(outcome, t)
+# outcome = 'a1c'; t = 24
+# df <- get_data(outcome, t)
 
 nodes <- list(W = setdiff(names(df), c("Y", "A")),
               A = 'A',
@@ -39,7 +39,7 @@ res <- run_VTE(df = df,
                sl_g = sl_g,
                sl_x = sl_x,
                ws = c('statin_use'), 
-               cv = F,
+               cv = T,
                dr = F,
                max_it = 1e4,
                lr = 1e-4)
@@ -51,7 +51,7 @@ res_vte_t <- list('res_ee' = res_ee,
                   'res_tmle' = res_tmle,
                   'res_ss' = res_ss)
 
-saveRDS(res_vte_t, file = "~/Repo/te_vim/data/res_vte_t_a1c.RDS")
+saveRDS(res_vte_t, file = "~/Repo/te_vim/data/res_vte_t_diab.RDS")
 
 # df_fit <- fit_para(df = df,
 #                    sl_Q = sl_Q, 

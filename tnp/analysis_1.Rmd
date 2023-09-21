@@ -17,6 +17,7 @@ library(R6)
 
 rm(list = ls())
 repo_path = "~/Repo/te_vim/"
+source(paste0(repo_path, "R/0_config.R"))
 source(paste0(repo_path, "R/data_process/data_helper.R"))
 source(paste0(repo_path, "R/simu/simu_dgd.R")) 
 source(paste0(repo_path, "R/simu/simu_config.R"))
@@ -68,6 +69,8 @@ kable(df_vte, "latex", booktabs = T, linesep = "", caption = "VTE Estiamtes") %>
 ```{r, echo=FALSE, fig.width = 10, fig.height = 8, dpi = 720, fig.cap="VIM Estiamtes", fig.align="center", fig.pos="H"}
 df_theta <-  readRDS(paste0("~/Repo/te_vim/analy_res/df_vim_t_", outcome, ".RDS"))
 
+df_theta$varname <- fct_recode(df_theta$varname, !!!covar_levels)
+
 p_theta_ee <- plot_theta(df_theta, estimator = "EE")
 p_theta_tmle <- plot_theta(df_theta, estimator = "TMLE")
 
@@ -76,6 +79,10 @@ p_theta_all <-
             p_theta_tmle + ggtitle("TMLE VIM estimates (T-learner)"))
 
 p_theta_all
+
+plotpath = paste0("~/Repo/te_vim/tnp/plot")
+ggsave('plot_theta_diab.png', width = 14, height = 8,
+       plot = p_theta_all, path = plotpath)
 ```
 
 ## 1.3 Stratified TMLE
@@ -133,6 +140,7 @@ kable(df_vte, "latex", booktabs = T, linesep = "", caption = "VTE Estiamtes") %>
 ## 2.2. VIM Estimation
 ```{r, echo=FALSE, fig.width = 10, fig.height = 8, dpi = 720, fig.cap="VIM Estiamtes", fig.align="center", fig.pos="H"}
 df_theta <-  readRDS(paste0("~/Repo/te_vim/analy_res/df_vim_t_", outcome, ".RDS"))
+df_theta$varname <- fct_recode(df_theta$varname, !!!covar_levels)
 
 p_theta_ee <- plot_theta(df_theta, estimator = "EE")
 p_theta_tmle <- plot_theta(df_theta, estimator = "TMLE")
@@ -142,6 +150,9 @@ p_theta_all <-
             p_theta_tmle + ggtitle("TMLE VIM estimates (T-learner)"))
 
 p_theta_all
+plotpath = paste0("~/Repo/te_vim/tnp/plot")
+ggsave('plot_theta_diab2.png', width = 14, height = 8,
+       plot = p_theta_all, path = plotpath)
 ```
 
 ## 2.3 Stratified TMLE
@@ -200,6 +211,7 @@ kable(df_vte, "latex", booktabs = T, linesep = "", caption = "VTE Estiamtes") %>
 ## 3.2. VIM Estimation
 ```{r, echo=FALSE, fig.width = 10, fig.height = 8, dpi = 720, fig.cap="VIM Estiamtes", fig.align="center", fig.pos="H"}
 df_theta <-  readRDS(paste0("~/Repo/te_vim/analy_res/df_vim_t_", outcome, ".RDS"))
+df_theta$varname <- fct_recode(df_theta$varname, !!!covar_levels)
 
 p_theta_ee <- plot_theta(df_theta, estimator = "EE")
 p_theta_tmle <- plot_theta(df_theta, estimator = "TMLE")
@@ -267,6 +279,7 @@ kable(df_vte, "latex", booktabs = T, linesep = "", caption = "VTE Estiamtes") %>
 ## 4.2. VIM Estimation
 ```{r, echo=FALSE, fig.width = 10, fig.height = 8, dpi = 720, fig.cap="VIM Estiamtes", fig.align="center", fig.pos="H"}
 df_theta <-  readRDS(paste0("~/Repo/te_vim/analy_res/df_vim_t_", outcome, ".RDS"))
+df_theta$varname <- fct_recode(df_theta$varname, !!!covar_levels)
 
 p_theta_ee <- plot_theta(df_theta, estimator = "EE")
 p_theta_tmle <- plot_theta(df_theta, estimator = "TMLE")
@@ -276,6 +289,10 @@ p_theta_all <-
             p_theta_tmle + ggtitle("TMLE VIM estimates (T-learner)"))
 
 p_theta_all
+
+plotpath = paste0("~/Repo/te_vim/tnp/plot")
+ggsave('plot_theta_a1c.png', width = 14, height = 8,
+       plot = p_theta_all, path = plotpath)
 ```
 
 ## 4.3 Stratified TMLE
