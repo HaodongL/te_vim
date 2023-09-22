@@ -23,7 +23,7 @@ source(paste0(repo_path, "R/est_function/vim.R"))
 outcome = 'diab'; t = 24
 df <- get_data(outcome, t, rm_baseIns=T)
 
-# outcome = 'a1c'; t = 24
+# outcome = 'cv'; t = 24
 # df <- get_data(outcome, t)
 
 nodes <- list(W = setdiff(names(df), c("Y", "A")),

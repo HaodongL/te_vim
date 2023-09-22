@@ -59,7 +59,7 @@ df_vte <- data.frame("estimator" = c("TMLE", "EE"),
                      "upper" = c(res_vte$res_tmle$ci_u, 
                                  res_vte$res_ee$ci_u))
 
-df_vte <- df_vte %>% mutate(across(where(is.numeric), round, 4))
+df_vte <- df_vte %>% mutate(across(where(is.numeric), round, 6))
 kable(df_vte, "latex", booktabs = T, linesep = "", caption = "VTE Estiamtes") %>% 
   kable_styling(font_size = 9,latex_options = "HOLD_position")
 ```
@@ -80,9 +80,9 @@ p_theta_all <-
 
 p_theta_all
 
-plotpath = paste0("~/Repo/te_vim/tnp/plot")
-ggsave('plot_theta_diab.png', width = 14, height = 8,
-       plot = p_theta_all, path = plotpath)
+# plotpath = paste0("~/Repo/te_vim/tnp/plot")
+# ggsave('plot_theta_diab.png', width = 14, height = 8,
+#        plot = p_theta_all, path = plotpath)
 ```
 
 ## 1.3 Stratified TMLE
@@ -96,7 +96,7 @@ p_cate_strat
 ## 1.4. TMLE Effect Modification
 ```{r, echo=FALSE}
 fit_em_summary <- readRDS(paste0("~/Repo/te_vim/analy_res/fit_em_su_", outcome, ".RDS"))
-df_em <- fit_em_summary %>% mutate(across(where(is.numeric), round, 4))
+df_em <- fit_em_summary %>% mutate(across(where(is.numeric), round, 6))
 df_em <- df_em[,2:7]
 
 kable(df_em, "latex", booktabs = T, linesep = "", caption = "TMLE Effect Modification Estiamtes") %>% kable_styling(font_size = 9,latex_options = "HOLD_position")
@@ -131,7 +131,7 @@ df_vte <- data.frame("estimator" = c("TMLE", "EE"),
                      "upper" = c(res_vte$res_tmle$ci_u,
                                  res_vte$res_ee$ci_u))
 
-df_vte <- df_vte %>% mutate(across(where(is.numeric), round, 4))
+df_vte <- df_vte %>% mutate(across(where(is.numeric), round, 6))
 kable(df_vte, "latex", booktabs = T, linesep = "", caption = "VTE Estiamtes") %>%
   kable_styling(font_size = 9,latex_options = "HOLD_position")
 ```
@@ -150,9 +150,9 @@ p_theta_all <-
             p_theta_tmle + ggtitle("TMLE VIM estimates (T-learner)"))
 
 p_theta_all
-plotpath = paste0("~/Repo/te_vim/tnp/plot")
-ggsave('plot_theta_diab2.png', width = 14, height = 8,
-       plot = p_theta_all, path = plotpath)
+# plotpath = paste0("~/Repo/te_vim/tnp/plot")
+# ggsave('plot_theta_diab2.png', width = 14, height = 8,
+#        plot = p_theta_all, path = plotpath)
 ```
 
 ## 2.3 Stratified TMLE
@@ -166,7 +166,7 @@ p_cate_strat
 ## 2.4. TMLE Effect Modification
 ```{r, echo=FALSE}
 fit_em_summary <- readRDS(paste0("~/Repo/te_vim/analy_res/fit_em_su_", outcome, ".RDS"))
-df_em <- fit_em_summary %>% mutate(across(where(is.numeric), round, 4))
+df_em <- fit_em_summary %>% mutate(across(where(is.numeric), round, 6))
 df_em <- df_em[,2:7]
 
 kable(df_em, "latex", booktabs = T, linesep = "", caption = "TMLE Effect Modification Estiamtes") %>% kable_styling(font_size = 9,latex_options = "HOLD_position")
@@ -202,7 +202,7 @@ df_vte <- data.frame("estimator" = c("TMLE", "EE"),
                      "upper" = c(res_vte$res_tmle$ci_u,
                                  res_vte$res_ee$ci_u))
 
-df_vte <- df_vte %>% mutate(across(where(is.numeric), round, 4))
+df_vte <- df_vte %>% mutate(across(where(is.numeric), round, 6))
 kable(df_vte, "latex", booktabs = T, linesep = "", caption = "VTE Estiamtes") %>%
   kable_styling(font_size = 9,latex_options = "HOLD_position")
 ```
@@ -221,6 +221,10 @@ p_theta_all <-
             p_theta_tmle + ggtitle("TMLE VIM estimates (T-learner)"))
 
 p_theta_all
+
+# plotpath = paste0("~/Repo/te_vim/tnp/plot")
+# ggsave('plot_theta_cv.png', width = 14, height = 8,
+#        plot = p_theta_all, path = plotpath)
 ```
 
 ## 3.3 Stratified TMLE
@@ -234,7 +238,7 @@ p_cate_strat
 ## 3.4. TMLE Effect Modification
 ```{r, echo=FALSE}
 fit_em_summary <- readRDS(paste0("~/Repo/te_vim/analy_res/fit_em_su_", outcome, ".RDS"))
-df_em <- fit_em_summary %>% mutate(across(where(is.numeric), round, 4))
+df_em <- fit_em_summary %>% mutate(across(where(is.numeric), round, 6))
 df_em <- df_em[,2:7]
 
 kable(df_em, "latex", booktabs = T, linesep = "", caption = "TMLE Effect Modification Estiamtes") %>% kable_styling(font_size = 9,latex_options = "HOLD_position")
@@ -270,7 +274,7 @@ df_vte <- data.frame("estimator" = c("TMLE", "EE"),
                      "upper" = c(res_vte$res_tmle$ci_u,
                                  res_vte$res_ee$ci_u))
 
-df_vte <- df_vte %>% mutate(across(where(is.numeric), round, 4))
+df_vte <- df_vte %>% mutate(across(where(is.numeric), round, 6))
 kable(df_vte, "latex", booktabs = T, linesep = "", caption = "VTE Estiamtes") %>%
   kable_styling(font_size = 9,latex_options = "HOLD_position")
 ```
@@ -290,9 +294,9 @@ p_theta_all <-
 
 p_theta_all
 
-plotpath = paste0("~/Repo/te_vim/tnp/plot")
-ggsave('plot_theta_a1c.png', width = 14, height = 8,
-       plot = p_theta_all, path = plotpath)
+# plotpath = paste0("~/Repo/te_vim/tnp/plot")
+# ggsave('plot_theta_a1c.png', width = 14, height = 8,
+#        plot = p_theta_all, path = plotpath)
 ```
 
 ## 4.3 Stratified TMLE
@@ -306,7 +310,7 @@ p_cate_strat
 ## 4.4. TMLE Effect Modification
 ```{r, echo=FALSE}
 fit_em_summary <- readRDS(paste0("~/Repo/te_vim/analy_res/fit_em_su_", outcome, ".RDS"))
-df_em <- fit_em_summary %>% mutate(across(where(is.numeric), round, 4))
+df_em <- fit_em_summary %>% mutate(across(where(is.numeric), round, 6))
 df_em <- df_em[,2:7]
 
 kable(df_em, "latex", booktabs = T, linesep = "", caption = "TMLE Effect Modification Estiamtes") %>% kable_styling(font_size = 9,latex_options = "HOLD_position")
