@@ -70,7 +70,6 @@ ranked.vars <- order(varimp, decreasing = TRUE)
 ranked.vars
 
 #Best linear projections
-#grf_res <- as.matrix(best_linear_projection(res_cf, A=X[ranked.vars[1:10]])) #top 10
 grf_blp <- as.matrix(best_linear_projection(res_cf, A=X[colnames(X) %in% cm_names])) #drugs to examine
 grf_res <- as.data.frame(grf_blp[2:nrow(grf_blp),c(1,2,4)])
 grf_res$Estimate <- grf_res$Estimate+grf_blp[1,1] # add intercept to get CATE. NOTE! Need to get the linear combo of SE
@@ -85,13 +84,18 @@ grf_res$ci.ub <- grf_res$Estimate + 1.96*grf_res$`Std. Error`
 
 grf_plot <- ggplot(grf_res, aes(x=cate, y=Estimate)) + geom_point() + coord_flip() +
   geom_linerange(aes(ymin=ci.lb, ymax=ci.ub)) + theme_bw() + geom_hline(yintercept=0) +
-  xlab("Drug usage") + ylab("CATE")
+  xlab("Drug usage") + ylab("CATE") + ggtitle("Causal random forest best linear projects\nOutcome: diabetes intensification")
 grf_plot
 
 ggsave(paste0(here(),"/tnp/plot/p_grf_cate.png"), grf_plot, width = 5, height = 5)
+ggsave(paste0(here(),"/tnp/plot/p_grf_cate.pdf"), grf_plot, width = 8, height = 12)
 saveRDS(grf_res, paste0(here(),"/analy_res/res_grf_cate_diab2.rds"))
 
 
+grf_plot_scaled <- ggplot(grf_res, aes(x=cate, y=Estimate-ate$estimate)) + geom_point() + coord_flip() +
+  geom_linerange(aes(ymin=ci.lb-ate$estimate, ymax=ci.ub-ate$estimate)) + theme_bw() + geom_hline(yintercept=0) +
+  xlab("Drug usage") + ylab("CATE")
+grf_plot_scaled
 
 
 
