@@ -9,7 +9,7 @@ fit_para <- function(df,
                      tau_bounds = NULL, 
                      tau_s_bounds = NULL, 
                      gamma_s_bounds = NULL, 
-                     dr = TRUE,
+                     dr = FALSE,
                      add_tau_sc = FALSE){
   
   all_covar = setdiff(names(df), 'Y')
@@ -65,12 +65,12 @@ fit_para <- function(df,
   }
   
   # temp, add tiny values to prevent constant cols
-  tau_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau + runif(n, 1e-11, 1e-10), #
+  tau_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau,  # + runif(n, 1e-11, 1e-10)
                      outcome = 'tau', para = 'tau_s', ws = ws)
   tau_s <- tau_s_fit$predict()
   # tau_s_fit$print()
   
-  gamma_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau + runif(n, 1e-11, 1e-10), #
+  gamma_s_fit <- fit_x(df = df, sl_x = sl_x, tau = tau, # + runif(n, 1e-11, 1e-10)
                        outcome = 'tau', para = 'gamma_s', ws = ws)
   gamma_s <- gamma_s_fit$predict()
   # gamma_s_fit$print()
@@ -123,7 +123,7 @@ fit_cvpara <- function(df,
                        tau_bounds = NULL, 
                        tau_s_bounds = NULL, 
                        gamma_s_bounds = NULL, 
-                       dr = TRUE){
+                       dr = FALSE){
   N = nrow(df)
   V = 10
   all_covar = setdiff(names(df), 'Y')
@@ -248,12 +248,12 @@ fit_cvpara <- function(df,
     }
     
     # fit and pred
-    tau_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t + runif(nrow(df_t), 1e-11, 1e-10), 
+    tau_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t, #+ runif(nrow(df_t), 1e-11, 1e-10)
                        outcome = 'tau', para = 'tau_s', ws = ws)
     tau_s_v <- tau_s_fit$predict(tau_s_task_v)
     
     # fit and pred
-    gamma_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t + runif(nrow(df_t), 1e-11, 1e-10), 
+    gamma_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t, # + runif(nrow(df_t), 1e-11, 1e-10)
                          outcome = 'tau', para = 'gamma_s', ws = ws)
     gamma_s_v <- gamma_s_fit$predict(gamma_s_task_v)
     

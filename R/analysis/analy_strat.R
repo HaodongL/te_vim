@@ -22,7 +22,7 @@ source(paste0(repo_path, "R/analysis/analy_helper.R"))
 # outcome = 'diab'; t = 24
 # df <- get_data(outcome, t, rm_baseIns=T)
 
-outcome = 'a1c'; t = 24
+outcome = 'diab2'; t = 24
 df <- get_data(outcome, t)
 
 nodes <- list(W = setdiff(names(df), c("Y", "A")),
@@ -43,9 +43,29 @@ registerDoParallel(9)
 tic()
 df_strat <- tmle_stratified(df, cm_names)
 toc()
-saveRDS(df_strat, file = "~/Repo/te_vim/data/df_strat_a1c.RDS")
+saveRDS(df_strat, file = "~/Repo/te_vim/data/df_strat_diab.RDS")
 
 
 # df_strat <- readRDS("~/Repo/te_vim/data/df_strat.RDS")
-# p_cate_strat <- plot_tmle_strat(cm_names, df_strat)
+p_cate_strat <- plot_tmle_strat(cm_names, df_strat)
 # ggsave("tnp/plot/p_cate_strat_ci.png", p_cate_strat, width = 5, height = 5)
+
+
+cm <- "vkantag"
+df_true <- df %>% 
+  filter(if_any(all_of(cm), ~ .x == "TRUE")) %>% 
+  select(-all_of(cm)) %>% 
+  select(where(not_constant))
+
+for (cm in cm_names){
+  print(paste(cm, 
+               sum(as.numeric(df %>% pull(cm)) -1),
+               nrow(df)- sum(as.numeric(df %>% pull(cm)) -1) ))
+}
+
+
+
+
+
+
+

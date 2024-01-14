@@ -5,9 +5,11 @@ source(paste0(repo_path, "R/simu/simu_dgd.R")) #Used for the current examples
 source(paste0(repo_path, "R/est_function/sl3_config.R"))
 source(paste0(repo_path, "R/est_function/fit_para.R"))
 source(paste0(repo_path, "R/est_function/vim.R"))
+library(causalHAL)
+source(paste0(repo_path, "admle/hal_cate_partially_linear.R"))
 
 # Q, g
-set.seed(123)
+set.seed(2023)
 N <- 5e2 #size of generated data
 df <- generate_data_simple(N)
 
@@ -64,6 +66,24 @@ gn <- g_fit$predict()
 gn <- bound(gn, g_bounds)
 
 
+# grf fit
+library(grf)
+w <- as.matrix(df[,c("X1", "X2")])
+fit_grf <- causal_forest(w, y, a)
+
+
+# adml HAL fit
+pi.hat <- gn
+m.hat <- Qbar1W * pi.hat + Qbar0W * (1-pi.hat)
+ADMLE_fit <- fit_cate_hal_partially_linear(W = w, A = a, Y = y, 
+                                           m.hat = m.hat,
+                                           pi.hat = pi.hat,
+                                           smoothness_orders_cate = 1, num_knots_cate = c(10), max_degree_cate = 1)
+
+
+
+
+
 # use true g
 # gn <- plogis(0.1*df$X1*df$X2-0.4*df$X1)
 
@@ -106,6 +126,21 @@ f_cate_dr <- function(w1, w2){
   return(tau_dr)
 }
 
+# grf cate
+f_cate_grf <- function(w1, w2){
+  X_new <- matrix(c(w1, w2), length(w1), 2)
+  tau_grf <- predict(fit_grf, X_new) %>% pull()
+  return(tau_grf)
+}
+
+
+# admle cate
+f_cate_admle <- function(w1, w2){
+  X_new <- matrix(c(w1, w2), length(w1), 2)
+  tau_admle <- predict(ADMLE_fit, X_new)
+  return(tau_admle)
+}
+
 
 ####
 
@@ -116,13 +151,13 @@ f_cate <- function (x, y) {
   return (CATE)
 }
 
-
-png(filename= paste0("~/Repo/te_vim/tnp/plot/cate_xgb_", N,".png"),
-    width = 2048,
+# 
+png(filename= paste0("~/Repo/te_vim/tnp/plot/cate_admle3_", N,".png"),
+    width = 1600,
     height = 1024,
-    res = 180,
+    res = 120,
     pointsize = 10)
-par(mfrow = c(1, 3))
+par(mfrow = c(2, 3))
 
 
 w1 <- seq(-1, 1, length= 30)
@@ -142,7 +177,7 @@ mse = round(mean((tau_n - tau)^2), 3)
 # z[is.na(z)] <- 1
 op <- par(bg = "white")
 persp(w1, w2, tau_n, theta = 30, phi = 25, expand = 0.5, col = "#669bbc",
-      main= paste0("CATE estimates with T-learner ", 
+      main= paste0("CATE estimates with HAL + T-learner ",
                    "(MSE = ", mse, ")"))
 
 
@@ -154,10 +189,35 @@ mse = round(mean((tau_n - tau)^2), 3)
 # z[is.na(z)] <- 1
 op <- par(bg = "white")
 persp(w1, w2, tau_n, theta = 30, phi = 25, expand = 0.5, col = "#669bbc",
-      main= paste0("CATE estimates with DR-learner ", 
+      main= paste0("CATE estimates with HAL + DR-learner ", 
+                   "(MSE = ", mse, ")"))
+
+# cate grf
+w1 <- seq(-1, 1, length= 30)
+w2 <- w1
+tau_n <- outer(w1, w2, f_cate_grf)
+mse = round(mean((tau_n - tau)^2), 3)
+# z[is.na(z)] <- 1
+op <- par(bg = "white")
+persp(w1, w2, tau_n, theta = 30, phi = 25, expand = 0.5, col = "#669bbc",
+      main= paste0("CATE estimates with causal forest ", 
+                   "(MSE = ", mse, ")"))
+
+
+# cate admle
+w1 <- seq(-1, 1, length= 30)
+w2 <- w1
+tau_n <- outer(w1, w2, f_cate_admle)
+mse = round(mean((tau_n - tau)^2), 3)
+# z[is.na(z)] <- 1
+op <- par(bg = "white")
+persp(w1, w2, tau_n, theta = 30, phi = 25, expand = 0.5, col = "#669bbc",
+      main= paste0("CATE estimates with ADMLE-HAL", 
                    "(MSE = ", mse, ")"))
 
 dev.off()
+
+
 
 
 

@@ -53,6 +53,9 @@ saveRDS(df_em, file = "~/Repo/te_vim/data/df_em.RDS")
 
 fit_em <- tmle_em_one(df, c("statin_use"))
 
+
+fit_em <- tmle_em_one(df, c("caantag"))
+
 fit_em$summary
 
 

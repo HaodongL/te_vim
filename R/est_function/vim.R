@@ -125,12 +125,15 @@ EE_VIM <- function(data){
   ATE <- sum(po)/N
   Sig1 <- sum(po^2)/N - ATE^2
   
-  VIM <- mean((po - tau_s)^2 - (po - tau)^2)
+  # VIM <- mean((po - tau_s)^2 - (po - tau)^2)
   # ic <- (po - tau_s)^2 - (po - tau)^2 - VIM
   A <- data$A
   Y <- data$Y
   QA <- data$mua_hat
   gn <- data$pi_hat
+  
+  
+  VIM <- mean(2*(tau - tau_s)*(A/gn - (1-A)/(1-gn))*(Y-QA) + (tau - tau_s)^2)
   ic <- 2*(tau - tau_s)*(A/gn - (1-A)/(1-gn))*(Y-QA) + (tau - tau_s)^2 - VIM
   ss <- sqrt(var(ic)/N)
   
@@ -459,12 +462,14 @@ EE_VTE <- function(data){
   ate <- sum(po)/N
   Sig1 <- sum(po^2)/N - ate^2
   
-  VTE <- mean((po - ate)^2 - (po - tau)^2)
+  # VTE <- mean((po - ate)^2 - (po - tau)^2)
   # ic <- (po - ate)^2 - (po - tau)^2 - VTE
   A <- data$A
   Y <- data$Y
   QA <- data$mua_hat
   gn <- data$pi_hat
+  
+  VTE <- mean(2*(tau - ate)*(A/gn - (1-A)/(1-gn))*(Y-QA) + (tau - ate)^2)
   ic <- 2*(tau - ate)*(A/gn - (1-A)/(1-gn))*(Y-QA) + (tau - ate)^2 - VTE
   se <- sqrt(var(ic)/N)
   
@@ -732,5 +737,4 @@ df_log_rr <- function(x, dx) {
 #   
 #   printCoefmat(df, digits = 6, signif.stars = T, na.print = "NA")
 # }
-
 
