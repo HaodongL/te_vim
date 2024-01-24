@@ -738,3 +738,64 @@ df_log_rr <- function(x, dx) {
 #   printCoefmat(df, digits = 6, signif.stars = T, na.print = "NA")
 # }
 
+TMLE_ATE <- function(data){
+  N <- nrow(data)
+  A <- data$A
+  Y <- data$Y
+  y_l = 0
+  y_u = 1
+  
+  # predict g, Q
+  QbarAW <- data$mua_hat
+  Qbar1W <- data$mu1_hat
+  Qbar0W <- data$mu0_hat
+  g_hat <- data$pi_hat
+  
+  # Scale (continuous)  outcome
+  if (length(unique(Y)) > 2){
+    y_l <- min(c(Y, QbarAW, Qbar1W, Qbar0W))
+    y_u <- max(c(Y, QbarAW, Qbar1W, Qbar0W))
+    
+    Y <- (Y - y_l)/(y_u - y_l)
+    QbarAW <- (QbarAW - y_l)/(y_u - y_l)
+    Qbar1W <- (Qbar1W - y_l)/(y_u - y_l)
+    Qbar0W <- (Qbar0W - y_l)/(y_u - y_l)
+  }
+  
+  # update Q
+  H_AW <- A/g_hat - (1-A)/(1-g_hat)
+  
+  suppressWarnings({
+    logitUpdate = glm(Y ~ -1 + H_AW, 
+                      offset = qlogis(QbarAW),
+                      family = 'quasibinomial')
+  })
+  
+  epsilon <- logitUpdate$coef
+  
+  QbarAW_star <- plogis(qlogis(QbarAW) + epsilon*H_AW)
+  Qbar1W_star <- plogis(qlogis(Qbar1W) + epsilon/g_hat)
+  Qbar0W_star <- plogis(qlogis(Qbar0W) - epsilon/(1-g_hat))
+  
+  # calc psi and ci
+  psi <- mean(Qbar1W_star - Qbar0W_star)
+  ic <- H_AW*(Y - QbarAW_star) + (Qbar1W_star - Qbar0W_star) - psi
+  se <- sqrt(var(ic)/N)
+  
+  ci_up  = psi + 1.96*se
+  ci_low = psi - 1.96*se
+  
+  # transform psi and ci back
+  psi_trans <- psi * (y_u - y_l) 
+  ci_up_trans <- ci_up * (y_u - y_l) 
+  ci_low_trans <- ci_low * (y_u - y_l) 
+  
+  out<- list(
+    coef = psi_trans,
+    std_err = se,
+    ci_l = ci_low_trans,
+    ci_u = ci_up_trans,
+    ic = ic
+  )
+  return(out)
+}

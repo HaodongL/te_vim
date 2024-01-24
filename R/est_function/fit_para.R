@@ -113,180 +113,180 @@ fit_para <- function(df,
 
 
 # cv fit Q, g, po, tau, tau_s, gamma_s
-fit_cvpara <- function(df, 
-                       sl_Q, 
-                       sl_g,
-                       sl_x,
-                       ws = NULL, 
-                       Q_bounds = NULL, 
-                       g_bounds = c(0.025, 0.975),
-                       tau_bounds = NULL, 
-                       tau_s_bounds = NULL, 
-                       gamma_s_bounds = NULL, 
-                       dr = FALSE){
-  N = nrow(df)
-  V = 10
-  all_covar = setdiff(names(df), 'Y')
-  all_w = setdiff(all_covar, 'A')
-  all_wsc = setdiff(all_w, ws)
-  
-  # make folds
-  folds = origami::make_folds(n = N, V = V)
-  # folds <- origami::make_folds(n = N, V = V, strata_ids = df$A)
-  
-  # containers for cv preds
-  QbarAW = rep(NA, N)
-  Qbar1W = rep(NA, N)
-  Qbar0W = rep(NA, N)
-  gn = rep(NA, N)
-  po = rep(NA, N)
-  tau = rep(NA, N)
-  tau_s = rep(NA, N)
-  gamma_s = rep(NA, N)
-  
-  # fit sl models on training set, predict on validation set
-  for (k in 1:V){
-    ##==========================##
-    ##       Q, g, po           ##
-    ##==========================##
-    # ---------- T ------------- #
-    index_t <- folds[[k]]$training_set
-    df_t <- df[index_t, ]
-    df_t0 <- df_t %>% mutate(A = 0)
-    df_t1 <- df_t %>% mutate(A = 1)
-    y_t <- df_t[["Y"]]
-    a_t <- df_t[["A"]]
-    
-    res_Qg <- fitSL(df_t, sl_Q, sl_g, Q_bounds, g_bounds) # big object rm later
-    Q_fit <- res_Qg$Q_fit # big object rm later
-    g_fit <- res_Qg$g_fit # big object rm later
-    
-    Q0_task_t <- make_sl3_Task(covariates = all_covar, data = df_t0)
-    Q1_task_t <- make_sl3_Task(covariates = all_covar, data = df_t1)
-    
-    Qbar0W_t <- Q_fit$predict(Q0_task_t)
-    Qbar1W_t <- Q_fit$predict(Q1_task_t)
-    # bound Q if need
-    if (!is.null(Q_bounds)){
-      Qbar0W_t <- bound(Qbar0W_t, Q_bounds)
-      Qbar1W_t <- bound(Qbar1W_t, Q_bounds)
-    }
-    QbarAW_t <- ifelse(df_t$A == 1, Qbar1W_t, Qbar0W_t)
-    # g_task <- make_sl3_Task(covariates = all_w, data = df_t)
-    gn_t <- g_fit$predict()
-    # bound g
-    gn_t <- bound(gn_t, g_bounds)
-    # po_t <- (y_t - QbarAW_t)*(2*a_t - 1)/gn_t + Qbar1W_t - Qbar0W_t
-    po_t <- (y_t - QbarAW_t)*(a_t/gn_t - (1-a_t)/(1-gn_t)) + Qbar1W_t - Qbar0W_t
-
-    # ---------- V ------------- #
-    index_v <- folds[[k]]$validation_set
-    df_v <- df[index_v, ]
-    df_v0 <- df_v %>% mutate(A = 0)
-    df_v1 <- df_v %>% mutate(A = 1)
-    y_v <- df_v[["Y"]]
-    a_v <- df_v[["A"]]
-    
-    # Q_task <- make_sl3_Task(covariates = all_covar, data = df_v)
-    Q0_task_v <- make_sl3_Task(covariates = all_covar, data = df_v0)
-    Q1_task_v <- make_sl3_Task(covariates = all_covar, data = df_v1)
-    
-    # Qn <- Q_fit$predict(Q_task)
-    Qbar0W_v <- Q_fit$predict(Q0_task_v)
-    Qbar1W_v <- Q_fit$predict(Q1_task_v)
-    # bound Q if need
-    if (!is.null(Q_bounds)){
-      Qbar0W_v <- bound(Qbar0W_v, Q_bounds)
-      Qbar1W_v <- bound(Qbar1W_v, Q_bounds)
-    }
-    QbarAW_v <- ifelse(df_v$A == 1, Qbar1W_v, Qbar0W_v)
-    
-    g_task_v <- make_sl3_Task(covariates = all_w, data = df_v)
-    gn_v <- g_fit$predict(g_task_v)
-    # bound g
-    gn_v <- bound(gn_v, g_bounds)
-    # po_v <- (y_v - QbarAW_v)*(2*a_v - 1)/gn_v + Qbar1W_v - Qbar0W_v
-    po_v <- (y_v - QbarAW_v)*(a_v/gn_v - (1-a_v)/(1-gn_v)) + Qbar1W_v - Qbar0W_v
-    
-    # update Q, g, po
-    Qbar0W[index_v] <- Qbar0W_v
-    Qbar1W[index_v] <- Qbar1W_v
-    QbarAW[index_v] <- QbarAW_v
-    gn[index_v] <- gn_v
-    po[index_v]  <- po_v
-    
-    ##================================##
-    ##       tau, tau_s, gamma_s      ##
-    ##================================##
-    tau_task_t <- make_sl3_Task(covariates = all_w, data = df_t)
-    tau_task_v <- make_sl3_Task(covariates = all_w, data = df_v)
-    tau_s_task_v <- make_sl3_Task(covariates = all_wsc, data = df_v)
-    gamma_s_task_v <- make_sl3_Task(covariates = all_wsc, data = df_v)
-    
-    
-    if (dr){
-      # fit tau, tau_s, gamma_s on training set
-      # predict tau, tau_s, gamma_s on validation set
-      tau_fit <- fit_x(df = df_t, sl_x = sl_x, po = po_t, outcome = 'po', para = 'tau')
-      tau_t <- tau_fit$predict(tau_task_t)
-      tau_v <- tau_fit$predict(tau_task_v)
-      
-      # tau_s_fit <- fit_x(df = df_t, sl_x = sl_x, po = po_t, outcome = 'po', para = 'tau_s', ws = ws)
-      # tau_s_v <- tau_s_fit$predict(s_task_v)
-      # 
-      # gamma_s_fit <- fit_x(df = df_t, sl_x = sl_x, po = po_t, outcome = 'po', para = 'gamma_s', ws = ws)
-      # gamma_s_v <- gamma_s_fit$predict(s_task_v)
-    }else{
-      tau_t <- Qbar1W_t - Qbar0W_t
-      tau_v <- Qbar1W_v - Qbar0W_v
-    }
-    
-    # bound tau in [-1,1]
-    if (!is.null(tau_bounds)){
-      tau_t <- bound(tau_t, tau_bounds)
-      tau_v <- bound(tau_v, tau_bounds)
-    }
-    
-    # fit and pred
-    tau_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t, #+ runif(nrow(df_t), 1e-11, 1e-10)
-                       outcome = 'tau', para = 'tau_s', ws = ws)
-    tau_s_v <- tau_s_fit$predict(tau_s_task_v)
-    
-    # fit and pred
-    gamma_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t, # + runif(nrow(df_t), 1e-11, 1e-10)
-                         outcome = 'tau', para = 'gamma_s', ws = ws)
-    gamma_s_v <- gamma_s_fit$predict(gamma_s_task_v)
-    
-    # bound tau_s in [-1,1]
-    if (!is.null(tau_s_bounds)){
-      tau_s_v <- bound(tau_s_v, tau_s_bounds)
-    }
-    # bound gamma_s in [0,1]
-    if (!is.null(gamma_s_bounds)){
-      gamma_s_v <- bound(gamma_s_v, gamma_s_bounds)
-    }
-    
-    # update tau, tau_s, gamma_s
-    tau[index_v] <- tau_v
-    tau_s[index_v] <- tau_s_v
-    gamma_s[index_v] <- gamma_s_v
-    
-    # remove big object
-    rm(res_Qg, Q_fit, g_fit)
-  }
-  
-  df_fit <- data.frame('Y' = df$Y, 
-                       'A' = df$A, 
-                       'pi_hat' = gn, 
-                       'mu0_hat' = Qbar0W,
-                       'mu1_hat' = Qbar1W,
-                       'mua_hat' = QbarAW,
-                       'po' = po,
-                       'tau' = tau,
-                       'tau_s' = tau_s,
-                       'gamma_s' = gamma_s)
-  return(df_fit)
-}
+# fit_cvpara <- function(df, 
+#                        sl_Q, 
+#                        sl_g,
+#                        sl_x,
+#                        ws = NULL, 
+#                        Q_bounds = NULL, 
+#                        g_bounds = c(0.025, 0.975),
+#                        tau_bounds = NULL, 
+#                        tau_s_bounds = NULL, 
+#                        gamma_s_bounds = NULL, 
+#                        dr = FALSE){
+#   N = nrow(df)
+#   V = 10
+#   all_covar = setdiff(names(df), 'Y')
+#   all_w = setdiff(all_covar, 'A')
+#   all_wsc = setdiff(all_w, ws)
+#   
+#   # make folds
+#   folds = origami::make_folds(n = N, V = V)
+#   # folds <- origami::make_folds(n = N, V = V, strata_ids = df$A)
+#   
+#   # containers for cv preds
+#   QbarAW = rep(NA, N)
+#   Qbar1W = rep(NA, N)
+#   Qbar0W = rep(NA, N)
+#   gn = rep(NA, N)
+#   po = rep(NA, N)
+#   tau = rep(NA, N)
+#   tau_s = rep(NA, N)
+#   gamma_s = rep(NA, N)
+#   
+#   # fit sl models on training set, predict on validation set
+#   for (k in 1:V){
+#     ##==========================##
+#     ##       Q, g, po           ##
+#     ##==========================##
+#     # ---------- T ------------- #
+#     index_t <- folds[[k]]$training_set
+#     df_t <- df[index_t, ]
+#     df_t0 <- df_t %>% mutate(A = 0)
+#     df_t1 <- df_t %>% mutate(A = 1)
+#     y_t <- df_t[["Y"]]
+#     a_t <- df_t[["A"]]
+#     
+#     res_Qg <- fitSL(df_t, sl_Q, sl_g, Q_bounds, g_bounds) # big object rm later
+#     Q_fit <- res_Qg$Q_fit # big object rm later
+#     g_fit <- res_Qg$g_fit # big object rm later
+#     
+#     Q0_task_t <- make_sl3_Task(covariates = all_covar, data = df_t0)
+#     Q1_task_t <- make_sl3_Task(covariates = all_covar, data = df_t1)
+#     
+#     Qbar0W_t <- Q_fit$predict(Q0_task_t)
+#     Qbar1W_t <- Q_fit$predict(Q1_task_t)
+#     # bound Q if need
+#     if (!is.null(Q_bounds)){
+#       Qbar0W_t <- bound(Qbar0W_t, Q_bounds)
+#       Qbar1W_t <- bound(Qbar1W_t, Q_bounds)
+#     }
+#     QbarAW_t <- ifelse(df_t$A == 1, Qbar1W_t, Qbar0W_t)
+#     # g_task <- make_sl3_Task(covariates = all_w, data = df_t)
+#     gn_t <- g_fit$predict()
+#     # bound g
+#     gn_t <- bound(gn_t, g_bounds)
+#     # po_t <- (y_t - QbarAW_t)*(2*a_t - 1)/gn_t + Qbar1W_t - Qbar0W_t
+#     po_t <- (y_t - QbarAW_t)*(a_t/gn_t - (1-a_t)/(1-gn_t)) + Qbar1W_t - Qbar0W_t
+# 
+#     # ---------- V ------------- #
+#     index_v <- folds[[k]]$validation_set
+#     df_v <- df[index_v, ]
+#     df_v0 <- df_v %>% mutate(A = 0)
+#     df_v1 <- df_v %>% mutate(A = 1)
+#     y_v <- df_v[["Y"]]
+#     a_v <- df_v[["A"]]
+#     
+#     # Q_task <- make_sl3_Task(covariates = all_covar, data = df_v)
+#     Q0_task_v <- make_sl3_Task(covariates = all_covar, data = df_v0)
+#     Q1_task_v <- make_sl3_Task(covariates = all_covar, data = df_v1)
+#     
+#     # Qn <- Q_fit$predict(Q_task)
+#     Qbar0W_v <- Q_fit$predict(Q0_task_v)
+#     Qbar1W_v <- Q_fit$predict(Q1_task_v)
+#     # bound Q if need
+#     if (!is.null(Q_bounds)){
+#       Qbar0W_v <- bound(Qbar0W_v, Q_bounds)
+#       Qbar1W_v <- bound(Qbar1W_v, Q_bounds)
+#     }
+#     QbarAW_v <- ifelse(df_v$A == 1, Qbar1W_v, Qbar0W_v)
+#     
+#     g_task_v <- make_sl3_Task(covariates = all_w, data = df_v)
+#     gn_v <- g_fit$predict(g_task_v)
+#     # bound g
+#     gn_v <- bound(gn_v, g_bounds)
+#     # po_v <- (y_v - QbarAW_v)*(2*a_v - 1)/gn_v + Qbar1W_v - Qbar0W_v
+#     po_v <- (y_v - QbarAW_v)*(a_v/gn_v - (1-a_v)/(1-gn_v)) + Qbar1W_v - Qbar0W_v
+#     
+#     # update Q, g, po
+#     Qbar0W[index_v] <- Qbar0W_v
+#     Qbar1W[index_v] <- Qbar1W_v
+#     QbarAW[index_v] <- QbarAW_v
+#     gn[index_v] <- gn_v
+#     po[index_v]  <- po_v
+#     
+#     ##================================##
+#     ##       tau, tau_s, gamma_s      ##
+#     ##================================##
+#     tau_task_t <- make_sl3_Task(covariates = all_w, data = df_t)
+#     tau_task_v <- make_sl3_Task(covariates = all_w, data = df_v)
+#     tau_s_task_v <- make_sl3_Task(covariates = all_wsc, data = df_v)
+#     gamma_s_task_v <- make_sl3_Task(covariates = all_wsc, data = df_v)
+#     
+#     
+#     if (dr){
+#       # fit tau, tau_s, gamma_s on training set
+#       # predict tau, tau_s, gamma_s on validation set
+#       tau_fit <- fit_x(df = df_t, sl_x = sl_x, po = po_t, outcome = 'po', para = 'tau')
+#       tau_t <- tau_fit$predict(tau_task_t)
+#       tau_v <- tau_fit$predict(tau_task_v)
+#       
+#       # tau_s_fit <- fit_x(df = df_t, sl_x = sl_x, po = po_t, outcome = 'po', para = 'tau_s', ws = ws)
+#       # tau_s_v <- tau_s_fit$predict(s_task_v)
+#       # 
+#       # gamma_s_fit <- fit_x(df = df_t, sl_x = sl_x, po = po_t, outcome = 'po', para = 'gamma_s', ws = ws)
+#       # gamma_s_v <- gamma_s_fit$predict(s_task_v)
+#     }else{
+#       tau_t <- Qbar1W_t - Qbar0W_t
+#       tau_v <- Qbar1W_v - Qbar0W_v
+#     }
+#     
+#     # bound tau in [-1,1]
+#     if (!is.null(tau_bounds)){
+#       tau_t <- bound(tau_t, tau_bounds)
+#       tau_v <- bound(tau_v, tau_bounds)
+#     }
+#     
+#     # fit and pred
+#     tau_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t, #+ runif(nrow(df_t), 1e-11, 1e-10)
+#                        outcome = 'tau', para = 'tau_s', ws = ws)
+#     tau_s_v <- tau_s_fit$predict(tau_s_task_v)
+#     
+#     # fit and pred
+#     gamma_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t, # + runif(nrow(df_t), 1e-11, 1e-10)
+#                          outcome = 'tau', para = 'gamma_s', ws = ws)
+#     gamma_s_v <- gamma_s_fit$predict(gamma_s_task_v)
+#     
+#     # bound tau_s in [-1,1]
+#     if (!is.null(tau_s_bounds)){
+#       tau_s_v <- bound(tau_s_v, tau_s_bounds)
+#     }
+#     # bound gamma_s in [0,1]
+#     if (!is.null(gamma_s_bounds)){
+#       gamma_s_v <- bound(gamma_s_v, gamma_s_bounds)
+#     }
+#     
+#     # update tau, tau_s, gamma_s
+#     tau[index_v] <- tau_v
+#     tau_s[index_v] <- tau_s_v
+#     gamma_s[index_v] <- gamma_s_v
+#     
+#     # remove big object
+#     rm(res_Qg, Q_fit, g_fit)
+#   }
+#   
+#   df_fit <- data.frame('Y' = df$Y, 
+#                        'A' = df$A, 
+#                        'pi_hat' = gn, 
+#                        'mu0_hat' = Qbar0W,
+#                        'mu1_hat' = Qbar1W,
+#                        'mua_hat' = QbarAW,
+#                        'po' = po,
+#                        'tau' = tau,
+#                        'tau_s' = tau_s,
+#                        'gamma_s' = gamma_s)
+#   return(df_fit)
+# }
 
 
 fitSL <- function(df, sl_Q, sl_g, Q_bounds = NULL, g_bounds = c(0.025, 0.975)){
@@ -358,4 +358,223 @@ bound <- function(x, bounds) {
     upper <- 1 - lower
   }
   pmin(pmax(x, lower), upper)
+}
+
+fit_cvpara <- function(df, 
+                       sl_Q, 
+                       sl_g,
+                       sl_x,
+                       ws = NULL, 
+                       Q_bounds = NULL, 
+                       g_bounds = c(0.025, 0.975),
+                       tau_bounds = NULL, 
+                       tau_s_bounds = NULL, 
+                       gamma_s_bounds = NULL, 
+                       dr = FALSE){
+  N = nrow(df)
+  V = 10
+  all_covar = setdiff(names(df), 'Y')
+  all_w = setdiff(all_covar, 'A')
+  
+  
+  # make folds
+  folds = origami::make_folds(n = N, V = V)
+  # folds <- origami::make_folds(n = N, V = V, strata_ids = df$A)
+  
+  # containers for cv preds
+  QbarAW = rep(NA, N)
+  Qbar1W = rep(NA, N)
+  Qbar0W = rep(NA, N)
+  gn = rep(NA, N)
+  po = rep(NA, N)
+  tau = rep(NA, N)
+  
+  if (is.list(ws)){
+    all_wsc = sapply(list_ws, function(x) setdiff(all_w, x))
+    M = length(list_ws)
+    tau_s = matrix(NA, N, M)
+    gamma_s = matrix(NA, N, M)
+  }else{
+    all_wsc = setdiff(all_w, ws)
+    tau_s = rep(NA, N)
+    gamma_s = rep(NA, N)
+  }
+  
+  # fit sl models on training set, predict on validation set
+  for (k in 1:V){
+    ##==========================##
+    ##       Q, g, po           ##
+    ##==========================##
+    # ---------- T ------------- #
+    index_t <- folds[[k]]$training_set
+    df_t <- df[index_t, ]
+    df_t0 <- df_t %>% mutate(A = 0)
+    df_t1 <- df_t %>% mutate(A = 1)
+    y_t <- df_t[["Y"]]
+    a_t <- df_t[["A"]]
+    
+    res_Qg <- fitSL(df_t, sl_Q, sl_g, Q_bounds, g_bounds) # big object rm later
+    Q_fit <- res_Qg$Q_fit # big object rm later
+    g_fit <- res_Qg$g_fit # big object rm later
+    
+    Q0_task_t <- make_sl3_Task(covariates = all_covar, data = df_t0)
+    Q1_task_t <- make_sl3_Task(covariates = all_covar, data = df_t1)
+    
+    Qbar0W_t <- Q_fit$predict(Q0_task_t)
+    Qbar1W_t <- Q_fit$predict(Q1_task_t)
+    # bound Q if need
+    if (!is.null(Q_bounds)){
+      Qbar0W_t <- bound(Qbar0W_t, Q_bounds)
+      Qbar1W_t <- bound(Qbar1W_t, Q_bounds)
+    }
+    QbarAW_t <- ifelse(df_t$A == 1, Qbar1W_t, Qbar0W_t)
+    # g_task <- make_sl3_Task(covariates = all_w, data = df_t)
+    gn_t <- g_fit$predict()
+    # bound g
+    gn_t <- bound(gn_t, g_bounds)
+    # po_t <- (y_t - QbarAW_t)*(2*a_t - 1)/gn_t + Qbar1W_t - Qbar0W_t
+    po_t <- (y_t - QbarAW_t)*(a_t/gn_t - (1-a_t)/(1-gn_t)) + Qbar1W_t - Qbar0W_t
+    
+    # ---------- V ------------- #
+    index_v <- folds[[k]]$validation_set
+    df_v <- df[index_v, ]
+    df_v0 <- df_v %>% mutate(A = 0)
+    df_v1 <- df_v %>% mutate(A = 1)
+    y_v <- df_v[["Y"]]
+    a_v <- df_v[["A"]]
+    
+    # Q_task <- make_sl3_Task(covariates = all_covar, data = df_v)
+    Q0_task_v <- make_sl3_Task(covariates = all_covar, data = df_v0)
+    Q1_task_v <- make_sl3_Task(covariates = all_covar, data = df_v1)
+    
+    # Qn <- Q_fit$predict(Q_task)
+    Qbar0W_v <- Q_fit$predict(Q0_task_v)
+    Qbar1W_v <- Q_fit$predict(Q1_task_v)
+    # bound Q if need
+    if (!is.null(Q_bounds)){
+      Qbar0W_v <- bound(Qbar0W_v, Q_bounds)
+      Qbar1W_v <- bound(Qbar1W_v, Q_bounds)
+    }
+    QbarAW_v <- ifelse(df_v$A == 1, Qbar1W_v, Qbar0W_v)
+    
+    g_task_v <- make_sl3_Task(covariates = all_w, data = df_v)
+    gn_v <- g_fit$predict(g_task_v)
+    # bound g
+    gn_v <- bound(gn_v, g_bounds)
+    # po_v <- (y_v - QbarAW_v)*(2*a_v - 1)/gn_v + Qbar1W_v - Qbar0W_v
+    po_v <- (y_v - QbarAW_v)*(a_v/gn_v - (1-a_v)/(1-gn_v)) + Qbar1W_v - Qbar0W_v
+    
+    # update Q, g, po
+    Qbar0W[index_v] <- Qbar0W_v
+    Qbar1W[index_v] <- Qbar1W_v
+    QbarAW[index_v] <- QbarAW_v
+    gn[index_v] <- gn_v
+    po[index_v]  <- po_v
+    
+    ##================================##
+    ##       tau, tau_s, gamma_s      ##
+    ##================================##
+    tau_task_t <- make_sl3_Task(covariates = all_w, data = df_t)
+    tau_task_v <- make_sl3_Task(covariates = all_w, data = df_v)
+    
+    if (dr){
+      # fit tau, tau_s, gamma_s on training set
+      # predict tau, tau_s, gamma_s on validation set
+      tau_fit <- fit_x(df = df_t, sl_x = sl_x, po = po_t, outcome = 'po', para = 'tau')
+      tau_t <- tau_fit$predict(tau_task_t)
+      tau_v <- tau_fit$predict(tau_task_v)
+      
+      # tau_s_fit <- fit_x(df = df_t, sl_x = sl_x, po = po_t, outcome = 'po', para = 'tau_s', ws = ws)
+      # tau_s_v <- tau_s_fit$predict(s_task_v)
+      # 
+      # gamma_s_fit <- fit_x(df = df_t, sl_x = sl_x, po = po_t, outcome = 'po', para = 'gamma_s', ws = ws)
+      # gamma_s_v <- gamma_s_fit$predict(s_task_v)
+    }else{
+      tau_t <- Qbar1W_t - Qbar0W_t
+      tau_v <- Qbar1W_v - Qbar0W_v
+    }
+    
+    # bound tau in [-1,1]
+    if (!is.null(tau_bounds)){
+      tau_t <- bound(tau_t, tau_bounds)
+      tau_v <- bound(tau_v, tau_bounds)
+    }
+    
+    # update tau
+    tau[index_v] <- tau_v
+    
+    fit_tau_s_gamma_s <- function(ws, all_wsc){
+      tau_s_task_v <- make_sl3_Task(covariates = all_wsc, data = df_v)
+      gamma_s_task_v <- make_sl3_Task(covariates = all_wsc, data = df_v)
+      # fit and pred
+      tau_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t, #+ runif(nrow(df_t), 1e-11, 1e-10)
+                         outcome = 'tau', para = 'tau_s', ws = ws)
+      tau_s_v <- tau_s_fit$predict(tau_s_task_v)
+      
+      # fit and pred
+      gamma_s_fit <- fit_x(df = df_t, sl_x = sl_x, tau = tau_t, # + runif(nrow(df_t), 1e-11, 1e-10)
+                           outcome = 'tau', para = 'gamma_s', ws = ws)
+      gamma_s_v <- gamma_s_fit$predict(gamma_s_task_v)
+      
+      # bound tau_s in [-1,1]
+      if (!is.null(tau_s_bounds)){
+        tau_s_v <- bound(tau_s_v, tau_s_bounds)
+      }
+      # bound gamma_s in [0,1]
+      if (!is.null(gamma_s_bounds)){
+        gamma_s_v <- bound(gamma_s_v, gamma_s_bounds)
+      }
+      res <- list("tau_s_v" = tau_s_v, "gamma_s_v" = gamma_s_v)
+      return(res)
+    }
+    
+    if (is.list(ws)){
+      for (i in c(1:length(ws))){
+        
+        print(paste0(round( (i + (k-1)*length(ws)) / (V*length(list_ws)) * 100), '% completed'))
+        
+        res <- fit_tau_s_gamma_s(ws = ws[[i]], all_wsc = all_wsc[[i]])
+        tau_s[index_v, i] <- res$tau_s_v
+        gamma_s[index_v, i] <- res$gamma_s_v
+      }
+    }else{
+      res <- fit_tau_s_gamma_s(ws = ws, all_wsc = all_wsc)
+      tau_s[index_v] <- res$tau_s_v
+      gamma_s[index_v] <- res$gamma_s_v
+      
+    }
+    
+    # remove big object
+    rm(res_Qg, Q_fit, g_fit)
+  }
+  
+  if (is.list(ws)){
+    df_fit <- list()
+    for (i in c(1:length(ws))){
+      df_fit_i <- data.frame('Y' = df$Y, 
+                             'A' = df$A, 
+                             'pi_hat' = gn, 
+                             'mu0_hat' = Qbar0W,
+                             'mu1_hat' = Qbar1W,
+                             'mua_hat' = QbarAW,
+                             'po' = po,
+                             'tau' = tau,
+                             'tau_s' = tau_s[,i],
+                             'gamma_s' = gamma_s[,i])
+      df_fit <- c(df_fit, list(df_fit_i))
+    }
+  }else{
+    df_fit <- data.frame('Y' = df$Y, 
+                         'A' = df$A, 
+                         'pi_hat' = gn, 
+                         'mu0_hat' = Qbar0W,
+                         'mu1_hat' = Qbar1W,
+                         'mua_hat' = QbarAW,
+                         'po' = po,
+                         'tau' = tau,
+                         'tau_s' = tau_s,
+                         'gamma_s' = gamma_s)
+  }
+  
+  return(df_fit)
 }
