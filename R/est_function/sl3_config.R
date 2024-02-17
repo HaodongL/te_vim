@@ -3,6 +3,7 @@ library(sl3)
 library(tmle3)
 library(foreach)
 library(doParallel)
+library(hal9001)
 
 
 # -- sl setup
@@ -28,7 +29,9 @@ lrnr_gam_g <- Lrnr_gam$new('A ~ s(X1) + s(X2) + ti(X1,X2)')
 lrnr_hal <- Lrnr_hal9001$new()
 lrnr_hal_fast <- Lrnr_hal9001$new(num_knots = c(40, 15, 10))
 lrnr_hal_xfast <- Lrnr_hal9001$new(num_knots = c(20, 10, 5))
-# lrnr_uhal_fast <- Lrnr_uhal9001$new(num_knots = c(50, 25, 15))
+# lrnr_uhal <- Lrnr_uhal9001$new()
+# lrnr_rhal <- Lrnr_rhal9001$new()
+
 # lrnr_grf <- Lrnr_grf$new()
 # lrnr_lm_inter<- Lrnr_glm$new(formula = "~.^2")
 grid_params <- list(
@@ -46,10 +49,6 @@ xgb_learners <- apply(grid, MARGIN = 1, function(tuning_params) {
 # lrnr_stack <- make_learner("Stack",
 #                            lrnr_lm,
 #                            lrnr_earth)
-lrnr_stack_g <- make_learner("Stack",
-                             lrnr_lm,
-                             lrnr_xgb,
-                             lrnr_earth)
 
 # lrnr_stack_Q <- make_learner("Stack",
 #                              lrnr_xgb2,
@@ -66,26 +65,31 @@ lrnr_stack_g <- make_learner("Stack",
 #                              lrnr_ranger3,
 #                              lrnr_lm)
 
+# lrnr_stack_Q <- make_learner("Stack",
+#                              lrnr_xgb,
+#                              lrnr_ranger,
+#                              lrnr_lm,
+#                              lrnr_earth,
+#                              lrnr_gam,
+#                              lrnr_hal_fast)
+# 
+# lrnr_stack_x <- make_learner("Stack",
+#                              lrnr_xgb,
+#                              lrnr_ranger,
+#                              lrnr_lm,
+#                              lrnr_earth,
+#                              lrnr_gam,
+#                              lrnr_hal_fast)
+
 lrnr_stack_Q <- make_learner("Stack",
                              lrnr_xgb,
                              lrnr_ranger,
                              lrnr_lm,
-                             lrnr_earth,
-                             lrnr_gam,
-                             lrnr_hal_fast)
+                             lrnr_earth)
 
-lrnr_stack_x <- make_learner("Stack",
-                             lrnr_xgb,
-                             lrnr_ranger,
+lrnr_stack_g <- make_learner("Stack",
                              lrnr_lm,
-                             lrnr_earth,
-                             lrnr_gam,
-                             lrnr_hal_fast)
-
-lrnr_stack_Q <- make_learner("Stack",
                              lrnr_xgb,
-                             lrnr_ranger,
-                             lrnr_lm,
                              lrnr_earth)
 
 lrnr_stack_x <- make_learner("Stack",
@@ -102,8 +106,8 @@ mn_metalearner <- make_learner(Lrnr_solnp,
                                metalearner_linear_multinomial,
                                loss_loglik_multinomial)
 
-ls_metalearner <- Lrnr_cv_selector$new(loss_squared_error)
-lb_metalearner <- Lrnr_cv_selector$new(loss_loglik_binomial)
+# ls_metalearner <- Lrnr_cv_selector$new(loss_squared_error)
+# lb_metalearner <- Lrnr_cv_selector$new(loss_loglik_binomial)
 
 sl_Q <- Lrnr_sl$new(
   learners = lrnr_stack_Q,
@@ -111,10 +115,10 @@ sl_Q <- Lrnr_sl$new(
   outcome_type = 'binomial'
 )
 
-sl_Q <- Lrnr_sl$new(
-  learners = lrnr_stack_Q,
-  metalearner = ls_metalearner
-)
+# sl_Q <- Lrnr_sl$new(
+#   learners = lrnr_stack_Q,
+#   metalearner = ls_metalearner
+# )
 
 sl_g <- Lrnr_sl$new(
   learners = lrnr_stack_g,
@@ -135,9 +139,9 @@ sl_x <- Lrnr_sl$new(
   metalearner = ls_metalearner
 )
 
-# sl_Q <- lrnr_xgb
-# sl_g <- lrnr_xgb
-# sl_x <- lrnr_xgb
+# sl_Q <- lrnr_hal
+# sl_g <- lrnr_hal
+# sl_x <- lrnr_hal
 
 sl_Q_hal <- lrnr_hal_fast
 sl_g_hal <- lrnr_hal_fast

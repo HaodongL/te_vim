@@ -20,8 +20,8 @@ source(paste0(repo_path, "R/analysis/analy_helper.R"))
 source(paste0(repo_path, "R/est_function/vim.R"))
 
 ### ------------  Part 1. import data  ------------ ###
-# outcome = 'diab'; t = 24
-# df <- get_data(outcome, t, rm_baseIns=T)
+outcome = 'diab'; t = 24
+df <- get_data(outcome, t, rm_baseIns=T)
 
 outcome = 'diab2'; t = 24
 df <- get_data(outcome, t, rm_baseIns=F)

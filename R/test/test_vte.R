@@ -31,15 +31,15 @@ res_ss <- res$resSS
 
 # wrapper
 tic()
-res <- run_VIM2(df = df,
+res2 <- run_VIM(df = df,
                sl_Q = sl_Q, 
                sl_g = sl_g,
                sl_x = sl_x,
                ws = c('X2'), 
                cv = F,
-               dr = T,
+               dr = F,
                max_it = 1e4)
 toc()
-res_ee <- res$resEE
-res_tmle <- res$resTMLE
-res_ss <- res$resSS
+res_ee2 <- res2$resEE
+res_tmle2 <- res2$resTMLE
+res_ss2 <- res2$resSS

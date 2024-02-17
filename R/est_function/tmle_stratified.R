@@ -22,7 +22,7 @@ run_tmle3 <- function(df){
   initial_likelihood <- ate_spec$make_initial_likelihood(tmle_task, learner_list)
   # without CV-TMLE
   targeted_likelihood <- Targeted_Likelihood$new(initial_likelihood,
-                                                 updater = list(cvtmle = FALSE))
+                                                 updater = list(cvtmle = TRUE))
   ate_params <- ate_spec$make_params(tmle_task, targeted_likelihood) 
   tmle3_fit <- fit_tmle3(tmle_task, targeted_likelihood, 
                          ate_params, targeted_likelihood$updater)
@@ -55,8 +55,8 @@ tmle_stratified <- function(df, cm_names){
     
     df_res_i <- data.frame("tau" = c(psi_hat1, psi_hat0),
                            "se" = c(se1, se0),
-                           "group" = c(paste0("T_", str_sub(cm, 1,6)),
-                                       paste0("F_", str_sub(cm, 1,6))))
+                           "group" = c(paste0("T_", stringr::str_sub(cm, 1,6)),
+                                       paste0("F_", stringr::str_sub(cm, 1,6))))
   }
   return(df_res)
 }
