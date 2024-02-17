@@ -25,7 +25,7 @@ library(flextable)
 #https://grf-labs.github.io/grf/articles/grf_guide.html
 
 ### ------------  Part 1. import data  ------------ ###
-df <- get_data(outcome="diab2", t=24, rm_baseIns=T)
+df <- get_data(outcome="diab", t=24, rm_baseIns=T)
 nodes <- list(W = setdiff(names(df), c("Y", "A")), A = 'A', Y = 'Y')
 df <- process_missing(df, nodes)$data
 
@@ -65,14 +65,66 @@ res_cf <- causal_forest(
 ate <- as.data.frame(t(average_treatment_effect(res_cf)))
 ate
 
+ate <- as.data.frame(t(average_treatment_effect(res_cf, subset =X$statin_use==1)))
+ate
+
+
+
+get_cate <- function(res_cf, var, level, var_name){
+  
+  cate <- as.data.frame(t(average_treatment_effect(res_cf, subset = !!(var)==!!(level))))
+  cate$var=var_name
+  cate$level=level
+  return(cate)
+}
+
+cate_df = NULL
+for(i in cm_names){
+  
+  cate1=get_cate(res_cf=res_cf, var=X[[i]], level=1, var_name=i)
+  cate0=get_cate(res_cf=res_cf, var=X[[i]], level=0, var_name=i)
+  
+  cate_df=bind_rows(cate_df,
+                    cate1, cate0)
+}
+
+cate_df=cate_df %>% rename(Estimate =estimate,`Std. Error`=std.err) 
+
+cate_df$ci.lb <- cate_df$Estimate - 1.96*cate_df$`Std. Error`
+cate_df$ci.ub <- cate_df$Estimate + 1.96*cate_df$`Std. Error`
+cate_df$level <- factor(cate_df$level, levels=c(0,1))
+cate_df$level=fct_recode(cate_df$level,  "no"="0",  "yes" = "1")
+cate_df$var = factor(cate_df$var, levels=rev(c("statin_use",  "adp"   ,"antihypertensives", "betab", "caantag","minera", "loopdiur" ,"thiazide" ,"vkantag")))
+cate_df$var <- fct_recode(cate_df$var, !!!subgroup_levels)
+
+
+grf_plot <- ggplot(cate_df, aes(x=var , y=Estimate, group=level, color=level)) + geom_point(position = position_dodge(0.5)) + coord_flip() +
+  geom_linerange(aes(ymin=ci.lb, ymax=ci.ub), position = position_dodge(0.5)) + 
+  theme_bw() + geom_hline(yintercept=0) +
+  xlab("Drug usage") + ylab("CATE") + ggtitle("Causal random forest best linear projects\nOutcome: diabetes intensification")
+grf_plot
+
+cm_names
+
+cat1=get_cate(var=X$statin_use, level=1)
+
+ate <- as.data.frame(t(average_treatment_effect(res_cf, subset =X$statin_use==0)))
+ate
+
 varimp = variable_importance(res_cf)
-ranked.vars <- order(varimp, decreasing = TRUE)
+ranked.vars <- factor(order(varimp, decreasing = TRUE))
 ranked.vars
+varnames <- fct_recode(colnames(X), !!!covar_levels)
+
+
+# Top 10 variables according to this measure
+data.frame(varnames[ranked.vars[1:20]])
+
 
 #Best linear projections
 grf_blp <- as.matrix(best_linear_projection(res_cf, A=X[colnames(X) %in% cm_names])) #drugs to examine
 grf_res <- as.data.frame(grf_blp[2:nrow(grf_blp),c(1,2,4)])
-grf_res$Estimate <- grf_res$Estimate+grf_blp[1,1] # add intercept to get CATE. NOTE! Need to get the linear combo of SE
+grf_res$Estimate <- grf_res$Estimate+grf_blp[1,1] # add intercept to get CATE. NOTE! Need to get the linear combo of SE?
 grf_res$cate=rownames(grf_res)
 grf_res=bind_rows(ate %>% rename(Estimate =estimate,`Std. Error`=std.err) %>% mutate(cate="overall"),grf_res)
 grf_res <- grf_res %>% mutate(cate=factor(cate, levels=unique(cate)))
@@ -105,17 +157,17 @@ grf_plot_scaled
 #Convert variable names to to plot labels
 #Convert the
 
-# estimand=test_calibration(res_cf)
-# res_blp <- best_linear_projection(res_cf)
-# plot(res_blp)
-# 
-# tau.hat <- predict(res_cf)$predictions
-# 
-# plot(tree <- get_tree(res_cf, 50))
+estimand=test_calibration(res_cf)
+res_blp <- best_linear_projection(res_cf)
+plot(res_blp)
+
+tau.hat <- predict(res_cf)$predictions
+
+plot(tree <- get_tree(res_cf, 50))
 
 
 # #Tree based policy learning
-# 
+# library(policytree)
 # samples.by.school <- split(seq_along(school), school)
 # num.schools <- length(samples.by.school)
 # train <- unlist(samples.by.school[sample(1:num.schools, num.schools / 2)])
@@ -128,7 +180,6 @@ grf_plot_scaled
 # rate.cate <- rank_average_treatment_effect(eval.forest, tau.hat.eval)
 # plot(rate.cate, main = "TOC: By decreasing estimated CATE")
 # 
-# library(policytree)
 # # Use train/evaluation school split from above, but use non-missing units for policy_tree
 # eval <- (1:nrow(X))[-train]
 # not.missing <- which(complete.cases(X))
