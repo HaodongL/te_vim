@@ -7,30 +7,13 @@ rm(list = ls())
 
 ### ------------  Part 0. Import Dataset  ------------ ###
 
-if(here::here()=="C:/Users/andre/Documents/te_vim"){
-  library(boxr)
-  box_auth()
-  
-  df_adsl <- box_read("946034250501")
-  df_tte <- box_read("946034258901")
-  df_adcm <- box_read("946034255301")
-  df_ttse <- box_read("946034261301")
-  df_hypo <-box_read("946034248101")
-  df_adae <- box_read("946034244501")
-  
-}else{
-  # read in subject level covariate dataset, tte, ttse and cm 
-  df_adsl <- haven::read_sas("data/ADaM/adsl.sas7bdat")
-  df_tte <- haven::read_sas("data/ADaM/adtte.sas7bdat")
-  df_adcm <- haven::read_sas("data/ADaM/adcm.sas7bdat")
-  df_ttse <- haven::read_sas("data/ADaM/adttse.sas7bdat")
-  df_hypo <- haven::read_sas("data/ADaM/adhypo.sas7bdat")
-  df_adae <- haven::read_sas("data/ADaM/adae.sas7bdat")
-  # df_adlb <- haven::read_sas("data/ADaM/adlb.sas7bdat")
-  # df_adlbx <- haven::read_sas("data/ADaM/adlbx.sas7bdat")
-  
-}
-
+df_adsl <- haven::read_sas(here("data/ADaM/adsl.sas7bdat"))
+df_tte <- haven::read_sas(here("data/ADaM/adtte.sas7bdat"))
+df_adcm <- haven::read_sas(here("data/ADaM/adcm.sas7bdat"))
+df_ttse <- haven::read_sas(here("data/ADaM/adttse.sas7bdat"))
+df_hypo <- haven::read_sas(here("data/ADaM/adhypo.sas7bdat"))
+df_adae <- haven::read_sas(here("data/ADaM/adae.sas7bdat"))
+#df_adlb <- haven::read_sas(here("data/ADaM/adlb.sas7bdat"))
 
 
 ### ------------  Part 1. Process Covariates  ------------ ###
@@ -256,7 +239,7 @@ W <- W %>% mutate(RC = CHOL1BL - LDL1BL - HDL1BL,
 # df_hdl <- df_adlbx %>% filter(AVISIT %in% c("VISIT 1, V10",
 #                                            "VISIT 2, V20",
 #                                            "VISIT 3 (DAY 0), V30"))
-# write_csv(df_hdl, file = "data/supp/hdl.csv")
+# write_csv(df_hdl, file = here("data/supp/hdl.csv"))
 
 
 # LDL
@@ -465,10 +448,10 @@ temp <- temp %>% filter(USUBJID %in% W$USUBJID[W$INSNVFL == FALSE])
 
 
 ##------------  Part 2.3 HBA1C
-# df_a1c <- df_adlb %>% 
+# df_a1c <- df_adlb %>%
 #   filter(PARAMCD == "HBA1C" & str_starts(AVISIT, "VISIT ([3-9]|1[0-3])"))
-# write_csv(df_a1c, file = "data/supp/a1c.csv")
-df_a1c <- read_csv("data/supp/a1c.csv")
+# write_csv(df_a1c, file = here("data/supp/a1c.csv"))
+df_a1c <- read_csv(here("data/supp/a1c.csv"))
 
 df_a1c <- df_a1c %>%
   group_by(USUBJID, AVISIT) %>%
@@ -494,22 +477,22 @@ df_a1c <- df_a1c %>%
 
 ### ------------  Part 3. Export Dataset  ------------ ###
 
-df_w <- read_csv(file = "data/supp/df_w.csv")
+df_w <- read_csv(file = here("data/supp/df_w.csv"))
 
 # 3.1 diabetes progression
-Y_diab <- read_csv(file = "data/supp/Y_diab.csv")
+Y_diab <- read_csv(file = here("data/supp/Y_diab.csv"))
 df_all_diab <- left_join(df_w, Y_diab, by = 'USUBJID')
 
-write_csv(df_all_diab, file = "data/supp/df_all_diab.csv")
+write_csv(df_all_diab, file = here("data/supp/df_all_diab.csv"))
 
 # 3.2 cv outcomes
-Y_cv <- read_csv(file = "data/supp/Y_cv.csv")
+Y_cv <- read_csv(file = here("data/supp/Y_cv.csv"))
 df_all_cv <- left_join(df_w, Y_cv, by = 'USUBJID')
 
-write_csv(df_all_cv, file = "data/supp/df_all_cv.csv")
+write_csv(df_all_cv, file = here("data/supp/df_all_cv.csv"))
 
 # 3.2 HBA1C
-Y_a1c <- read_csv(file = "data/supp/Y_a1c.csv")
+Y_a1c <- read_csv(file = here("data/supp/Y_a1c.csv"))
 df_all_a1c <- left_join(df_w, Y_a1c, by = 'USUBJID')
 
-write_csv(df_all_a1c, file = "data/supp/df_all_a1c.csv")
+write_csv(df_all_a1c, file = here("data/supp/df_all_a1c.csv"))

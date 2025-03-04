@@ -73,17 +73,29 @@ p_cate_t <- plot_cate(cm_names, cbind(df, "tau" = df_fit$mu1_hat - df_fit$mu0_ha
 
 p_cate_dr <- plot_cate(cm_names, cbind(df, "tau" = df_fit$tau))
 
-# ggsave("tnp/plot/p_cate_t.png", p_cate_t, width = 5, height = 5)
-# ggsave("tnp/plot/p_cate_dr.png", p_cate_dr, width = 5, height = 5)
+saveRDS(file=here("tnp/plot_objects/p_cate_t.RDS"), p_cate_t)
+saveRDS(file=here("tnp/plot_objects/p_cate_dr.RDS"), p_cate_dr)
+ggsave(here("tnp/plot/p_cate_t.png"), p_cate_t, width = 5, height = 5)
+ggsave(here("tnp/plot/p_cate_dr.png"), p_cate_dr, width = 5, height = 5)
 
-# stratified TMLE
-cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
-              "vkantag", "caantag", "thiazide", "loopdiur")
-df_strat <- tmle_stratified(df, cm_names)
-# saveRDS(df_strat, file = "~/Repo/te_vim/data/df_strat.RDS")
+# # stratified TMLE
+# cm_names <- c("statin_use", "antihypertensives", "betab", "minera", "adp",
+#               "vkantag", "caantag", "thiazide", "loopdiur")
 
-p_cate_strat <- plot_tmle_strat(cm_names, df_strat)
+#XXXXXXXXXXXXXXXXXXXXXXXXXXXX
+#debug:
+#XXXXXXXXXXXXXXXXXXXXXXXXXXXX
+# df_strat <- tmle_stratified(df, cm_names)
+# stratified_fit <- tmle3(stratified_ate_spec, df, node_list, learner_list)
+# 
+# names(df_strat)
+#  saveRDS(df_strat, file = here("data/df_strat.RDS"))
 
+
+# p_cate_strat <- plot_tmle_strat(cm_names, df_strat)
+# 
+# print(stratified_fit)
+# 
 # ggsave("tnp/plot/p_cate_strat_ci.png", p_cate_strat, width = 5, height = 5)
 
 # GRF cate
@@ -100,12 +112,14 @@ p_cate_grf <- plot_cate(cm_names,
                         cbind(df, 
                               "tau" = c_forest_hat$predictions,
                               "var_tau" = c_forest_hat$variance.estimates))
-# ggsave("tnp/plot/p_cate_grf.png", p_cate_grf, width = 5, height = 5)
+saveRDS(file=here("tnp/plot_objects/p_cate_grf.RDS"), p_cate_grf)
+ ggsave(here("tnp/plot/p_cate_grf.png"), p_cate_grf, width = 5, height = 5)
 
 p_cate_all <- ggarrange(p_cate_t + ggtitle("SL CATE estimates (T-learner)"), 
                         p_cate_dr + ggtitle("SL CATE estimates (DR-learner)"), 
                         p_cate_grf + ggtitle("GRF CATE estimates"), 
                         p_cate_strat + ggtitle("TMLE Stratified ATE estimates"))
-# ggsave("tnp/plot/p_cate_all.png", p_cate_all, width = 10, height = 10)
+saveRDS(file=here("tnp/plot_objects/p_cate_all.RDS"), p_cate_all)
+ ggsave("tnp/plot/p_cate_all.png", p_cate_all, width = 10, height = 10)
 
 

@@ -10,29 +10,9 @@ rm(list = ls())
 
 
 ### ------------  Part 0. Import Dataset  ------------ ###
-if(here::here()=="C:/Users/andre/Documents/jici/te_vim"){
-  
-  repo_path = "C:/Users/andre/Documents/jici/te_vim/"
-  source(paste0(repo_path, "R/data_process/data_helper.R"))
-  
-  #cleaned data
-  df <- read_csv(paste0(here(),"/data/supp/df_all_diab2.csv"))
-  dim(df)
-  colnames(df)
-  
-  head(df)  
-  
-  
-}else{
-  
-  repo_path = "~/Repo/te_vim/"
-  source(paste0(repo_path, "R/data_process/data_helper.R"))
-  # read in analysis data
-  ### ------------  Part 1. import data  ------------ ###
-  # outcome = 'diab'; t = 24
+
   # df <- get_data(outcome, t, rm_baseIns=T)
-  df <- read_csv("~/Repo/te_vim/data/supp/df_analy1.csv")
-}
+  df <- read_csv(here("data/supp/df_analy1.csv"))
   
 
 # impute missingness

@@ -9,7 +9,7 @@ library(doParallel)
 # library(ggpubr)
 
 rm(list = ls())
-repo_path = "~/Repo/te_vim/"
+repo_path = paste0(here::here(),"/")
 source(paste0(repo_path, "R/data_process/data_helper.R"))
 source(paste0(repo_path, "R/simu/simu_dgd.R")) 
 source(paste0(repo_path, "R/simu/simu_config.R"))
@@ -61,7 +61,8 @@ res_vte_t <- list('res_ee' = res_ee,
                   'res_tmle' = res_tmle,
                   'res_ss' = res_ss)
 
-# saveRDS(res_vte_t, file = "~/Repo/te_vim/data/res_vte_t_cv_diab.RDS")
+
+ saveRDS(res_vte_t, file = here("data/res_vte_t_cv_diab.RDS"))
 
 # df_fit <- fit_para(df = df,
 #                    sl_Q = sl_Q, 
@@ -73,18 +74,7 @@ res_vte_t <- list('res_ee' = res_ee,
 # res_tmle <- TMLE_VTE(df_fit, max_it = 1e4, lr = 1e-4)
 
 
-#  oh
-rm(list = ls())
-repo_path = "~/Repo/te_vim/"
-source(paste0(repo_path, "R/data_process/data_helper.R"))
-source(paste0(repo_path, "R/analysis/analy_helper.R"))
-source(paste0(repo_path, "R/est_function/sl3_config.R"))
-source(paste0(repo_path, "R/est_function/fit_para.R"))
-source("~/Repo/TE-Heterogeneity/R/vte.R")
-source("~/Repo/TE-Heterogeneity/R/aipw.R")
-source("~/Repo/TE-Heterogeneity/R/tmle.R")
-source("~/Repo/TE-Heterogeneity/R/example_helpers.R")
-
+### diabetes definiton 1 ###
 
 
 ### ------------  Part 1. import data  ------------ ###

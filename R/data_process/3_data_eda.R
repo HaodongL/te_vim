@@ -7,7 +7,7 @@ library(RColorBrewer)
 library(tmle3)
 
 # read baseline variables
-df_w <- read_csv("data/supp/df_w.csv")
+df_w <- read_csv(here("data/supp/df_w.csv"))
 df_w <- df_w %>% 
   mutate(across(where(is.character), ~ as.factor(.))) %>% 
   mutate(across(where(is.logical), ~ as.factor(.))) 

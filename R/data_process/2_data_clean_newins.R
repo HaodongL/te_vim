@@ -2,36 +2,27 @@ library(here)
 library(tidyverse)
 library(dplyr)
 library(mice)
+library(here)
 rm(list = ls())
 
 
 ### ------------  Part 0. Import Dataset  ------------ ###
 
-if(here::here()=="C:/Users/andre/Documents/te_vim"){
-  library(boxr)
-  box_auth()
-  
-  df_adsl <- box_read("946034250501")
-  df_tte <- box_read("946034258901")
-  df_adcm <- box_read("946034255301")
-  df_ttse <- box_read("946034261301")
-  df_hypo <-box_read("946034248101")
-  df_adae <- box_read("946034244501")
-  
-}else{
+
   # read in subject level covariate dataset, tte, ttse and cm 
-  df_adsl <- haven::read_sas("data/ADaM/adsl.sas7bdat")
-  df_tte <- haven::read_sas("data/ADaM/adtte.sas7bdat")
-  df_adcm <- haven::read_sas("data/ADaM/adcm.sas7bdat")
-  df_ttse <- haven::read_sas("data/ADaM/adttse.sas7bdat")
-  df_hypo <- haven::read_sas("data/ADaM/adhypo.sas7bdat")
-  df_adae <- haven::read_sas("data/ADaM/adae.sas7bdat")
+  df_adsl <- haven::read_sas(here("data/ADaM/adsl.sas7bdat"))
+  df_tte <- haven::read_sas(here("data/ADaM/adtte.sas7bdat"))
+  df_adcm <- haven::read_sas(here("data/ADaM/adcm.sas7bdat"))
+  df_ttse <- haven::read_sas(here("data/ADaM/adttse.sas7bdat"))
+  df_hypo <- haven::read_sas(here("data/ADaM/adhypo.sas7bdat"))
+  df_adae <- haven::read_sas(here("data/ADaM/adae.sas7bdat"))
   # df_adlb <- haven::read_sas("data/ADaM/adlb.sas7bdat")
   # df_adlbx <- haven::read_sas("data/ADaM/adlbx.sas7bdat")
   
-}
+  
+  
 
-df_base <- read_csv("data/supp/df_base.csv")
+df_base <- read_csv(here("data/supp/df_base.csv"))
 
 ### ------------  Part 2. Process Outcomes  ------------ ###
 
@@ -170,9 +161,10 @@ Y_diab <- Y_diab %>%
 
 ### ------------  Part 3. Export Dataset  ------------ ###
 
-df_w <- read_csv(file = "data/supp/df_w.csv")
+df_w <- read_csv(file = here("data/supp/df_w.csv"))
 
 # 3.1 diabetes progression
 df_all_diab2 <- left_join(df_w, Y_diab, by = 'USUBJID')
 
-write_csv(df_all_diab2, file = "data/supp/df_all_diab2.csv")
+write_csv(df_all_diab2, file = here("data/supp/df_all_diab2.csv"))
+          

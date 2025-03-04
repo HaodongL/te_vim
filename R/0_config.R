@@ -12,9 +12,9 @@ library(kableExtra)
 library(readr)
 library(R6)
 
-if(here::here()=="C:/Users/andre/Documents/jici/te_vim"){
+if(here::here()=="C:/Users/andre/OneDrive/Documents/te_vim"){
   
-  repo_path = "C:/Users/andre/Documents/jici/te_vim/"
+  repo_path = "C:/Users/andre/OneDrive/Documents/te_vim/"
   
 }else{
   repo_path = "~/Repo/te_vim/"
